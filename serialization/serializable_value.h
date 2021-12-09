@@ -39,16 +39,16 @@ struct SerializableValue : std::wstring
 // Deserialization function, allow convert SerializableValue to types, write your own function for special data type
 // or overload std::wistringstream operator>> operator
 template<class T>
-SSH_NODISCARD T deserialize_value(const SerializableValue& value);
+EXT_NODISCARD T deserialize_value(const SerializableValue& value);
 template<>
-SSH_NODISCARD inline std::wstring deserialize_value<std::wstring>(const SerializableValue& value) { return static_cast<std::wstring>(value); }
+EXT_NODISCARD inline std::wstring deserialize_value<std::wstring>(const SerializableValue& value) { return static_cast<std::wstring>(value); }
 template<>
-SSH_NODISCARD inline std::string deserialize_value<std::string>(const SerializableValue& value) { return std::narrow(deserialize_value<std::wstring>(value).c_str()); }
+EXT_NODISCARD inline std::string deserialize_value<std::string>(const SerializableValue& value) { return std::narrow(deserialize_value<std::wstring>(value).c_str()); }
 template<>
-SSH_NODISCARD inline bool deserialize_value<bool>(const SerializableValue& value) { return value == L"true"; }
+EXT_NODISCARD inline bool deserialize_value<bool>(const SerializableValue& value) { return value == L"true"; }
 #ifdef __ATLTIME_H__
 template<>
-SSH_NODISCARD inline CTime deserialize_value<CTime>(const SerializableValue& value)
+EXT_NODISCARD inline CTime deserialize_value<CTime>(const SerializableValue& value)
 {
     SYSTEMTIME st = { 0 };
     swscanf_s(value.c_str(), L"%hd.%hd.%hd %hd:%hd:%hd", &st.wDay, &st.wMonth, &st.wYear, &st.wHour, &st.wMinute, &st.wSecond);
@@ -57,11 +57,11 @@ SSH_NODISCARD inline CTime deserialize_value<CTime>(const SerializableValue& val
 #endif
 #ifdef __AFXSTR_H__
 template<>
-SSH_NODISCARD inline CString deserialize_value<CString>(const SerializableValue& value) { return deserialize_value<std::wstring>(value).c_str(); }
+EXT_NODISCARD inline CString deserialize_value<CString>(const SerializableValue& value) { return deserialize_value<std::wstring>(value).c_str(); }
 #endif
 
 template<class T>
-SSH_NODISCARD T deserialize_value(const SerializableValue& value)
+EXT_NODISCARD T deserialize_value(const SerializableValue& value)
 {
     T result;
     std::wistringstream stream(value);
@@ -80,7 +80,7 @@ SSH_NODISCARD T deserialize_value(const SerializableValue& value)
 // Serialization function, allow convert types to SerializableValue, write your own function for special data type
 // or overload std::wistringstream operator<< operator
 template<class T>
-SSH_NODISCARD SerializableValue serialize_value(const T& val)
+EXT_NODISCARD SerializableValue serialize_value(const T& val)
 {
     if constexpr (std::is_enum_v<T>)
         return serialize_value<long>(static_cast<long>(val));

@@ -11,18 +11,18 @@
 /* Setup execution code on exit scope
 
 Using:
-* SSH_SCOPE_ON_EXIT({ foundedPos = currentPos; });
-* SSH_SCOPE_ON_EXIT_F((&foundedPos, currentPos),
+* EXT_SCOPE_ON_EXIT({ foundedPos = currentPos; });
+* EXT_SCOPE_ON_EXIT_F((&foundedPos, currentPos),
     {
         foundedPos = currentPos;
     });
 */
-#define SSH_SCOPE_ON_EXIT(code) ::ext::scope::ExitScope SSH_PP_CAT(__on_scoped_exit, __COUNTER__)([&]() code);
-#define SSH_SCOPE_ON_EXIT_F(capture, code) ::ext::scope::ExitScope SSH_PP_CAT(__on_scoped_exit, __COUNTER__)([REMOVE_PARENTHES(capture)]() code);
+#define EXT_SCOPE_ON_EXIT(code) ::ext::scope::ExitScope EXT_PP_CAT(__on_scoped_exit, __COUNTER__)([&]() code);
+#define EXT_SCOPE_ON_EXIT_F(capture, code) ::ext::scope::ExitScope EXT_PP_CAT(__on_scoped_exit, __COUNTER__)([REMOVE_PARENTHES(capture)]() code);
 
 // Declare cleaner for object, it will be called after exit scope
-#define SSH_SCOPE_ON_EXIT_FREE(object, function) \
-    ::ext::scope::FreeObject SSH_PP_CAT(__on_scoped_exit_free, __COUNTER__)(object, function);
+#define EXT_SCOPE_ON_EXIT_FREE(object, function) \
+    ::ext::scope::FreeObject EXT_PP_CAT(__on_scoped_exit_free, __COUNTER__)(object, function);
 
 namespace ext::scope {
 
@@ -76,7 +76,7 @@ struct ObjectHolder : ::ext::NonCopyable
     /// <param name="objectInvalidValue">If set, we will only destroy the object if it does not match this value</param>
     ObjectHolder(_In_ FreeFunction&& freeObjectFunction,
                  _In_opt_ std::optional<ObjectType>&& objectInitialValue,
-                 _In_opt_ std::optional<ObjectType>&& objectInvalidValue) SSH_NOEXCEPT
+                 _In_opt_ std::optional<ObjectType>&& objectInvalidValue) EXT_NOEXCEPT
         : m_freeObjectFunction(std::move(freeObjectFunction))
         , m_object(std::move(objectInitialValue))
         , m_objectInvalidValue(std::move(objectInvalidValue))
@@ -85,12 +85,12 @@ struct ObjectHolder : ::ext::NonCopyable
     /// <param name="freeObjectFunction">Destroy object function</param>
     /// <param name="objectInvalidValue">If set, we will only destroy the object if it does not match this value</param>
     ObjectHolder(_In_ FreeFunction&& freeObjectFunction,
-                 _In_opt_ std::optional<ObjectType>&& objectInvalidValue = std::nullopt) SSH_NOEXCEPT
+                 _In_opt_ std::optional<ObjectType>&& objectInvalidValue = std::nullopt) EXT_NOEXCEPT
         : m_freeObjectFunction(std::move(freeObjectFunction))
         , m_objectInvalidValue(std::move(objectInvalidValue))
     {}
     // Move constuctor
-    ObjectHolder(_In_ ObjectHolder&& otherObjectHolder) SSH_NOEXCEPT
+    ObjectHolder(_In_ ObjectHolder&& otherObjectHolder) EXT_NOEXCEPT
         : m_freeObjectFunction(std::move(otherObjectHolder.m_freeObjectFunction))
         , m_object(std::move(otherObjectHolder.m_object))
         , m_objectInvalidValue(std::move(otherObjectHolder.m_objectInvalidValue))
@@ -101,33 +101,33 @@ struct ObjectHolder : ::ext::NonCopyable
 
     ~ObjectHolder() { DestroyObject(); }
 
-    constexpr ObjectHolder& operator=(ObjectType&& object) SSH_NOEXCEPT
+    constexpr ObjectHolder& operator=(ObjectType&& object) EXT_NOEXCEPT
     {
         DestroyObject();
         m_object = std::move(object);
         return *this;
     }
 
-    constexpr ObjectHolder& operator=(const ObjectType& object) SSH_NOEXCEPT
+    constexpr ObjectHolder& operator=(const ObjectType& object) EXT_NOEXCEPT
     {
         DestroyObject();
         m_object = object;
         return *this;
     }
 
-    constexpr SSH_NODISCARD operator ObjectType&() { return m_object.value(); }
-    constexpr SSH_NODISCARD operator const ObjectType&() const { return m_object.value(); }
+    constexpr EXT_NODISCARD operator ObjectType&() { return m_object.value(); }
+    constexpr EXT_NODISCARD operator const ObjectType&() const { return m_object.value(); }
 
-    constexpr SSH_NODISCARD const ObjectType& value() const { return m_object.value(); }
-    constexpr SSH_NODISCARD bool has_value() const SSH_NOEXCEPT
+    constexpr EXT_NODISCARD const ObjectType& value() const { return m_object.value(); }
+    constexpr EXT_NODISCARD bool has_value() const EXT_NOEXCEPT
     {
         return m_object.has_value() && (!m_objectInvalidValue.has_value() || m_object.value() != m_objectInvalidValue.value());
     }
-    constexpr SSH_NODISCARD bool operator!() const SSH_NOEXCEPT { return !has_value(); }
-    constexpr SSH_NODISCARD operator bool() const SSH_NOEXCEPT { return has_value(); }
+    constexpr EXT_NODISCARD bool operator!() const EXT_NOEXCEPT { return !has_value(); }
+    constexpr EXT_NODISCARD operator bool() const EXT_NOEXCEPT { return has_value(); }
 
 public:
-    constexpr void DestroyObject() SSH_NOEXCEPT
+    constexpr void DestroyObject() EXT_NOEXCEPT
     {
         if (m_freeObjectFunction != nullptr && has_value())
             m_freeObjectFunction(m_object.value());

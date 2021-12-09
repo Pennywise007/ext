@@ -14,22 +14,22 @@
 * Example of creating dump
 void main()
 {
-    SSH_DUMP_DECLARE_HANDLER();
+    EXT_DUMP_DECLARE_HANDLER();
 
-    SSH_DUMP_CREATE() OR throw std::exception();
+    EXT_DUMP_CREATE() OR throw std::exception();
 }
 */
 
 /* Declare handler for unhandled exceptions and create dumps */
-#define SSH_DUMP_DECLARE_HANDLER()                                          \
+#define EXT_DUMP_DECLARE_HANDLER()                                          \
     if (!::ext::dump::g_exceptionHandlerAdded)                              \
     {                                                                       \
         ::ext::dump::g_exceptionHandlerAdded = true;                        \
         ::AddVectoredExceptionHandler(1, ::ext::dump::unhandled_handler);   \
     }
 
-/* Create dump code, it is better to call SSH_DUMP_DECLARE_HANDLER in main to catch unhandled exceptions */
-#define SSH_DUMP_CREATE() ext::dump::create_dump();
+/* Create dump code, it is better to call EXT_DUMP_DECLARE_HANDLER in main to catch unhandled exceptions */
+#define EXT_DUMP_CREATE() ext::dump::create_dump();
 
 // If the debugger is connected - break, otherwise - create a process dump
 #define DEBUG_BREAK_OR_CREATE_DUMP                                          \
@@ -37,14 +37,14 @@ void main()
         if (IsDebuggerPresent())                                            \
             DebugBreak();                                                   \
         else                                                                \
-            SSH_DUMP_CREATE();                                              \
+            EXT_DUMP_CREATE();                                              \
     }
 
 /*
 Checks boolean expression, if true:
 * generate breakpoint if debugger present, othervise - create dump
 * show error in log*/
-#define SSH_DUMP_IF(bool_expression)                                \
+#define EXT_DUMP_IF(bool_expression)                                \
     if (const bool __result = (bool_expression); !__result) {}      \
     else                                                            \
         for (bool __firstEnter = true;; __firstEnter = false)       \
@@ -54,7 +54,7 @@ Checks boolean expression, if true:
                 break;                                              \
             }                                                       \
             else                                                    \
-                SSH_TRACE_ERR() << "DUMP at " << __FILE__ << "(" << __LINE__ << ") expr: \'" << #bool_expression << "\' "
+                EXT_TRACE_ERR() << "DUMP at " << __FILE__ << "(" << __LINE__ << ") expr: \'" << #bool_expression << "\' "
 
 namespace ext::dump {
 
@@ -64,7 +64,7 @@ static std::atomic_bool g_exceptionHandlerAdded = false;
 
 inline void make_minidump(EXCEPTION_POINTERS* e)
 {
-    SSH_TRACE_DBG() << "Dump creation started";
+    EXT_TRACE_DBG() << "Dump creation started";
 
     auto hDbgHelp = ::LoadLibraryA("dbghelp");
     if (hDbgHelp == nullptr)
@@ -85,7 +85,7 @@ inline void make_minidump(EXCEPTION_POINTERS* e)
         wsprintfA(name + strlen(name), "_%4d.%02d.%02d_%02d.%02d.%02d.dmp", t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond);
     }
 
-    SSH_TRACE() << "Dump file: " << name;
+    EXT_TRACE() << "Dump file: " << name;
 
     auto hFile = CreateFileA(name, GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
     if (hFile == INVALID_HANDLE_VALUE)
@@ -101,7 +101,7 @@ inline void make_minidump(EXCEPTION_POINTERS* e)
               MINIDUMP_TYPE(MiniDumpWithIndirectlyReferencedMemory | MiniDumpScanMemory), // MiniDumpNormal
               &exceptionInfo, nullptr, nullptr);
 
-    SSH_TRACE_DBG() << "Dump creation finished";
+    EXT_TRACE_DBG() << "Dump creation finished";
 }
 
 inline LONG CALLBACK unhandled_handler(EXCEPTION_POINTERS* e)
@@ -111,9 +111,9 @@ inline LONG CALLBACK unhandled_handler(EXCEPTION_POINTERS* e)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-inline void create_dump(const char *msg = nullptr) SSH_NOEXCEPT
+inline void create_dump(const char *msg = nullptr) EXT_NOEXCEPT
 {
-    SSH_DUMP_DECLARE_HANDLER();
+    EXT_DUMP_DECLARE_HANDLER();
     __try
     {
         constexpr unsigned long argumentsCount = 1;

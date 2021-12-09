@@ -39,14 +39,14 @@ inline std::unique_ptr<serializer::IDeserializer> Fabric::TextDeserializer(const
 
 struct Visitor::CollectionInfo
 {
-    explicit CollectionInfo(const ISerializableCollection* collection_) SSH_THROWS()
+    explicit CollectionInfo(const ISerializableCollection* collection_) EXT_THROWS()
         : collection(collection_)
         , sizeOfCollection(collection_->Size())
         , currentIndexInsideCollection(0L)
     {
-        SSH_EXPECT(collection);
+        EXT_EXPECT(collection);
     }
-    explicit CollectionInfo(const std::shared_ptr<ISerializableCollection>& collection_) SSH_THROWS()
+    explicit CollectionInfo(const std::shared_ptr<ISerializableCollection>& collection_) EXT_THROWS()
         : CollectionInfo(collection_.get())
     {
         collectionHolder = collection_;
@@ -60,14 +60,14 @@ struct Visitor::CollectionInfo
 
 inline Visitor::Visitor(const ISerializable* object) : m_currentSerializableObject(object)
 {
-    SSH_EXPECT(CheckObject(m_currentSerializableObject)) << "No info inside collection";
-    SSH_EXPECT(UpdateObjectType()) << "Unknown collection type";
+    EXT_EXPECT(CheckObject(m_currentSerializableObject)) << "No info inside collection";
+    EXT_EXPECT(UpdateObjectType()) << "Unknown collection type";
 }
 
 inline size_t Visitor::GetIndexAmongIdenticalNames(bool bCollectionStart)
 {
     const wchar_t* curObjectName = m_currentSerializableObject.GetName();
-    SSH_ASSERT(curObjectName);
+    EXT_ASSERT(curObjectName);
     if (!curObjectName)
         return 0;
 
@@ -99,7 +99,7 @@ inline bool Visitor::GoToNextObject()
     case ObjectType::eCollectionStart:
         {
             const ISerializableCollection* collection = m_currentSerializableObject;
-            SSH_EXPECT(collection);
+            EXT_EXPECT(collection);
 
             if (collection->Size() == 0)
             {
@@ -111,14 +111,14 @@ inline bool Visitor::GoToNextObject()
 
             if (!UpdateObjectType())
             {
-                SSH_ASSERT(false) << "Can`t find collection element type, skip it";
+                EXT_ASSERT(false) << "Can`t find collection element type, skip it";
                 m_currentObjectType = ObjectType::eField;
                 return GoToNextObject();
             }
 
             if (!CheckObject(m_currentSerializableObject))
             {
-                SSH_ASSERT(false) << "Not serializable element inside collection, skip it";
+                EXT_ASSERT(false) << "Not serializable element inside collection, skip it";
                 return GoToNextObject();
             }
         }
@@ -177,7 +177,7 @@ inline bool Visitor::GoToNextObject()
         }
         break;
     default:
-        SSH_UNREACHABLE();
+        EXT_UNREACHABLE();
     }
 
     return true;
@@ -185,7 +185,7 @@ inline bool Visitor::GoToNextObject()
 
 inline void Visitor::UpdateCurrentCollectionSize()
 {
-    SSH_EXPECT(!m_collectionsDepth.empty()) << "The size of a collection that does not exist is updated";
+    EXT_EXPECT(!m_collectionsDepth.empty()) << "The size of a collection that does not exist is updated";
 
     CollectionInfo& collectionInfo = m_collectionsDepth.back();
     collectionInfo.sizeOfCollection = collectionInfo.collection->Size();
@@ -209,7 +209,7 @@ inline bool Visitor::UpdateObjectType()
         }
         else
         {
-            SSH_ASSERT(false) << "Unknown type of serializable object";
+            EXT_ASSERT(false) << "Unknown type of serializable object";
             return false;
         }
     }
@@ -219,7 +219,7 @@ inline bool Visitor::UpdateObjectType()
 
 inline bool Executor::SerializeObject(const std::unique_ptr<serializer::ISerializer>& serializer, const ISerializable* object)
 {
-    SSH_REQUIRE(serializer && object) << "didn't pass what to serialize";
+    EXT_REQUIRE(serializer && object) << "didn't pass what to serialize";
 
     const std::shared_ptr<SerializableNode> serializationTreeRoot = std::make_shared<SerializableNode>(object->GetName());
     std::shared_ptr currentNode = serializationTreeRoot;
@@ -237,20 +237,20 @@ inline bool Executor::SerializeObject(const std::unique_ptr<serializer::ISeriali
             break;
         case Visitor::ObjectType::eCollectionEnd:
             {
-                SSH_ASSERT(currentNode->Name == objectsVisitor.GetCurrentObject()->GetName());
+                EXT_ASSERT(currentNode->Name == objectsVisitor.GetCurrentObject()->GetName());
                 currentNode = currentNode->Parent.lock();
             }
             break;
         case Visitor::ObjectType::eField:
             {
                 const auto* field = dynamic_cast<const ISerializableField*>(objectsVisitor.GetCurrentObject());
-                SSH_ASSERT(field);
+                EXT_ASSERT(field);
                 currentNode->ChildNodes.emplace_back(std::make_shared<SerializableNode>(field->GetName(), currentNode));
                 currentNode->ChildNodes.back()->Value = field->SerializeValue();
             }
             break;
         default:
-            SSH_UNREACHABLE();
+            EXT_UNREACHABLE();
         }
 
     } while (objectsVisitor.GoToNextObject());
@@ -260,7 +260,7 @@ inline bool Executor::SerializeObject(const std::unique_ptr<serializer::ISeriali
 
 inline bool Executor::DeserializeObject(const std::unique_ptr<serializer::IDeserializer>& deserializer, ISerializable* object)
 {
-    SSH_REQUIRE(deserializer) << "didn't pass what to serialize";
+    EXT_REQUIRE(deserializer) << "didn't pass what to serialize";
 
     std::shared_ptr<SerializableNode> deserializationTreeRoot;
     if (!deserializer->Deserialize(deserializationTreeRoot))
@@ -278,7 +278,7 @@ inline bool Executor::DeserializeObject(const std::unique_ptr<serializer::IDeser
         case Visitor::ObjectType::eCollectionStart:
             {
                 const auto* collection = dynamic_cast<const ISerializableCollection*>(objectsVisitor.GetCurrentObject());
-                SSH_ASSERT(collection);
+                EXT_ASSERT(collection);
 
                 auto childNode = currentNode->GetChild(collection->GetName(), objectsVisitor.GetIndexAmongIdenticalNames(true));
                 if (childNode)
@@ -290,21 +290,21 @@ inline bool Executor::DeserializeObject(const std::unique_ptr<serializer::IDeser
                 }
                 else
                 {
-                    SSH_ASSERT(false) << "Can`t find node for collection " << collection->GetName();
+                    EXT_ASSERT(false) << "Can`t find node for collection " << collection->GetName();
                     objectsVisitor.SkipCollectionContent();
                 }
             }
             break;
         case Visitor::ObjectType::eCollectionEnd:
             {
-                SSH_ASSERT(currentNode->Name == objectsVisitor.GetCurrentObject()->GetName()) << "Invalid name for cuurent collection";
+                EXT_ASSERT(currentNode->Name == objectsVisitor.GetCurrentObject()->GetName()) << "Invalid name for cuurent collection";
                 currentNode = currentNode->Parent.lock();
             }
             break;
         case Visitor::ObjectType::eField:
             {
                 const auto* field = dynamic_cast<const ISerializableField*>(objectsVisitor.GetCurrentObject());
-                SSH_ASSERT(field);
+                EXT_ASSERT(field);
 
                 if (auto childNode = currentNode->GetChild(field->GetName(), objectsVisitor.GetIndexAmongIdenticalNames(false)))
                 {
@@ -313,14 +313,14 @@ inline bool Executor::DeserializeObject(const std::unique_ptr<serializer::IDeser
                     if (childNode->Value.has_value())
                         deserializeField->DeserializeValue(childNode->Value.value());
                     else
-                        SSH_ASSERT(false) << "Can`t find value for field " << field->GetName();
+                        EXT_ASSERT(false) << "Can`t find value for field " << field->GetName();
                 }
                 else
-                    SSH_ASSERT(false) << "Can`t find node for field " << field->GetName();
+                    EXT_ASSERT(false) << "Can`t find node for field " << field->GetName();
             }
             break;
         default:
-            SSH_UNREACHABLE();
+            EXT_UNREACHABLE();
         }
 
     } while (objectsVisitor.GoToNextObject());

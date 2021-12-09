@@ -25,7 +25,7 @@ struct ITraceWorker : ext::NonCopyable
 
 struct FileTracer : ITraceWorker
 {
-    FileTracer() SSH_THROWS(std::runtime_error, std::filesystem::filesystem_error)
+    FileTracer() EXT_THROWS(std::runtime_error, std::filesystem::filesystem_error)
     {
         auto tracesDirectory = std::filesystem::get_exe_directory().append("Traces");
         if (!std::filesystem::exists(tracesDirectory) && !std::filesystem::create_directories(tracesDirectory))
@@ -63,7 +63,7 @@ struct FileTracer : ITraceWorker
             m_outputFile << text << std::endl;
             m_outputFile.flush();
 
-            SSH_DUMP_IF(!m_outputFile.good()) << SSH_TRACE_FUNCTION;
+            EXT_DUMP_IF(!m_outputFile.good()) << EXT_TRACE_FUNCTION;
         }
         else
             DEBUG_BREAK_OR_CREATE_DUMP; // file must be opened on creation class

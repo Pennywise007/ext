@@ -9,30 +9,30 @@
 
 namespace std::filesystem {
 
-SSH_NODISCARD inline std::filesystem::path get_exe_directory() SSH_NOEXCEPT
+EXT_NODISCARD inline std::filesystem::path get_exe_directory() EXT_NOEXCEPT
 {
     const static auto currentDirectory = []() -> std::filesystem::path
     {
         wchar_t exePath[_MAX_PATH * 10] = {0};
-        SSH_DUMP_IF(GetModuleFileName(/*AfxGetApp()->m_hInstance*/nullptr, exePath, _MAX_PATH * 10) == 0);
+        EXT_DUMP_IF(GetModuleFileName(/*AfxGetApp()->m_hInstance*/nullptr, exePath, _MAX_PATH * 10) == 0);
         return std::filesystem::path(exePath).remove_filename();
     }();
     return currentDirectory;
 }
 
-SSH_NODISCARD inline std::filesystem::path get_exe_name() SSH_NOEXCEPT
+EXT_NODISCARD inline std::filesystem::path get_exe_name() EXT_NOEXCEPT
 {
     const static auto exeName = []() -> std::filesystem::path
     {
         wchar_t exePath[_MAX_PATH * 10] = {0};
-        SSH_DUMP_IF(GetModuleFileName(/*AfxGetApp()->m_hInstance*/nullptr, exePath, _MAX_PATH * 10) == 0);
+        EXT_DUMP_IF(GetModuleFileName(/*AfxGetApp()->m_hInstance*/nullptr, exePath, _MAX_PATH * 10) == 0);
 
         return std::filesystem::path(exePath).filename();
     }();
     return exeName;
 }
 
-inline bool create_file(const std::filesystem::path& path) SSH_THROWS(std::filesystem::filesystem_error)
+inline bool create_file(const std::filesystem::path& path) EXT_THROWS(std::filesystem::filesystem_error)
 {
     if (!std::filesystem::create_directories(path))
         return false;

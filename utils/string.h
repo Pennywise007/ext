@@ -18,17 +18,17 @@ namespace std {
 #include <string_view>
 
 template <typename... Args>
-SSH_NODISCARD std::string string_sprintf(std::string_view rt_fmt_str, Args&&... args)
+EXT_NODISCARD std::string string_sprintf(std::string_view rt_fmt_str, Args&&... args)
 {
     return std::vformat(rt_fmt_str, std::make_format_args(args...));
 }
 
 #else
 template <typename... Args>
-SSH_NODISCARD std::string string_sprintf(const char* format, Args&&... args) SSH_THROWS()
+EXT_NODISCARD std::string string_sprintf(const char* format, Args&&... args) EXT_THROWS()
 {
     const int size_s = std::snprintf(nullptr, 0, format, std::forward<Args>(args)...) + 1; // + '\0'
-    if (size_s <= 0) { SSH_DUMP_IF(true); throw std::runtime_error("Error during formatting."); }
+    if (size_s <= 0) { EXT_DUMP_IF(true); throw std::runtime_error("Error during formatting."); }
     const auto size = static_cast<size_t>(size_s);
     std::string string(size, {});
     std::snprintf(string.data(), size, format, std::forward<Args>(args)...);
@@ -37,10 +37,10 @@ SSH_NODISCARD std::string string_sprintf(const char* format, Args&&... args) SSH
 }
 
 template <typename... Args>
-SSH_NODISCARD std::wstring string_swprintf(const wchar_t* format, Args&&... args) SSH_THROWS()
+EXT_NODISCARD std::wstring string_swprintf(const wchar_t* format, Args&&... args) EXT_THROWS()
 {
     const int size_s = std::swprintf(nullptr, 0, format, std::forward<Args>(args)...) + 1; // + '\0'
-    if (size_s <= 0) { SSH_DUMP_IF(true); throw std::runtime_error("Error during formatting."); }
+    if (size_s <= 0) { EXT_DUMP_IF(true); throw std::runtime_error("Error during formatting."); }
     const auto size = static_cast<size_t>(size_s);
     std::wstring string(size, {});
     std::swprintf(string.data(), size, format, std::forward<Args>(args)...);
@@ -64,7 +64,7 @@ void string_trim_all(std::basic_string<CharType, std::char_traits<CharType>, std
     text = text.substr(indexFirstNotSpace, text.length() - indexLastNotSpace - indexFirstNotSpace);
 }
 
-SSH_NODISCARD inline std::wstring widen(const char* str)
+EXT_NODISCARD inline std::wstring widen(const char* str)
 {
     const auto length = strlen(str);
 
@@ -80,7 +80,7 @@ SSH_NODISCARD inline std::wstring widen(const char* str)
     return result;
 }
 
-SSH_NODISCARD inline std::string narrow(const wchar_t* str)
+EXT_NODISCARD inline std::string narrow(const wchar_t* str)
 {
     const auto length = wcslen(str);
 

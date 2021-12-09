@@ -23,7 +23,7 @@ struct ISerializer
 {
     virtual ~ISerializer() = default;
     // Serialize tree
-    SSH_NODISCARD virtual bool Serialize(const std::shared_ptr<SerializableNode>& serializationTreeRoot) SSH_THROWS() = 0;
+    EXT_NODISCARD virtual bool Serialize(const std::shared_ptr<SerializableNode>& serializationTreeRoot) EXT_THROWS() = 0;
 };
 
 // Deserialization object interface
@@ -31,7 +31,7 @@ struct IDeserializer
 {
     virtual ~IDeserializer() = default;
     // Deserialize tree data
-    SSH_NODISCARD virtual bool Deserialize(_Out_ std::shared_ptr<SerializableNode>& deserializationTreeRoot) SSH_THROWS() = 0;
+    EXT_NODISCARD virtual bool Deserialize(_Out_ std::shared_ptr<SerializableNode>& deserializationTreeRoot) EXT_THROWS() = 0;
 };
 
 // Serializer interfaces fabric
@@ -40,13 +40,13 @@ struct Fabric
 // Predefine USE_PUGI_XML and add pugi XML lib to project if you want serialize to/from xml.
 #ifdef USE_PUGI_XML
     // Create serializer to/from XML file.
-    SSH_NODISCARD static std::unique_ptr<serializer::ISerializer> XMLSerializer(const std::filesystem::path& filePath);
-    SSH_NODISCARD static std::unique_ptr<serializer::IDeserializer> XMLDeserializer(const std::filesystem::path& filePath);
+    EXT_NODISCARD static std::unique_ptr<serializer::ISerializer> XMLSerializer(const std::filesystem::path& filePath);
+    EXT_NODISCARD static std::unique_ptr<serializer::IDeserializer> XMLDeserializer(const std::filesystem::path& filePath);
 #endif
 
     // Create serializer to/from text.
-    SSH_NODISCARD static std::unique_ptr<serializer::ISerializer> TextSerializer(std::wstring& outputText);
-    SSH_NODISCARD static std::unique_ptr<serializer::IDeserializer> TextDeserializer(const std::wstring& inputText) SSH_THROWS();
+    EXT_NODISCARD static std::unique_ptr<serializer::ISerializer> TextSerializer(std::wstring& outputText);
+    EXT_NODISCARD static std::unique_ptr<serializer::IDeserializer> TextDeserializer(const std::wstring& inputText) EXT_THROWS();
 };
 
 // Serialization executor class, serialize/deserialize object via ISerializer/IDeserializer interfaces
@@ -56,13 +56,13 @@ struct Executor
     /// <param name="serializer">Serialization interface, @see Fabric.</param>
     /// <param name="object">Serializable object.</param>
     /// <returns>True if serialization successfully, may throw exception.</returns>
-    static bool SerializeObject(const std::unique_ptr<serializer::ISerializer>& serializer, const ISerializable* object) SSH_THROWS();
+    static bool SerializeObject(const std::unique_ptr<serializer::ISerializer>& serializer, const ISerializable* object) EXT_THROWS();
 
     /// <summary>Deserialize object.</summary>
     /// <param name="deserializer">Deserialization interface, @see Fabric.</param>
     /// <param name="object">Serializable object.</param>
     /// <returns>True if deserialization successfully, may throw exception.</returns>
-    static bool DeserializeObject(const std::unique_ptr<serializer::IDeserializer>& deserializer, ISerializable* object) SSH_THROWS();
+    static bool DeserializeObject(const std::unique_ptr<serializer::IDeserializer>& deserializer, ISerializable* object) EXT_THROWS();
 };
 
 // Visitor class by fields and collections of the object being serialized
@@ -70,7 +70,7 @@ struct Executor
 class Visitor
 {
 public:
-    Visitor(const ISerializable* rootObject) SSH_THROWS();
+    Visitor(const ISerializable* rootObject) EXT_THROWS();
 
 public:
     // Current serializable object type
@@ -81,16 +81,16 @@ public:
         eField                  // Field
     };
     // Get type of current visitor serializable object
-    SSH_NODISCARD ObjectType GetCurrentObjectType() const SSH_NOEXCEPT { return m_currentObjectType; }
+    EXT_NODISCARD ObjectType GetCurrentObjectType() const EXT_NOEXCEPT { return m_currentObjectType; }
     // Get current serializable object
-    SSH_NODISCARD const ISerializable* GetCurrentObject() const SSH_NOEXCEPT { return m_currentSerializableObject; }
+    EXT_NODISCARD const ISerializable* GetCurrentObject() const EXT_NOEXCEPT { return m_currentSerializableObject; }
     // Get the number of identical names in the collection for the current object
     // in case several objects with the same name have been serialized
-    SSH_NODISCARD size_t GetIndexAmongIdenticalNames(bool bCollectionStart);
+    EXT_NODISCARD size_t GetIndexAmongIdenticalNames(bool bCollectionStart);
     // Move to next serializable object
-    SSH_NODISCARD bool GoToNextObject();
+    EXT_NODISCARD bool GoToNextObject();
     // Skip the entire collection
-    void SkipCollectionContent() SSH_NOEXCEPT { m_currentObjectType = ObjectType::eCollectionEnd; }
+    void SkipCollectionContent() EXT_NOEXCEPT { m_currentObjectType = ObjectType::eCollectionEnd; }
     // Reread the size of the current collection
     void UpdateCurrentCollectionSize();
 
@@ -98,7 +98,7 @@ private:
     // Update the current object type
     bool UpdateObjectType();
     // Check the object for the possibility of serialization
-    SSH_NODISCARD static bool CheckObject(const ISerializable* object) { return object && object->GetName(); }
+    EXT_NODISCARD static bool CheckObject(const ISerializable* object) { return object && object->GetName(); }
 
 private:
     ObjectType m_currentObjectType = ObjectType::eCollectionStart;
@@ -120,7 +120,7 @@ private:
         operator const ISerializableField*() const { return dynamic_cast<const ISerializableField*>(serializableObjectPointer); }
         operator const ISerializableCollection*() const { return dynamic_cast<const ISerializableCollection*>(serializableObjectPointer); }
 
-        SSH_NODISCARD const wchar_t* GetName() const SSH_NOEXCEPT { return serializableObjectPointer->GetName(); }
+        EXT_NODISCARD const wchar_t* GetName() const EXT_NOEXCEPT { return serializableObjectPointer->GetName(); }
 
     } m_currentSerializableObject;
 
@@ -166,7 +166,7 @@ struct TreeSerializer
 
         while (currentNode)
         {
-            SSH_ASSERT(!currentNode->Name.empty()) << "Must be value OR child nodes";
+            EXT_ASSERT(!currentNode->Name.empty()) << "Must be value OR child nodes";
 
             if (!currentNode->Value.has_value())
             {
@@ -199,7 +199,7 @@ private:
     static void GoToChild(std::stack<std::pair<size_t, size_t>>& childLevelInfo, std::shared_ptr<SerializableNode>& currentNode, const size_t& index)
     {
         childLevelInfo.push(std::make_pair(currentNode->ChildNodes.size(), 0));
-        SSH_ASSERT(index < childLevelInfo.top().first) << "Iterate over list size";
+        EXT_ASSERT(index < childLevelInfo.top().first) << "Iterate over list size";
         currentNode = *std::next(currentNode->ChildNodes.begin(), index);
     }
 
@@ -217,7 +217,7 @@ private:
     // Go to parent node from current
     static bool GoToParentNode(std::stack<std::pair<size_t, size_t>>& childLevelInfo, std::shared_ptr<SerializableNode>& currentNode)
     {
-        SSH_ASSERT(!childLevelInfo.empty());
+        EXT_ASSERT(!childLevelInfo.empty());
         childLevelInfo.pop();
         currentNode = currentNode->Parent.lock();
         return currentNode != nullptr;

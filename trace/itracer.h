@@ -9,10 +9,10 @@
 #include <sstream>
 
 // Macro for tracing current function, basically used in trace prefix
-#define SSH_TRACE_FUNCTION "[" __FUNCTION__  "]: "
+#define EXT_TRACE_FUNCTION "[" __FUNCTION__  "]: "
 
-// Default trace macros, using: SSH_TRACE_TYPE(::ext::ITracer::TraceType::eNormal) << SSH_TRACE_FUNCTION << "my text";
-#define SSH_TRACE_TYPE(TraceType) \
+// Default trace macros, using: EXT_TRACE_TYPE(::ext::ITracer::TraceType::eNormal) << EXT_TRACE_FUNCTION << "my text";
+#define EXT_TRACE_TYPE(TraceType) \
     for (auto* __tracer = ::ext::get_tracer(); __tracer && __tracer->CanTrace(TraceType); __tracer = nullptr)   \
         for (std::ostringstream __stream; __tracer; __tracer = nullptr)                                         \
             for (bool __streamIsSet = false; __tracer; __streamIsSet = true)                                    \
@@ -24,12 +24,12 @@
                 else                                                                                            \
                     __stream
 
-// Default trace macros, using: SSH_TRACE() << SSH_TRACE_FUNCTION << "my text";
-#define SSH_TRACE()         SSH_TRACE_TYPE(::ext::ITracer::Type::eNormal)
-// Trace macros for debug output, using: SSH_TRACE_DBG() << SSH_TRACE_FUNCTION << "my text";
-#define SSH_TRACE_DBG()     SSH_TRACE_TYPE(::ext::ITracer::Type::eDebug)
-// Trace macros for errors, using: SSH_TRACE_ERR() << SSH_TRACE_FUNCTION << "my text";
-#define SSH_TRACE_ERR()     SSH_TRACE_TYPE(::ext::ITracer::Type::eError)
+// Default trace macros, using: EXT_TRACE() << EXT_TRACE_FUNCTION << "my text";
+#define EXT_TRACE()         EXT_TRACE_TYPE(::ext::ITracer::Type::eNormal)
+// Trace macros for debug output, using: EXT_TRACE_DBG() << EXT_TRACE_FUNCTION << "my text";
+#define EXT_TRACE_DBG()     EXT_TRACE_TYPE(::ext::ITracer::Type::eDebug)
+// Trace macros for errors, using: EXT_TRACE_ERR() << EXT_TRACE_FUNCTION << "my text";
+#define EXT_TRACE_ERR()     EXT_TRACE_TYPE(::ext::ITracer::Type::eError)
 
 namespace ext {
 

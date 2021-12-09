@@ -58,7 +58,7 @@ public:
         eNormal
     };
 
-    SSH_NODISCARD static thread_pool& GlobalInstance();
+    EXT_NODISCARD static thread_pool& GlobalInstance();
 
     /**
      * \brief add task function to queue
@@ -79,7 +79,7 @@ public:
      * \return taskId of created task and future with task result
      */
     template <typename Result, typename... FunctionArgs, typename... Args>
-    SSH_NODISCARD std::pair<task::TaskId, std::future<Result>> add_task(Result(task)(FunctionArgs...),
+    EXT_NODISCARD std::pair<task::TaskId, std::future<Result>> add_task(Result(task)(FunctionArgs...),
                                                                         const TaskPriority priority = TaskPriority::eNormal,
                                                                         Args&&... args);
 
@@ -118,7 +118,7 @@ struct thread_pool::TaskInfo : ext::NonCopyable
     TaskInfo(std::function<void()>&& _task, const TaskPriority _priority)
         : task(std::move(_task)), priority(_priority)
     {
-        SSH_EXPECT(SUCCEEDED(CoCreateGuid(&taskId))) << "Failed to create GUID";
+        EXT_EXPECT(SUCCEEDED(CoCreateGuid(&taskId))) << "Failed to create GUID";
     }
 
     std::function<void()> task;
@@ -195,7 +195,7 @@ inline thread_pool::thread_pool(std::function<void(const task::TaskId&)>&& onTas
 {
     m_taskDoneEvent.Create();
 
-    SSH_EXPECT(threadsCount > 0) << "Zero thread count";
+    EXT_EXPECT(threadsCount > 0) << "Zero thread count";
     m_threads.resize(threadsCount);
     for (auto& thread : m_threads)
         thread.run(&thread_pool::worker, this);

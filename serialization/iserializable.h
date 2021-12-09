@@ -16,9 +16,9 @@ struct InternalStruct : SerializableObject<InternalStruct, L"Pretty name">
 
 struct CustomField: ISerializableField
 {
-    SSH_NODISCARD virtual const wchar_t* GetName() const SSH_NOEXCEPT { return L"CustomFieldName"; }
-    SSH_NODISCARD virtual SerializableValue SerializeValue() const { return L"test"; }
-    virtual void DeserializeValue(const SerializableValue& value) { SSH_EXPECT(value == L"test"); }
+    EXT_NODISCARD virtual const wchar_t* GetName() const EXT_NOEXCEPT { return L"CustomFieldName"; }
+    EXT_NODISCARD virtual SerializableValue SerializeValue() const { return L"test"; }
+    virtual void DeserializeValue(const SerializableValue& value) { EXT_EXPECT(value == L"test"); }
 };
 
 struct TestStruct : SerializableObject<TestStruct>, InternalStruct
@@ -122,17 +122,17 @@ struct SerializableNode
     std::optional<SerializableValue> Value;
     std::list<std::shared_ptr<SerializableNode>> ChildNodes;
 
-    SerializableNode(std::wstring name, std::shared_ptr<SerializableNode> parentNode = nullptr) SSH_NOEXCEPT
+    SerializableNode(std::wstring name, std::shared_ptr<SerializableNode> parentNode = nullptr) EXT_NOEXCEPT
         : Name(std::move(name)), Parent(parentNode)
     {}
-    SSH_NODISCARD std::shared_ptr<SerializableNode> GetChild(const wchar_t* name, const size_t& indexAmongTheSameNames = 0) const SSH_NOEXCEPT
+    EXT_NODISCARD std::shared_ptr<SerializableNode> GetChild(const wchar_t* name, const size_t& indexAmongTheSameNames = 0) const EXT_NOEXCEPT
     {
         auto searchIt = ChildNodes.begin(), end = ChildNodes.end();
         for (size_t i = 0; i <= indexAmongTheSameNames && searchIt != end; ++i)
         {
             searchIt = std::find_if(i == 0 ? searchIt : std::next(searchIt), end, [&name](const auto& node) { return node->Name == name; });
         }
-        SSH_ASSERT(searchIt != end) << "Can`t find " << name << " in child nodes " << Parent.lock() ? Parent.lock()->Name : L"";
+        EXT_ASSERT(searchIt != end) << "Can`t find " << name << " in child nodes " << Parent.lock() ? Parent.lock()->Name : L"";
         return searchIt != end ? *searchIt : nullptr;
     }
 };
@@ -143,10 +143,10 @@ struct ISerializable
 {
     virtual ~ISerializable() = default;
     // Get name of serializable object
-    SSH_NODISCARD virtual const wchar_t* GetName() const SSH_NOEXCEPT = 0;
+    EXT_NODISCARD virtual const wchar_t* GetName() const EXT_NOEXCEPT = 0;
     // Called before deserializing object, allow to change deserializable tree and avoid unexpected data, allow to add upgrade for old stored settings
     // Also used to allocate collections elements
-    virtual void PrepareToDeserialize(_Inout_ std::shared_ptr<SerializableNode>& /*serializableTree*/) SSH_THROWS() {}
+    virtual void PrepareToDeserialize(_Inout_ std::shared_ptr<SerializableNode>& /*serializableTree*/) EXT_THROWS() {}
 };
 
 // Interface for serializable field, @see serialize_value/deserialize_value functions
@@ -154,7 +154,7 @@ struct ISerializable
 struct ISerializableField : ISerializable
 {
     // Serialize field value to string
-    SSH_NODISCARD virtual SerializableValue SerializeValue() const = 0;
+    EXT_NODISCARD virtual SerializableValue SerializeValue() const = 0;
     // Deserialize field value from string
     virtual void DeserializeValue(const SerializableValue& value) = 0;
 };
@@ -163,9 +163,9 @@ struct ISerializableField : ISerializable
 struct ISerializableCollection : ISerializable
 {
     // Collection size
-    SSH_NODISCARD virtual size_t Size() const SSH_NOEXCEPT = 0;
+    EXT_NODISCARD virtual size_t Size() const EXT_NOEXCEPT = 0;
     // Get collection element by index
-    SSH_NODISCARD virtual std::shared_ptr<ISerializable> Get(const size_t& index) const = 0;
+    EXT_NODISCARD virtual std::shared_ptr<ISerializable> Get(const size_t& index) const = 0;
 };
 
 #pragma endregion SerializationInterfaces
@@ -221,12 +221,12 @@ struct SerializableCollectionImpl : ISerializableCollection
 
 public:
 // ISerializable
-    SSH_NODISCARD const wchar_t* GetName() const SSH_NOEXCEPT override { return m_name; }
+    EXT_NODISCARD const wchar_t* GetName() const EXT_NOEXCEPT override { return m_name; }
 // ISerializableCollection
-    SSH_NODISCARD size_t Size() const SSH_NOEXCEPT override { return m_fields.size(); }
-    SSH_NODISCARD std::shared_ptr<ISerializable> Get(const size_t& index) const override
+    EXT_NODISCARD size_t Size() const EXT_NOEXCEPT override { return m_fields.size(); }
+    EXT_NODISCARD std::shared_ptr<ISerializable> Get(const size_t& index) const override
     {
-        if (index >= m_fields.size()) { SSH_DUMP_IF(true); return nullptr; }
+        if (index >= m_fields.size()) { EXT_DUMP_IF(true); return nullptr; }
         return *std::next(m_fields.begin(), index);
     };
 protected:
@@ -249,7 +249,7 @@ protected:
     {
         std::wstring trimName = name;
         std::string_trim_all(trimName);
-        SSH_ASSERT(!trimName.empty());
+        EXT_ASSERT(!trimName.empty());
         if constexpr (impl::is_map_v<Field>)
             m_fields.emplace_back(std::make_shared<impl::SerializableMap<Type, Field>>(type, field, std::move(trimName)));
         else if constexpr (impl::is_set_v<Field>)
@@ -264,7 +264,7 @@ protected:
     {
         std::wstring trimName = name;
         std::string_trim_all(trimName);
-        SSH_ASSERT(!trimName.empty());
+        EXT_ASSERT(!trimName.empty());
         m_fields.emplace_back(std::make_shared<impl::SerializableCollection<Type, std::vector<Field>>>(type, field, std::move(trimName)));
     }
 
@@ -274,7 +274,7 @@ protected:
     {
         std::wstring trimName = name;
         std::string_trim_all(trimName);
-        SSH_ASSERT(!trimName.empty());
+        EXT_ASSERT(!trimName.empty());
         m_fields.emplace_back(std::make_shared<impl::SerializableCollection<Type, std::list<Field>>>(type, field, std::move(trimName)));
     }
 
@@ -292,7 +292,7 @@ protected:
 
 // ISerializable
 public:
-    SSH_NODISCARD const wchar_t* GetName() const SSH_NOEXCEPT override { return TypeName != nullptr ? TypeName : m_serializableClassName.c_str(); }
+    EXT_NODISCARD const wchar_t* GetName() const EXT_NOEXCEPT override { return TypeName != nullptr ? TypeName : m_serializableClassName.c_str(); }
 
 protected:
     const std::wstring m_serializableClassName = std::widen(typeid(Type).name());
@@ -356,10 +356,10 @@ struct SerializableBase : ISerializableType
 
 // ISerializable
 protected:
-    SSH_NODISCARD virtual const wchar_t* GetName() const SSH_NOEXCEPT override { return m_name.c_str(); }
+    EXT_NODISCARD virtual const wchar_t* GetName() const EXT_NOEXCEPT override { return m_name.c_str(); }
 
 protected:
-    SSH_NODISCARD Field& GetField() const { return (*m_typePointer).*m_field; }
+    EXT_NODISCARD Field& GetField() const { return (*m_typePointer).*m_field; }
 
 private:
     Type* m_typePointer;
@@ -375,9 +375,9 @@ struct SerializableType : ISerializableField
 
 protected:
 // ISerializable
-    SSH_NODISCARD const wchar_t* GetName() const SSH_NOEXCEPT override { return m_name.c_str(); }
+    EXT_NODISCARD const wchar_t* GetName() const EXT_NOEXCEPT override { return m_name.c_str(); }
 // ISerializableField
-    SSH_NODISCARD SerializableValue SerializeValue() const override { return serialize_value<Type>(*m_typePointer); }
+    EXT_NODISCARD SerializableValue SerializeValue() const override { return serialize_value<Type>(*m_typePointer); }
     void DeserializeValue(const SerializableValue& value) override { *m_typePointer = deserialize_value<Type>(value); }
 
 private:
@@ -390,8 +390,8 @@ struct SerializableOnlyValueHolder : ISerializableField
 {
     SerializableOnlyValueHolder(SerializableValue&& value, const wchar_t* name) : value(std::move(value)), m_name(name) {}
 
-    SSH_NODISCARD const wchar_t* GetName() const SSH_NOEXCEPT override { return m_name; }
-    SSH_NODISCARD SerializableValue SerializeValue() const override { return value; }
+    EXT_NODISCARD const wchar_t* GetName() const EXT_NOEXCEPT override { return m_name; }
+    EXT_NODISCARD SerializableValue SerializeValue() const override { return value; }
     void DeserializeValue(const SerializableValue& /*value*/) override { }
 
     SerializableValue value;
@@ -406,13 +406,13 @@ struct SerializableMap<Type, Map, std::enable_if_t<is_map_v<Map>>> : Serializabl
     SerializableMap(Type* typePointer, Map Type::* field, std::wstring&& name) : Base(typePointer, field, std::move(name)) {}
 protected:
 // ISerializable
-    void PrepareToDeserialize(_Inout_ std::shared_ptr<SerializableNode>& deserializableTree) SSH_THROWS() override
+    void PrepareToDeserialize(_Inout_ std::shared_ptr<SerializableNode>& deserializableTree) EXT_THROWS() override
     {
         Base::GetField().clear();
         for (const auto& child : deserializableTree->ChildNodes)
         {
             const auto& keyText = child->Name;
-            SSH_EXPECT(keyText == L"Map pair");
+            EXT_EXPECT(keyText == L"Map pair");
 
             decltype(Base::GetField().emplace(typename Map::value_type())) emplaceResult;
             if constexpr (is_serializable_v<typename Map::key_type>)
@@ -420,8 +420,8 @@ protected:
             else
             {
                 const auto& keyChild = child->GetChild(L"Key");
-                SSH_EXPECT(keyChild);
-                SSH_EXPECT(keyChild->Value.has_value());
+                EXT_EXPECT(keyChild);
+                EXT_EXPECT(keyChild->Value.has_value());
                 emplaceResult = Base::GetField().emplace(deserialize_value<typename Map::key_type>(*keyChild->Value), create_default_value<typename Map::mapped_type>());
             }
 
@@ -432,7 +432,7 @@ protected:
             {
                 if (!emplaceResult.second)
                 {
-                    SSH_ASSERT(false) << "Failed to emplace, Type changed?";
+                    EXT_ASSERT(false) << "Failed to emplace, Type changed?";
                     return;
                 }
                 insertedIter = std::move(emplaceResult.first);
@@ -441,19 +441,19 @@ protected:
             if constexpr (!is_serializable_v<typename Map::mapped_type>)
             {
                 const auto& valueChild = child->GetChild(L"Value");
-                SSH_EXPECT(valueChild);
-                SSH_EXPECT(valueChild->Value.has_value());
+                EXT_EXPECT(valueChild);
+                EXT_EXPECT(valueChild->Value.has_value());
                 insertedIter->second = deserialize_value<typename Map::mapped_type>(*valueChild->Value);
             }
         }
     }
 
 // ISerializableCollection
-    SSH_NODISCARD size_t Size() const SSH_NOEXCEPT override { return Base::GetField().size(); }
-    SSH_NODISCARD std::shared_ptr<ISerializable> Get(const size_t& index) const override
+    EXT_NODISCARD size_t Size() const EXT_NOEXCEPT override { return Base::GetField().size(); }
+    EXT_NODISCARD std::shared_ptr<ISerializable> Get(const size_t& index) const override
     {
         Map& container = Base::GetField();
-        if (index >= container.size()) { SSH_DUMP_IF(true); return nullptr; }
+        if (index >= container.size()) { EXT_DUMP_IF(true); return nullptr; }
 
         auto it = std::next(container.begin(), index);
 
@@ -480,7 +480,7 @@ struct SerializableSet<Type, Set, std::enable_if_t<is_set_v<Set>>> : Serializabl
     SerializableSet(Type* typePointer, Set Type::* field, std::wstring&& name) : Base(typePointer, field, std::move(name)) {}
 protected:
 // ISerializable
-    void PrepareToDeserialize(_Inout_ std::shared_ptr<SerializableNode>& deserializableTree) SSH_THROWS() override
+    void PrepareToDeserialize(_Inout_ std::shared_ptr<SerializableNode>& deserializableTree) EXT_THROWS() override
     {
         Base::GetField().clear();
         for (const auto& child : deserializableTree->ChildNodes)
@@ -489,18 +489,18 @@ protected:
                 Base::GetField().emplace(create_default_value<typename Set::value_type>());
             else
             {
-                SSH_EXPECT(child->Name == L"Value") << "Expect set node name Value";
-                SSH_EXPECT(child->Value.has_value()) << "Expect set node with value not empty";
+                EXT_EXPECT(child->Name == L"Value") << "Expect set node name Value";
+                EXT_EXPECT(child->Value.has_value()) << "Expect set node with value not empty";
                 Base::GetField().emplace(deserialize_value<typename Set::key_type>(*child->Value));
             }
         }
     }
 // ISerializableCollection
-    SSH_NODISCARD size_t Size() const SSH_NOEXCEPT override { return Base::GetField().size(); }
-    SSH_NODISCARD std::shared_ptr<ISerializable> Get(const size_t& index) const override
+    EXT_NODISCARD size_t Size() const EXT_NOEXCEPT override { return Base::GetField().size(); }
+    EXT_NODISCARD std::shared_ptr<ISerializable> Get(const size_t& index) const override
     {
         Set& container = Base::GetField();
-        if (index >= container.size()) { SSH_DUMP_IF(true); return nullptr; }
+        if (index >= container.size()) { EXT_DUMP_IF(true); return nullptr; }
 
         auto it = std::next(container.begin(), index);
         if constexpr (is_serializable_v<typename Set::value_type>)
@@ -519,7 +519,7 @@ struct SerializableCollection : SerializableBase<ISerializableCollection, Type, 
     SerializableCollection(Type* typePointer, ArrayFields Type::* field, std::wstring&& name) : Base(typePointer, field, std::move(name)) {}
 protected:
 // ISerializable
-    void PrepareToDeserialize(_Inout_ std::shared_ptr<SerializableNode>& deserializableTree) SSH_THROWS() override
+    void PrepareToDeserialize(_Inout_ std::shared_ptr<SerializableNode>& deserializableTree) EXT_THROWS() override
     {
         Base::GetField().resize(deserializableTree->ChildNodes.size());
         for (auto& field : Base::GetField())
@@ -528,11 +528,11 @@ protected:
         }
     }
 // ISerializableCollection
-    SSH_NODISCARD size_t Size() const SSH_NOEXCEPT override { return Base::GetField().size(); }
-    SSH_NODISCARD std::shared_ptr<ISerializable> Get(const size_t& index) const override
+    EXT_NODISCARD size_t Size() const EXT_NOEXCEPT override { return Base::GetField().size(); }
+    EXT_NODISCARD std::shared_ptr<ISerializable> Get(const size_t& index) const override
     {
         auto& list = Base::GetField();
-        if (index >= list.size()) { SSH_DUMP_IF(true); return nullptr; }
+        if (index >= list.size()) { EXT_DUMP_IF(true); return nullptr; }
 
         auto it = std::next(list.begin(), index);
         if constexpr (is_serializable_v<typename ArrayFields::value_type>)
@@ -551,7 +551,7 @@ struct SerializableField<Type, Field, std::enable_if_t<!is_serializable_v<Field>
 
 protected:
 // ISerializableField
-    SSH_NODISCARD SerializableValue SerializeValue() const override { return serialize_value<Field>(Base::GetField()); }
+    EXT_NODISCARD SerializableValue SerializeValue() const override { return serialize_value<Field>(Base::GetField()); }
     void DeserializeValue(const SerializableValue& value) override { Base::GetField() = deserialize_value<Field>(value); }
 };
 
@@ -564,9 +564,9 @@ struct SerializableField<Type, Field, std::enable_if_t<is_based_on<ISerializable
 
 protected:
 // ISerializable
-    SSH_NODISCARD const wchar_t* GetName() const SSH_NOEXCEPT override { return Base::GetField().GetName(); }
+    EXT_NODISCARD const wchar_t* GetName() const EXT_NOEXCEPT override { return Base::GetField().GetName(); }
 // ISerializableField
-    SSH_NODISCARD SerializableValue SerializeValue() const override { return Base::GetField().SerializeValue(); }
+    EXT_NODISCARD SerializableValue SerializeValue() const override { return Base::GetField().SerializeValue(); }
     void DeserializeValue(const SerializableValue& value) override { Base::GetField().DeserializeValue(value); }
 };
 
@@ -579,11 +579,11 @@ struct SerializableField<Type, Field, std::enable_if_t<is_based_on<ISerializable
 
 protected:
 // ISerializable
-    SSH_NODISCARD const wchar_t* GetName() const SSH_NOEXCEPT override { return Base::GetField().GetName(); }
-    void PrepareToDeserialize(_Inout_ std::shared_ptr<SerializableNode>& deserializableTree) SSH_THROWS() override { return Base::GetField().PrepareToDeserialize(deserializableTree); }
+    EXT_NODISCARD const wchar_t* GetName() const EXT_NOEXCEPT override { return Base::GetField().GetName(); }
+    void PrepareToDeserialize(_Inout_ std::shared_ptr<SerializableNode>& deserializableTree) EXT_THROWS() override { return Base::GetField().PrepareToDeserialize(deserializableTree); }
 // ISerializableCollection
-    SSH_NODISCARD size_t Size() const SSH_NOEXCEPT override { return Base::GetField().Size(); }
-    SSH_NODISCARD std::shared_ptr<ISerializable> Get(const size_t& index) const override { return Base::GetField().Get(index); }
+    EXT_NODISCARD size_t Size() const EXT_NOEXCEPT override { return Base::GetField().Size(); }
+    EXT_NODISCARD std::shared_ptr<ISerializable> Get(const size_t& index) const override { return Base::GetField().Get(index); }
 };
 
 // Proxy class for ISerializableField, used for base classes
@@ -593,11 +593,11 @@ struct SerializableFieldProxy : ISerializableField
 
 protected:
 // ISerializable
-    SSH_NODISCARD const wchar_t* GetName() const SSH_NOEXCEPT override { SSH_DUMP_IF(!m_field); return m_field ? m_field->GetName() : nullptr; }
-    void PrepareToDeserialize(_Inout_ std::shared_ptr<SerializableNode>& deserializableTree) SSH_THROWS() override { SSH_EXPECT(m_field); m_field->PrepareToDeserialize(deserializableTree); }
+    EXT_NODISCARD const wchar_t* GetName() const EXT_NOEXCEPT override { EXT_DUMP_IF(!m_field); return m_field ? m_field->GetName() : nullptr; }
+    void PrepareToDeserialize(_Inout_ std::shared_ptr<SerializableNode>& deserializableTree) EXT_THROWS() override { EXT_EXPECT(m_field); m_field->PrepareToDeserialize(deserializableTree); }
 // ISerializableField
-    SSH_NODISCARD SerializableValue SerializeValue() const override { SSH_EXPECT(m_field); return m_field->SerializeValue(); }
-    void DeserializeValue(const SerializableValue& value) override { SSH_EXPECT(m_field); m_field->DeserializeValue(value); }
+    EXT_NODISCARD SerializableValue SerializeValue() const override { EXT_EXPECT(m_field); return m_field->SerializeValue(); }
+    void DeserializeValue(const SerializableValue& value) override { EXT_EXPECT(m_field); m_field->DeserializeValue(value); }
 
     ISerializableField* m_field;
 };
@@ -609,11 +609,11 @@ struct SerializableCollectionProxy : ISerializableCollection
 
 protected:
 // ISerializable
-    SSH_NODISCARD const wchar_t* GetName() const SSH_NOEXCEPT override { SSH_DUMP_IF(!m_collection); return m_collection ? m_collection->GetName() : nullptr; }
-    void PrepareToDeserialize(_Inout_ std::shared_ptr<SerializableNode>& deserializableTree) SSH_THROWS() override { SSH_EXPECT(m_collection); m_collection->PrepareToDeserialize(deserializableTree); }
+    EXT_NODISCARD const wchar_t* GetName() const EXT_NOEXCEPT override { EXT_DUMP_IF(!m_collection); return m_collection ? m_collection->GetName() : nullptr; }
+    void PrepareToDeserialize(_Inout_ std::shared_ptr<SerializableNode>& deserializableTree) EXT_THROWS() override { EXT_EXPECT(m_collection); m_collection->PrepareToDeserialize(deserializableTree); }
 // ISerializableCollection
-    SSH_NODISCARD size_t Size() const SSH_NOEXCEPT override { SSH_DUMP_IF(!m_collection); return m_collection ? m_collection->Size() : 0; }
-    SSH_NODISCARD std::shared_ptr<ISerializable> Get(const size_t& index) const override { SSH_EXPECT(m_collection); return m_collection->Get(index); }
+    EXT_NODISCARD size_t Size() const EXT_NOEXCEPT override { EXT_DUMP_IF(!m_collection); return m_collection ? m_collection->Size() : 0; }
+    EXT_NODISCARD std::shared_ptr<ISerializable> Get(const size_t& index) const override { EXT_EXPECT(m_collection); return m_collection->Get(index); }
 
     ISerializableCollection* m_collection;
 };

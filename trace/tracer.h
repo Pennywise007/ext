@@ -28,7 +28,7 @@
 #include <ext/utils/string.h>
 
 // Internal macro to call scope tracer, allow adding extra text to stream after call
-#define SSH_TRACE_SCOPE_TYPE_EX(traceType, name)                                \
+#define EXT_TRACE_SCOPE_TYPE_EX(traceType, name)                                \
         ::ext::trace::ScopedCallTracer<traceType> name;                         \
         while (name.CanTrace() && !name)                                        \
             for (std::wostringstream stream; !name;)                            \
@@ -39,15 +39,15 @@
                         stream
 
 /* Trace text inside scope, will show text on begin and end of current scope */
-#define SSH_TRACE_SCOPE_TYPE(traceType) SSH_TRACE_SCOPE_TYPE_EX(traceType, SSH_PP_CAT(__scoped_tracer_, __COUNTER__))
+#define EXT_TRACE_SCOPE_TYPE(traceType) EXT_TRACE_SCOPE_TYPE_EX(traceType, EXT_PP_CAT(__scoped_tracer_, __COUNTER__))
 
 /* Trace text inside scope, will show text on begin and end of current scope
-Usage SSH_TRACE_SCOPE() << SSH_TRACE_FUNCTION << "my trace"; */
-#define SSH_TRACE_SCOPE()       SSH_TRACE_SCOPE_TYPE(::ext::ITracer::Type::eNormal)
+Usage EXT_TRACE_SCOPE() << EXT_TRACE_FUNCTION << "my trace"; */
+#define EXT_TRACE_SCOPE()       EXT_TRACE_SCOPE_TYPE(::ext::ITracer::Type::eNormal)
 
 /* Trace text in DBG inside scope, will show text on begin and end of current scope
-Usage SSH_TRACE_SCOPE_DBG() << SSH_TRACE_FUNCTION << "my trace";*/
-#define SSH_TRACE_SCOPE_DBG()   SSH_TRACE_SCOPE_TYPE(::ext::ITracer::Type::eDebug)
+Usage EXT_TRACE_SCOPE_DBG() << EXT_TRACE_FUNCTION << "my trace";*/
+#define EXT_TRACE_SCOPE_DBG()   EXT_TRACE_SCOPE_TYPE(::ext::ITracer::Type::eDebug)
 
 #include <ext/trace/workers.h>
 
@@ -67,7 +67,7 @@ inline StreamType& operator<<(StreamType& stream, const ::ext::ITracer::Type typ
         return stream << "INF";
     }
 
-    SSH_UNREACHABLE();
+    EXT_UNREACHABLE();
 }
 
 /*
@@ -94,7 +94,7 @@ private:
         if (type == ::ext::ITracer::Type::eDebug)
             return false;
 #else
-        SSH_UNUSED(type);
+        EXT_UNUSED(type);
 #endif // _DEBUG
 
         return m_enable;
@@ -103,7 +103,7 @@ private:
     void Trace(const ::ext::ITracer::Type type, std::string text) noexcept override
     try
     {
-        SSH_DUMP_IF(text.empty()) << SSH_TRACE_FUNCTION << "empty trace text";
+        EXT_DUMP_IF(text.empty()) << EXT_TRACE_FUNCTION << "empty trace text";
 
         if (!CanTrace(type))
             return;
@@ -135,7 +135,7 @@ private:
     }
     catch (const std::exception&)
     {
-        ext::ManageException(SSH_TRACE_FUNCTION);
+        ext::ManageException(EXT_TRACE_FUNCTION);
     }
 
     void EnableTraces(const bool enable) noexcept override
@@ -164,7 +164,7 @@ private:
     }
     catch (const std::exception&)
     {
-        ext::ManageException(SSH_TRACE_FUNCTION);
+        ext::ManageException(EXT_TRACE_FUNCTION);
     }
 
 private:
@@ -184,13 +184,13 @@ struct ScopedCallTracer final : ::ext::NonCopyable
     ~ScopedCallTracer()
     {
         if (m_text.has_value())
-            SSH_TRACE_TYPE(traceType) << m_text.value() << " end";
+            EXT_TRACE_TYPE(traceType) << m_text.value() << " end";
     }
 
     void SetData(std::wstring&& text)
     {
         m_text = std::move(text);
-        SSH_TRACE_TYPE(traceType) << m_text.value() << " begin";
+        EXT_TRACE_TYPE(traceType) << m_text.value() << " begin";
     }
 
     bool CanTrace() const noexcept { return m_tracer->CanTrace(traceType); }

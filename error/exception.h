@@ -21,19 +21,19 @@ namespace ext {
 class source_location
 {
 public:
-    constexpr source_location() SSH_NOEXCEPT = default;
+    constexpr source_location() EXT_NOEXCEPT = default;
 
-    constexpr source_location(const char* file, int line) SSH_NOEXCEPT
+    constexpr source_location(const char* file, int line) EXT_NOEXCEPT
         : m_fileName(file)
         , m_fileLine(line)
     {}
 
-    std::string to_string() const SSH_NOEXCEPT
+    std::string to_string() const EXT_NOEXCEPT
     {
         return std::string_sprintf("\'%s\'(%d)", m_fileName, m_fileLine);
     }
 
-    constexpr bool exist() const SSH_NOEXCEPT
+    constexpr bool exist() const EXT_NOEXCEPT
     {
         return m_fileName != nullptr;
     }
@@ -43,7 +43,7 @@ private:
     const int m_fileLine = 0;
 };
 
-#define SSH_SRC_LOCATION ext::source_location(__FILE__, __LINE__)
+#define EXT_SRC_LOCATION ext::source_location(__FILE__, __LINE__)
 
 struct exception : std::exception
 {
@@ -53,7 +53,7 @@ struct exception : std::exception
         , m_exceptionType(exceptionType)
         , m_desription(description)
     {
-        SSH_TRACE_ERR() << to_string().c_str();
+        EXT_TRACE_ERR() << to_string().c_str();
     }
 
     explicit exception(const char* description, const char* exceptionType = "Exception") noexcept
@@ -61,16 +61,16 @@ struct exception : std::exception
         , m_exceptionType(exceptionType)
         , m_desription(description)
     {
-        SSH_TRACE_ERR() << to_string().c_str();
+        EXT_TRACE_ERR() << to_string().c_str();
     }
     explicit exception(const wchar_t* description, const char* exceptionType = "Exception") noexcept
         : m_exceptionType(exceptionType)
         , m_desription(std::narrow(description).c_str())
     {
-        SSH_TRACE_ERR() << to_string().c_str();
+        EXT_TRACE_ERR() << to_string().c_str();
     }
 
-    SSH_NODISCARD std::string to_string() const
+    EXT_NODISCARD std::string to_string() const
     {
         auto externalText = external_text();
         if (!externalText.empty())
@@ -83,7 +83,7 @@ struct exception : std::exception
         return text;
     }
 
-    SSH_NODISCARD virtual std::string external_text() const { return {}; }
+    EXT_NODISCARD virtual std::string external_text() const { return {}; }
     virtual const char* what() const override { return m_desription.c_str(); }
 
     template <class T>
@@ -213,7 +213,7 @@ inline auto /*std::string*/ManageExceptionText(const CharType* prefixText, bool 
     print_exception_stack(std::nullopt);
 
     const auto string = exceptionStream.str();
-    SSH_TRACE_ERR() << string;
+    EXT_TRACE_ERR() << string;
     return string;
 }
 
@@ -221,16 +221,16 @@ inline auto /*std::string*/ManageExceptionText(const CharType* prefixText, bool 
 * Show trace error and get text from exception
 *
 * Example:
-* ManageException(SSH_TRACE_FUNCTION));
+* ManageException(EXT_TRACE_FUNCTION));
 */
 inline void ManageException(const char* prefixText) noexcept
 {
-    SSH_UNUSED(ManageExceptionText(prefixText, false));
+    EXT_UNUSED(ManageExceptionText(prefixText, false));
 }
 
 inline void ManageException(const wchar_t* prefixText) noexcept
 {
-    SSH_UNUSED(ManageExceptionText(prefixText, false));
+    EXT_UNUSED(ManageExceptionText(prefixText, false));
 }
 
 } // namespace ext

@@ -23,14 +23,14 @@ public:
 
 protected:
 // ISerializer
-    SSH_NODISCARD bool Serialize(const std::shared_ptr<SerializableNode>& serializationTreeRoot) SSH_THROWS() override;
+    EXT_NODISCARD bool Serialize(const std::shared_ptr<SerializableNode>& serializationTreeRoot) EXT_THROWS() override;
 // INodeSerializer
     void WriteCollectionStart(const std::wstring& name, const size_t& collectionLevel) override;
     void WriteCollectionEnd(const std::wstring& name, const size_t& collectionLevel, bool nextFieldExist) override;
     void WriteField(const std::wstring& name, const SerializableValue& value, const size_t& fieldLevel, bool nextFieldExist) override;
 
 // IDeserializer
-    SSH_NODISCARD bool Deserialize(_Out_ std::shared_ptr<SerializableNode>& deserializationTreeRoot) SSH_THROWS() override;
+    EXT_NODISCARD bool Deserialize(_Out_ std::shared_ptr<SerializableNode>& deserializationTreeRoot) EXT_THROWS() override;
 
 public:
     // Установить значение в ноду
@@ -55,13 +55,13 @@ private:
     std::optional<pugi::xml_node> m_currentSerializationNode;
 };
 
-inline bool SerializerXML::Serialize(const std::shared_ptr<SerializableNode>& serializationTreeRoot) SSH_THROWS()
+inline bool SerializerXML::Serialize(const std::shared_ptr<SerializableNode>& serializationTreeRoot) EXT_THROWS()
 {
     pugi::xml_document document;
     m_currentSerializationNode = document;
-    SSH_SCOPE_ON_EXIT({ m_currentSerializationNode.reset(); });
+    EXT_SCOPE_ON_EXIT({ m_currentSerializationNode.reset(); });
 
-    SSH_REQUIRE(serializationTreeRoot) << "Root node uninitialized!";
+    EXT_REQUIRE(serializationTreeRoot) << "Root node uninitialized!";
     TreeSerializer::SerializeTree(serializationTreeRoot, this);
 
     return document.save_file(m_filePath.c_str(), PUGIXML_TEXT("    "), pugi::format_default, pugi::encoding_utf8);;
@@ -69,41 +69,41 @@ inline bool SerializerXML::Serialize(const std::shared_ptr<SerializableNode>& se
 
 inline void SerializerXML::WriteCollectionStart(const std::wstring& name, const size_t& /*collectionLevel*/)
 {
-    SSH_REQUIRE(m_currentSerializationNode) << "No current node!";
+    EXT_REQUIRE(m_currentSerializationNode) << "No current node!";
     m_currentSerializationNode = m_currentSerializationNode->append_child(kNodeCollection);
     SetAttributeValue(*m_currentSerializationNode, kAttributeName, name.c_str());;
 }
 
 inline void SerializerXML::WriteCollectionEnd(const std::wstring& name, const size_t& /*collectionLevel*/, bool /*nextFieldExist*/)
 {
-    SSH_REQUIRE(m_currentSerializationNode) << "No current node!";
+    EXT_REQUIRE(m_currentSerializationNode) << "No current node!";
 
-    SSH_ASSERT(_wcsicmp(m_currentSerializationNode->name(), kNodeCollection) == 0);
+    EXT_ASSERT(_wcsicmp(m_currentSerializationNode->name(), kNodeCollection) == 0);
     std::wstring currentName;
-    SSH_ASSERT(GetAttributeValue(*m_currentSerializationNode, kAttributeName, currentName));
-    SSH_ASSERT(currentName == name);
-    SSH_UNUSED(name);
+    EXT_ASSERT(GetAttributeValue(*m_currentSerializationNode, kAttributeName, currentName));
+    EXT_ASSERT(currentName == name);
+    EXT_UNUSED(name);
 
     m_currentSerializationNode = m_currentSerializationNode->parent();
 }
 
 inline void SerializerXML::WriteField(const std::wstring& name, const SerializableValue& value, const size_t& /*fieldLevel*/, bool /*nextFieldExist*/)
 {
-    SSH_REQUIRE(m_currentSerializationNode) << "No current node!";
+    EXT_REQUIRE(m_currentSerializationNode) << "No current node!";
     auto fieldNode = m_currentSerializationNode->append_child(kNodeField);
     SetAttributeValue(fieldNode, kAttributeName, name.c_str());;
     SetAttributeValue(fieldNode, kAttributeValue, value.c_str());;
     SetAttributeValue(fieldNode, kAttributeType, std::to_wstring((int)value.Type).c_str());;
 }
 
-inline bool SerializerXML::Deserialize(_Out_ std::shared_ptr<SerializableNode>& deserializationTreeRoot) SSH_THROWS()
+inline bool SerializerXML::Deserialize(_Out_ std::shared_ptr<SerializableNode>& deserializationTreeRoot) EXT_THROWS()
 {
     pugi::xml_document hFile;
     const pugi::xml_parse_result parseRes = hFile.load_file(m_filePath.c_str(), pugi::parse_default, pugi::encoding_utf8);
-    SSH_CHECK(parseRes && hFile) << parseRes.description();
+    EXT_CHECK(parseRes && hFile) << parseRes.description();
 
     auto currentNode = hFile.document_element();
-    SSH_EXPECT(currentNode) << "Can`t find data inside document";
+    EXT_EXPECT(currentNode) << "Can`t find data inside document";
 
     deserializationTreeRoot = std::make_shared<SerializableNode>(currentNode.name());
     std::shared_ptr<SerializableNode> currentTreeNode = deserializationTreeRoot;
@@ -131,23 +131,23 @@ inline bool SerializerXML::Deserialize(_Out_ std::shared_ptr<SerializableNode>& 
 
     while (currentNode)
     {
-        SSH_EXPECT(GetAttributeValue(currentNode, kAttributeName, currentTreeNode->Name)) << "Can`t find name of node";
+        EXT_EXPECT(GetAttributeValue(currentNode, kAttributeName, currentTreeNode->Name)) << "Can`t find name of node";
 
         std::wstring value;
         if (GetAttributeValue(currentNode, kAttributeValue, value))
         {
-            SSH_ASSERT(_wcsicmp(currentNode.name(), kNodeField) == 0);
+            EXT_ASSERT(_wcsicmp(currentNode.name(), kNodeField) == 0);
             currentTreeNode->Value = std::move(value);
             if (GetAttributeValue(currentNode, kAttributeType, value))
                 currentTreeNode->Value->Type = static_cast<SerializableValue::ValueType>(_wtoi(value.c_str()));
             else
-                SSH_ASSERT(false);
+                EXT_ASSERT(false);
 
             goToNextNode();
         }
         else
         {
-            SSH_ASSERT(_wcsicmp(currentNode.name(), kNodeCollection) == 0);
+            EXT_ASSERT(_wcsicmp(currentNode.name(), kNodeCollection) == 0);
             if (const auto firstChild = currentNode.first_child())
             {
                 currentNode = firstChild;

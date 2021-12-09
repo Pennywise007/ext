@@ -34,29 +34,29 @@ class SerializerText : public ISerializer, public INodeSerializer, public IDeser
 {
 public:
     explicit SerializerText(std::wstring* outputText) : m_outputText(outputText) {}
-    explicit SerializerText(const std::wstring& inputText) SSH_THROWS();
+    explicit SerializerText(const std::wstring& inputText) EXT_THROWS();
 
 protected:
 // ISerializer
-    SSH_NODISCARD bool Serialize(const std::shared_ptr<SerializableNode>& serializationTreeRoot) SSH_THROWS() override;
+    EXT_NODISCARD bool Serialize(const std::shared_ptr<SerializableNode>& serializationTreeRoot) EXT_THROWS() override;
 // INodeSerializer
     void WriteCollectionStart(const std::wstring& name, const size_t& collectionLevel) override;
     void WriteCollectionEnd(const std::wstring& name, const size_t& collectionLevel, bool nextFieldExist) override;
     void WriteField(const std::wstring& name, const SerializableValue& value, const size_t& fieldLevel, bool nextFieldExist) override;
 
 // IDeserializer
-    SSH_NODISCARD bool Deserialize(_Out_ std::shared_ptr<SerializableNode>& deserializationTreeRoot) SSH_THROWS() override;
+    EXT_NODISCARD bool Deserialize(_Out_ std::shared_ptr<SerializableNode>& deserializationTreeRoot) EXT_THROWS() override;
 
 private:
     static std::wstring GenerateIndent(const size_t& indentLevel);
     static bool TrimLeft(std::wstring_view& string);
     static bool TrimRight(std::wstring_view& string);
     // Find open and close braces position by current level
-    SSH_NODISCARD static bool FindBracesPositions(const std::wstring_view& string, std::pair<size_t, size_t>& bracesPositions);
+    EXT_NODISCARD static bool FindBracesPositions(const std::wstring_view& string, std::pair<size_t, size_t>& bracesPositions);
     static std::wstring GetFieldName(std::wstring_view& text);
     static void GetFieldValue(std::wstring_view& text, std::optional<SerializableValue>& value);
     // Fill node info for current braces level
-    void GetFieldInfoOnCurrentBracesLevel(std::wstring_view& textInsideBraces, const std::shared_ptr<SerializableNode>& currentNode) const SSH_THROWS();
+    void GetFieldInfoOnCurrentBracesLevel(std::wstring_view& textInsideBraces, const std::shared_ptr<SerializableNode>& currentNode) const EXT_THROWS();
 
 private:
     std::shared_ptr<SerializableNode> m_rootNode;
@@ -64,30 +64,30 @@ private:
     std::wstring* m_outputText = nullptr;
 };
 
-inline SerializerText::SerializerText(const std::wstring& inputText) SSH_THROWS()
+inline SerializerText::SerializerText(const std::wstring& inputText) EXT_THROWS()
 {
     std::wstring_view text(inputText);
-    SSH_EXPECT(TrimLeft(text)) << "Input text empty " << inputText;
+    EXT_EXPECT(TrimLeft(text)) << "Input text empty " << inputText;
     m_rootNode = std::make_shared<SerializableNode>(GetFieldName(text));
     if (text.front() == L'{')
         GetFieldInfoOnCurrentBracesLevel(text, m_rootNode);
     else
         GetFieldValue(text, m_rootNode->Value);
 
-    SSH_ASSERT(text.empty());
+    EXT_ASSERT(text.empty());
 }
 
-SSH_NODISCARD inline bool SerializerText::Serialize(const std::shared_ptr<SerializableNode>& serializationTreeRoot) SSH_THROWS()
+EXT_NODISCARD inline bool SerializerText::Serialize(const std::shared_ptr<SerializableNode>& serializationTreeRoot) EXT_THROWS()
 {
-    SSH_REQUIRE(serializationTreeRoot && m_outputText) << "Root node uninitialized!";
+    EXT_REQUIRE(serializationTreeRoot && m_outputText) << "Root node uninitialized!";
     m_outputText->clear();
     TreeSerializer::SerializeTree(serializationTreeRoot, this);
     return true;
 }
 
-SSH_NODISCARD inline bool SerializerText::Deserialize(_Out_ std::shared_ptr<SerializableNode>& deserializationTreeRoot) SSH_THROWS()
+EXT_NODISCARD inline bool SerializerText::Deserialize(_Out_ std::shared_ptr<SerializableNode>& deserializationTreeRoot) EXT_THROWS()
 {
-    SSH_REQUIRE(m_rootNode) << "Root node uninitialized!";
+    EXT_REQUIRE(m_rootNode) << "Root node uninitialized!";
     deserializationTreeRoot = m_rootNode;
     return true;
 }
@@ -142,7 +142,7 @@ inline bool SerializerText::TrimRight(std::wstring_view& string)
     return !string.empty();
 }
 
-SSH_NODISCARD inline bool SerializerText::FindBracesPositions(const std::wstring_view& string, std::pair<size_t, size_t>& bracesPositions)
+EXT_NODISCARD inline bool SerializerText::FindBracesPositions(const std::wstring_view& string, std::pair<size_t, size_t>& bracesPositions)
 {
     bool startBraceFound = false;
 
@@ -171,14 +171,14 @@ SSH_NODISCARD inline bool SerializerText::FindBracesPositions(const std::wstring
         }
     }
 
-    SSH_EXPECT(!startBraceFound) << "Can`t find closing braces in text: " << string.substr(bracesPositions.first).data();
+    EXT_EXPECT(!startBraceFound) << "Can`t find closing braces in text: " << string.substr(bracesPositions.first).data();
     return false;
 }
 
-inline void SerializerText::GetFieldInfoOnCurrentBracesLevel(std::wstring_view& textInsideBraces, const std::shared_ptr<SerializableNode>& currentNode) const SSH_THROWS()
+inline void SerializerText::GetFieldInfoOnCurrentBracesLevel(std::wstring_view& textInsideBraces, const std::shared_ptr<SerializableNode>& currentNode) const EXT_THROWS()
 {
-    SSH_CHECK(TrimLeft(textInsideBraces) && TrimRight(textInsideBraces)) << "Text empty";
-    SSH_CHECK(textInsideBraces.front() == L'{' && textInsideBraces.back() == L'}') << "Text must be in braces";
+    EXT_CHECK(TrimLeft(textInsideBraces) && TrimRight(textInsideBraces)) << "Text empty";
+    EXT_CHECK(textInsideBraces.front() == L'{' && textInsideBraces.back() == L'}') << "Text must be in braces";
 
     // remove braces
     textInsideBraces = textInsideBraces.substr(1, textInsideBraces.size() - 2);
@@ -194,12 +194,12 @@ inline void SerializerText::GetFieldInfoOnCurrentBracesLevel(std::wstring_view& 
         {
             // start of collection like : "schedule" : { "days": 1, "every" : 0 }
             std::pair<size_t, size_t> bracesPositions;
-            SSH_CHECK(FindBracesPositions(textInsideBraces, bracesPositions)) << "Failed to find braces end" << textInsideBraces;
-            SSH_ASSERT(bracesPositions.first == 0) << "We already have found start brace position";
+            EXT_CHECK(FindBracesPositions(textInsideBraces, bracesPositions)) << "Failed to find braces end" << textInsideBraces;
+            EXT_ASSERT(bracesPositions.first == 0) << "We already have found start brace position";
 
             std::wstring_view text = textInsideBraces.substr(0, bracesPositions.second + 1);
             GetFieldInfoOnCurrentBracesLevel(text, node);
-            SSH_ASSERT(text.empty());
+            EXT_ASSERT(text.empty());
 
             textInsideBraces = textInsideBraces.substr(bracesPositions.second + 1);
             if (!TrimLeft(textInsideBraces))
@@ -207,7 +207,7 @@ inline void SerializerText::GetFieldInfoOnCurrentBracesLevel(std::wstring_view& 
             if (textInsideBraces.front() == ',') // expect next field
             {
                 textInsideBraces = textInsideBraces.substr(1);
-                SSH_EXPECT(TrimLeft(textInsideBraces)) << "After \',\' text is empty";
+                EXT_EXPECT(TrimLeft(textInsideBraces)) << "After \',\' text is empty";
             }
         }
         else
@@ -218,7 +218,7 @@ inline void SerializerText::GetFieldInfoOnCurrentBracesLevel(std::wstring_view& 
 
 inline std::wstring SerializerText::GetFieldName(std::wstring_view& text)
 {
-    SSH_EXPECT(text.front() == L'"') << "Expect start of field name in quotes: " << text;
+    EXT_EXPECT(text.front() == L'"') << "Expect start of field name in quotes: " << text;
     size_t fieldNameSize = 0;
     for (size_t quotesIndex = 1, length = text.size(); quotesIndex < length; ++quotesIndex)
     {
@@ -228,23 +228,23 @@ inline std::wstring SerializerText::GetFieldName(std::wstring_view& text)
             break;
         }
     }
-    SSH_EXPECT(fieldNameSize > 0) << "Can`t find field name ending quote: " << text;
+    EXT_EXPECT(fieldNameSize > 0) << "Can`t find field name ending quote: " << text;
 
     std::wstring result = { text.data() + 1, fieldNameSize };
 
     text = text.substr(fieldNameSize + 2);
-    SSH_CHECK(TrimLeft(text)) << "Failed to find field value";
+    EXT_CHECK(TrimLeft(text)) << "Failed to find field value";
 
-    SSH_EXPECT(text.front() == L':') << "Expect field value after \':\' symbol" << text;
+    EXT_EXPECT(text.front() == L':') << "Expect field value after \':\' symbol" << text;
     text = text.substr(1);
-    SSH_CHECK(TrimLeft(text)) << "Value after field name not found";
+    EXT_CHECK(TrimLeft(text)) << "Value after field name not found";
 
     return result;
 }
 
 inline void SerializerText::GetFieldValue(std::wstring_view& text, std::optional<SerializableValue>& value)
 {
-    SSH_EXPECT(!value.has_value()) << "Value already found";
+    EXT_EXPECT(!value.has_value()) << "Value already found";
 
     // field value like: "extScheduleFlags": 0,
     for (size_t valueIndex = 0, length = text.size(); valueIndex < length; ++valueIndex)
@@ -252,7 +252,7 @@ inline void SerializerText::GetFieldValue(std::wstring_view& text, std::optional
         if (text.at(valueIndex) == L',')
         {
             auto fieldValue = text.substr(0, valueIndex);
-            SSH_EXPECT(TrimRight(fieldValue)) << "Field value empty " << text;
+            EXT_EXPECT(TrimRight(fieldValue)) << "Field value empty " << text;
             value.emplace(fieldValue);
             text = text.substr(valueIndex + 1);
             TrimLeft(text);
@@ -262,7 +262,7 @@ inline void SerializerText::GetFieldValue(std::wstring_view& text, std::optional
     }
     if (!value.has_value())
     {
-        SSH_EXPECT(TrimRight(text)) << "Field value empty";
+        EXT_EXPECT(TrimRight(text)) << "Field value empty";
         value.emplace(text);
         std::wstring_view().swap(text);
     }

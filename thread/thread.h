@@ -39,15 +39,15 @@ namespace this_thread {
 using namespace std::this_thread;
 
 // Interruption point for ext::thread function, if thread interrupted - throws a ext::thread::thread_interrupted
-inline void interruption_point() SSH_THROWS(ext::thread::thread_interrupted());
+inline void interruption_point() EXT_THROWS(ext::thread::thread_interrupted());
 // Check if current ext:thread has been interrupted
-SSH_NODISCARD inline bool interruption_requested() SSH_NOEXCEPT;
+EXT_NODISCARD inline bool interruption_requested() EXT_NOEXCEPT;
 // Sleep until time period, if the thread is interrupted, throws an exception
 template <class _Clock, class _Duration>
-void interruptible_sleep_until(const std::chrono::time_point<_Clock, _Duration>& absoluteTime) SSH_THROWS(ext::thread::thread_interrupted());
+void interruptible_sleep_until(const std::chrono::time_point<_Clock, _Duration>& absoluteTime) EXT_THROWS(ext::thread::thread_interrupted());
 // Sleep for time duration, if the thread is interrupted, throws an exception
 template <class _Rep, class _Period>
-void interruptible_sleep_for(const std::chrono::duration<_Rep, _Period>& timeDuration) SSH_THROWS(ext::thread::thread_interrupted());
+void interruptible_sleep_for(const std::chrono::duration<_Rep, _Period>& timeDuration) EXT_THROWS(ext::thread::thread_interrupted());
 
 } // namespace this_thread
 
@@ -58,27 +58,27 @@ class thread : public std::thread
 
 public:
     // constructors from std::thread
-    thread() SSH_NOEXCEPT = default;
-    thread(base&& _Other) SSH_NOEXCEPT
+    thread() EXT_NOEXCEPT = default;
+    thread(base&& _Other) EXT_NOEXCEPT
         : base(std::forward<base>(_Other))
     {
         if (joinable())
             ext::get_service<InterruptedThreads>().OnStartThread(get_id());
     }
-    thread(thread&& _Other) SSH_NOEXCEPT
+    thread(thread&& _Other) EXT_NOEXCEPT
         : base(std::forward<base>(_Other))
         , m_interrupted(static_cast<bool>(_Other.m_interrupted))
     {}
 
     template<class _Fn, class... _Args>
-    explicit thread(_Fn&& _Fx, _Args&&... _Ax) SSH_NOEXCEPT
+    explicit thread(_Fn&& _Fx, _Args&&... _Ax) EXT_NOEXCEPT
         : base(std::forward<_Fn>(_Fx), std::forward<_Args>(_Ax)...)
     {
         if (joinable())
             ext::get_service<InterruptedThreads>().OnStartThread(get_id());
     }
 
-    thread& operator=(base&& _Other) SSH_NOEXCEPT
+    thread& operator=(base&& _Other) EXT_NOEXCEPT
     {
         if (joinable())
             ext::get_service<InterruptedThreads>().DetachThread(*this);
@@ -89,7 +89,7 @@ public:
         return *this;
     }
 
-    thread& operator=(thread&& _Other) SSH_NOEXCEPT
+    thread& operator=(thread&& _Other) EXT_NOEXCEPT
     {
         if (joinable())
             ext::get_service<InterruptedThreads>().DetachThread(*this);
@@ -98,18 +98,18 @@ public:
         return *this;
     }
 
-    void swap(base& _Other)   SSH_NOEXCEPT { operator=(std::move(_Other)); }
-    void swap(thread& _Other) SSH_NOEXCEPT { operator=(std::move(_Other)); }
+    void swap(base& _Other)   EXT_NOEXCEPT { operator=(std::move(_Other)); }
+    void swap(thread& _Other) EXT_NOEXCEPT { operator=(std::move(_Other)); }
 
     // Run function for execution in current thread
     template<class _Fn, class... _Args>
-    void run(_Fn&& _Fx, _Args&&... _Ax) SSH_NOEXCEPT
+    void run(_Fn&& _Fx, _Args&&... _Ax) EXT_NOEXCEPT
     {
         base temp(std::forward<_Fn>(_Fx), std::forward<_Args>(_Ax)...);
         swap(temp);
     }
 
-    ~thread() SSH_NOEXCEPT
+    ~thread() EXT_NOEXCEPT
     {
         if (joinable())
             ext::get_service<InterruptedThreads>().OnDestroyThread(get_id());
@@ -118,7 +118,7 @@ public:
     void detach()
     {
         ext::get_service<InterruptedThreads>().DetachThread(*this);
-        SSH_ASSERT(!joinable()) << SSH_TRACE_FUNCTION "Service must detach us";
+        EXT_ASSERT(!joinable()) << EXT_TRACE_FUNCTION "Service must detach us";
     }
 
     void join()
@@ -133,26 +133,26 @@ public:
     class thread_interrupted {};
 
     // interrupt current thread function
-    void interrupt() SSH_THROWS()
+    void interrupt() EXT_THROWS()
     {
         if (m_interrupted)
             return;
         m_interrupted = true;
-        SSH_EXPECT(joinable()) << SSH_TRACE_FUNCTION "No function call for execution in this thread";
+        EXT_EXPECT(joinable()) << EXT_TRACE_FUNCTION "No function call for execution in this thread";
         ext::get_service<InterruptedThreads>().Interrupt(get_id());
     }
 
     // check if thread has been interrupted
-    SSH_NODISCARD bool interrupted() const SSH_THROWS()
+    EXT_NODISCARD bool interrupted() const EXT_THROWS()
     {
         return m_interrupted;
     }
 
     // interrupt thread and wait for join
-    void interrupt_and_join() SSH_THROWS() { interrupt(); if (joinable()) base::join(); }
+    void interrupt_and_join() EXT_THROWS() { interrupt(); if (joinable()) base::join(); }
 
     // check if thread function is executing
-    SSH_NODISCARD bool thread_works() SSH_NOEXCEPT
+    EXT_NODISCARD bool thread_works() EXT_NOEXCEPT
     {
         if (joinable())
         {
@@ -165,10 +165,10 @@ public:
 
     // try join until time point
     template <class Clock, class Duration>
-    bool try_join_until(const std::chrono::time_point<Clock, Duration>& time) SSH_THROWS()
+    bool try_join_until(const std::chrono::time_point<Clock, Duration>& time) EXT_THROWS()
     {
-        SSH_ASSERT(time < Clock::now());
-        SSH_EXPECT(std::this_thread::get_id() != get_id()) << "Trying joining itself, deadlock occur!";
+        EXT_ASSERT(time < Clock::now());
+        EXT_EXPECT(std::this_thread::get_id() != get_id()) << "Trying joining itself, deadlock occur!";
 
         while (Clock::now() < time)
         {
@@ -186,7 +186,7 @@ public:
 
     // try join for duration
     template<class Rep, class Period>
-    bool try_join_for(const std::chrono::duration<Rep, Period>& duration) SSH_THROWS()
+    bool try_join_for(const std::chrono::duration<Rep, Period>& duration) EXT_THROWS()
     {
         return try_join_until(std::_To_absolute_time(duration));
     }
@@ -216,35 +216,35 @@ private:
         std::map<std::thread::id, ext::thread> m_detachedInterruptedThreads;
 
     public:
-        void OnStartThread(const std::thread::id& id) SSH_NOEXCEPT
+        void OnStartThread(const std::thread::id& id) EXT_NOEXCEPT
         {
-            SSH_ASSERT(id != kInvalidThreadId);
+            EXT_ASSERT(id != kInvalidThreadId);
             {
                 std::lock_guard lock(m_workingThreadsMutex);
                 auto emplaceRes = m_workingThreadsInterruptionEvents.emplace(id, std::make_shared<ext::Event>());
-                SSH_ASSERT(emplaceRes.second) << "Double start of thread with same id " << id;
+                EXT_ASSERT(emplaceRes.second) << "Double start of thread with same id " << id;
                 emplaceRes.first->second->Create(true);
             }
             CleanupDetachedThreads();
         }
 
-        void OnDestroyThread(const std::thread::id& id) SSH_NOEXCEPT
+        void OnDestroyThread(const std::thread::id& id) EXT_NOEXCEPT
         {
-            SSH_ASSERT(id != kInvalidThreadId);
+            EXT_ASSERT(id != kInvalidThreadId);
             {
                 std::lock_guard lock(m_workingThreadsMutex);
-                SSH_ASSERT(m_workingThreadsInterruptionEvents.find(id) != m_workingThreadsInterruptionEvents.end());
+                EXT_ASSERT(m_workingThreadsInterruptionEvents.find(id) != m_workingThreadsInterruptionEvents.end());
                 m_workingThreadsInterruptionEvents.erase(id);
             }
             CleanupDetachedThreads();
         }
 
-        void OnThreadJoined(const std::thread::id& id) SSH_NOEXCEPT
+        void OnThreadJoined(const std::thread::id& id) EXT_NOEXCEPT
         {
-            SSH_ASSERT(id != kInvalidThreadId);
+            EXT_ASSERT(id != kInvalidThreadId);
             {
                 std::lock_guard lock(m_workingThreadsMutex);
-                SSH_ASSERT(m_workingThreadsInterruptionEvents.find(id) != m_workingThreadsInterruptionEvents.end());
+                EXT_ASSERT(m_workingThreadsInterruptionEvents.find(id) != m_workingThreadsInterruptionEvents.end());
                 m_workingThreadsInterruptionEvents.erase(id);
             }
             CleanupDetachedThreads();
@@ -256,29 +256,29 @@ private:
             {
                 {
                     std::lock_guard interruptMutex(m_workingThreadsMutex);
-                    SSH_ASSERT(m_workingThreadsInterruptionEvents.find(thread.get_id()) != m_workingThreadsInterruptionEvents.end());
+                    EXT_ASSERT(m_workingThreadsInterruptionEvents.find(thread.get_id()) != m_workingThreadsInterruptionEvents.end());
                     m_workingThreadsInterruptionEvents.erase(thread.get_id());
                 }
 
                 if (thread.interrupted() && thread.thread_works())
                 {
                     std::lock_guard detachedMutex(m_detachedInterruptedThreadsMutex);
-                    SSH_ASSERT(m_detachedInterruptedThreads.find(thread.get_id()) == m_detachedInterruptedThreads.end());
+                    EXT_ASSERT(m_detachedInterruptedThreads.find(thread.get_id()) == m_detachedInterruptedThreads.end());
                     m_detachedInterruptedThreads.emplace(thread.get_id(), std::move(thread));
                     CleanupDetachedThreads();
                     return;
                 }
             }
             else
-                SSH_ASSERT(false);
+                EXT_ASSERT(false);
 
             thread.detach();
             CleanupDetachedThreads();
         }
 
-        SSH_NODISCARD bool IsInterrupted(const std::thread::id& id) SSH_NOEXCEPT
+        EXT_NODISCARD bool IsInterrupted(const std::thread::id& id) EXT_NOEXCEPT
         {
-            SSH_ASSERT(id != kInvalidThreadId);
+            EXT_ASSERT(id != kInvalidThreadId);
             {
                 std::lock_guard lock(m_workingThreadsMutex);
                 if (const auto it = m_workingThreadsInterruptionEvents.find(id); it != m_workingThreadsInterruptionEvents.end())
@@ -287,9 +287,9 @@ private:
             return m_detachedInterruptedThreads.find(id) != m_detachedInterruptedThreads.end();
         }
 
-        SSH_NODISCARD std::shared_ptr<ext::Event> GetInterruptionEvent(const std::thread::id& id) SSH_NOEXCEPT
+        EXT_NODISCARD std::shared_ptr<ext::Event> GetInterruptionEvent(const std::thread::id& id) EXT_NOEXCEPT
         {
-            SSH_ASSERT(id != kInvalidThreadId);
+            EXT_ASSERT(id != kInvalidThreadId);
             {
                 std::lock_guard lock(m_workingThreadsMutex);
                 if (const auto it = m_workingThreadsInterruptionEvents.find(id); it != m_workingThreadsInterruptionEvents.end())
@@ -307,14 +307,14 @@ private:
             return res;
         }
 
-        void Interrupt(const std::thread::id& id) SSH_NOEXCEPT
+        void Interrupt(const std::thread::id& id) EXT_NOEXCEPT
         {
-            SSH_ASSERT(id != kInvalidThreadId);
+            EXT_ASSERT(id != kInvalidThreadId);
 
             std::lock_guard lock(m_workingThreadsMutex);
-            SSH_ASSERT(m_workingThreadsInterruptionEvents.find(id) != m_workingThreadsInterruptionEvents.end());
+            EXT_ASSERT(m_workingThreadsInterruptionEvents.find(id) != m_workingThreadsInterruptionEvents.end());
             auto& interruptionEvent = m_workingThreadsInterruptionEvents.at(id);
-            SSH_ASSERT(interruptionEvent);
+            EXT_ASSERT(interruptionEvent);
             interruptionEvent->Set();
             interruptionEvent->Destroy();
         }
@@ -346,29 +346,29 @@ private:
         }
     };
 
-    friend bool this_thread::interruption_requested() SSH_NOEXCEPT;
+    friend bool this_thread::interruption_requested() EXT_NOEXCEPT;
 
     template <class _Clock, class _Duration>
-    friend void this_thread::interruptible_sleep_until(const std::chrono::time_point<_Clock, _Duration>& absoluteTime) SSH_THROWS(ext::thread::thread_interrupted());
+    friend void this_thread::interruptible_sleep_until(const std::chrono::time_point<_Clock, _Duration>& absoluteTime) EXT_THROWS(ext::thread::thread_interrupted());
 };
 
 namespace this_thread {
 
 // Interruption point for ext::thread function, if thread interrupted - throws a ext::thread::thread_interrupted
-void interruption_point() SSH_THROWS(ext::thread::thread_interrupted())
+void interruption_point() EXT_THROWS(ext::thread::thread_interrupted())
 {
     if (interruption_requested())
         throw ext::thread::thread_interrupted();
 }
 
 // Check if current ext:thread has been interrupted
-SSH_NODISCARD inline bool interruption_requested() SSH_NOEXCEPT
+EXT_NODISCARD inline bool interruption_requested() EXT_NOEXCEPT
 {
     return ext::get_service<::ext::thread::InterruptedThreads>().IsInterrupted(ext::this_thread::get_id());
 }
 
 template <class _Clock, class _Duration>
-void interruptible_sleep_until(const std::chrono::time_point<_Clock, _Duration>& timePoint) SSH_THROWS(ext::thread::thread_interrupted())
+void interruptible_sleep_until(const std::chrono::time_point<_Clock, _Duration>& timePoint) EXT_THROWS(ext::thread::thread_interrupted())
 {
 #if _HAS_CXX20
     static_assert(std::chrono::is_clock_v<_Clock>, "Clock type required");
@@ -388,7 +388,7 @@ void interruptible_sleep_until(const std::chrono::time_point<_Clock, _Duration>&
         catch (...)
         {}
 
-        SSH_ASSERT(interruption_requested());
+        EXT_ASSERT(interruption_requested());
         throw ext::thread::thread_interrupted();
     }
 
@@ -396,7 +396,7 @@ void interruptible_sleep_until(const std::chrono::time_point<_Clock, _Duration>&
 }
 
 template <class _Rep, class _Period>
-void interruptible_sleep_for(const std::chrono::duration<_Rep, _Period>& duration) SSH_THROWS(ext::thread::thread_interrupted())
+void interruptible_sleep_for(const std::chrono::duration<_Rep, _Period>& duration) EXT_THROWS(ext::thread::thread_interrupted())
 {
     interruptible_sleep_until(std::_To_absolute_time(duration));
 }

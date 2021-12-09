@@ -3,28 +3,28 @@
 #include <yvals_core.h>
 
 // Unused variable or return value
-#define SSH_UNUSED(variable) static_cast<void>(variable)
+#define EXT_UNUSED(variable) static_cast<void>(variable)
 
 // Functions declaration
-#define SSH_NODISCARD   _NODISCARD
-#define SSH_NOEXCEPT    noexcept
-#define SSH_THROWS(...)  noexcept(false)
+#define EXT_NODISCARD   _NODISCARD
+#define EXT_NOEXCEPT    noexcept
+#define EXT_THROWS(...)  noexcept(false)
 
 /* Unreachable code
  *
  * if (true) return;
- * SSH_UNREACHABLE()
+ * EXT_UNREACHABLE()
 */
 #ifdef __GNUC__
-#define SSH_UNREACHABLE() __builtin_unreachable()
+#define EXT_UNREACHABLE() __builtin_unreachable()
 #else
-#define SSH_UNREACHABLE() __assume(0)
+#define EXT_UNREACHABLE() __assume(0)
 #endif
 
-// SSH_PP_CAT(x, y) => xy
-#define SSH_PP_EXPAND(x)  x
-#define SSH_PP_CAT_I(x,y) SSH_PP_EXPAND(x##y)
-#define SSH_PP_CAT(x,y) SSH_PP_CAT_I(x,y)
+// EXT_PP_CAT(x, y) => xy
+#define EXT_PP_EXPAND(x)  x
+#define EXT_PP_CAT_I(x,y) EXT_PP_EXPAND(x##y)
+#define EXT_PP_CAT(x,y) EXT_PP_CAT_I(x,y)
 
 // STRINGINIZE(ttt) = "ttt"
 #define TO_STRING(x) #x

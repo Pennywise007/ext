@@ -23,7 +23,7 @@ struct CheckFailedException : ::ext::exception
         , m_expression(expression)
     {}
 
-    SSH_NODISCARD std::string external_text() const override { return "expression: '" + m_expression + "'"; }
+    EXT_NODISCARD std::string external_text() const override { return "expression: '" + m_expression + "'"; }
 
     template <class T>
     auto& operator<<(const T& data) { ::ext::exception::operator<<(data); return *this; }
@@ -34,15 +34,15 @@ struct CheckFailedException : ::ext::exception
 } // namespace ext::check
 
 // Checks expression via check function, if check failes - throw exception
-// Example:  SSH_CHECK_RESULT(val, _result == 0, ::ext::check::CheckFailedException(__FILE__, __LINE__, "Failed")) << "Text";
-#define SSH_CHECK_RESULT(expr, check_func, exception)                   \
-    for (auto &&__result = (expr); !(check_func);)                       \
+// Example:  EXT_CHECK_RESULT(val, _result == 0, ::ext::check::CheckFailedException(__FILE__, __LINE__, "Failed")) << "Text";
+#define EXT_CHECK_RESULT(expr, check_func, exception)                       \
+    for (auto &&__result = (expr); !(check_func);)                          \
         throw exception
 
 // Checks boolean expression, in case of fail - throw CheckFailedException
-// Example:  SSH_CHECK(val == true) << "Check failed";
-#define SSH_CHECK(bool_expression)      \
-    SSH_CHECK_RESULT(bool_expression, !!(__result), ::ext::check::CheckFailedException(SSH_SRC_LOCATION, #bool_expression))
+// Example:  EXT_CHECK(val == true) << "Check failed";
+#define EXT_CHECK(bool_expression)      \
+    EXT_CHECK_RESULT(bool_expression, !!(__result), ::ext::check::CheckFailedException(EXT_SRC_LOCATION, #bool_expression))
 
 /*
 Checks expression via check function, if check failes:
@@ -50,10 +50,10 @@ Checks expression via check function, if check failes:
 * throw exception
 
 Example:
-SSH_EXPECT_RESULT(val, _result == 0, ::ext::check::CheckFailedException(__FILE__, __LINE__, "Valueu check failed")) << "Check failed";
+EXT_EXPECT_RESULT(val, _result == 0, ::ext::check::CheckFailedException(__FILE__, __LINE__, "Valueu check failed")) << "Check failed";
 */
-#define SSH_EXPECT_RESULT(expr, check_func, exception)                              \
-    for (auto &&__result = (expr); !(check_func);)                                   \
+#define EXT_EXPECT_RESULT(expr, check_func, exception)                              \
+    for (auto &&__result = (expr); !(check_func);)                                  \
          for (bool __firstEnter = true;; __firstEnter = false)                      \
             if (__firstEnter)                                                       \
             {                                                                       \
@@ -68,10 +68,10 @@ Checks boolean expression or HRESULT,  if check failes:
 * throw exception
 
 Example:
-SSH_EXPECT(val == true) << "Check failed";
+EXT_EXPECT(val == true) << "Check failed";
 */
-#define SSH_EXPECT(bool_expression)     \
-    SSH_EXPECT_RESULT(bool_expression, !!(__result), ::ext::check::CheckFailedException(SSH_SRC_LOCATION, #bool_expression))
+#define EXT_EXPECT(bool_expression)     \
+    EXT_EXPECT_RESULT(bool_expression, !!(__result), ::ext::check::CheckFailedException(EXT_SRC_LOCATION, #bool_expression))
 
 /*
 Checks boolean expression or HRESULT, if check failes:
@@ -79,9 +79,9 @@ Checks boolean expression or HRESULT, if check failes:
 * throw exception
 
 Example:
-SSH_REQUIRE(MainInterface) << "No main interface";
+EXT_REQUIRE(MainInterface) << "No main interface";
 */
-#define SSH_REQUIRE(bool_expression) SSH_EXPECT(bool_expression)
+#define EXT_REQUIRE(bool_expression) EXT_EXPECT(bool_expression)
 
 /*
 Checks boolean expression or HRESULT in DEBUG, if check failes:
@@ -89,10 +89,10 @@ Checks boolean expression or HRESULT in DEBUG, if check failes:
 * show error in log
 
 Example:
-SSH_ASSERT(val == true) << "Check failed";
+EXT_ASSERT(val == true) << "Check failed";
 */
 #ifdef _DEBUG
-#define SSH_ASSERT(bool_expression) SSH_DUMP_IF(!(bool_expression))
+#define EXT_ASSERT(bool_expression) EXT_DUMP_IF(!(bool_expression))
 #else
-#define SSH_ASSERT(bool_expression) if (true) {} else SSH_TRACE_ERR()
+#define EXT_ASSERT(bool_expression) if (true) {} else EXT_TRACE_ERR()
 #endif	// _DEBUG

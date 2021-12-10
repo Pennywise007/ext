@@ -41,7 +41,7 @@ struct ITickHandler
     /// <summary>Called when the timer ticks</summary>
     /// <param name="tickParam">Parameter passed during subscription.</param>
     /// <returns>True - continue ticks, False - interrupt this timer.</returns>
-    SSH_NODISCARD virtual bool OnTick(::ext::tick::TickParam tickParam) SSH_NOEXCEPT = 0;
+    EXT_NODISCARD virtual bool OnTick(::ext::tick::TickParam tickParam) EXT_NOEXCEPT = 0;
 };
 
 // Tick service implementation, creates Invoker and Async timers for sending information about ticks to subscribers
@@ -87,7 +87,7 @@ public:
     /// <summary>Checking if this handler has a timer with the given parameter</summary>
     /// <param name="handler">Handler pointer.</param>
     /// <param name="tickParam">Tick parameter.</param>
-    SSH_NODISCARD bool IsTimerExist(ITickHandler* handler, const TickParam& tickParam)
+    EXT_NODISCARD bool IsTimerExist(ITickHandler* handler, const TickParam& tickParam)
     {
         return m_asyncTimer.IsHandlerExist(handler, tickParam) ||
                m_invokedTimer.IsHandlerExist(handler, tickParam);
@@ -96,7 +96,7 @@ public:
 private:
     struct TimerBase
     {
-        SSH_NODISCARD bool IsHandlerExist(ITickHandler* handler, const TickParam& tickParam)
+        EXT_NODISCARD bool IsHandlerExist(ITickHandler* handler, const TickParam& tickParam)
         {
             std::scoped_lock lock(m_handlersMutex);
             const auto handlers = m_handlers.equal_range(handler);
@@ -222,7 +222,7 @@ private:
     private:
         void StartTimer()
         {
-            SSH_ASSERT(m_timerId.has_value());
+            EXT_ASSERT(m_timerId.has_value());
             ext::InvokeMethod([timerId = &m_timerId]()
             {
                 timerId->emplace(::SetTimer(nullptr, NULL, (UINT)kDefTickInterval.count(),
@@ -231,7 +231,7 @@ private:
                                                 get_service<TickService>().m_invokedTimer.OnTickTimer();
                                             }));
             });
-            SSH_ASSERT(m_timerId == 0);
+            EXT_ASSERT(m_timerId == 0);
         }
 
         void StopTimer()
@@ -309,7 +309,7 @@ struct TickSubscriber : public ITickHandler
 
     /// <summary>Checking if this handler has a timer with the given parameter.</summary>
     /// <param name="tickParam">Tick parameter.</param>
-    SSH_NODISCARD bool IsTimerExist(const TickParam& tickParam)
+    EXT_NODISCARD bool IsTimerExist(const TickParam& tickParam)
     { return get_service<TickService>().IsTimerExist(this, tickParam); }
 };
 

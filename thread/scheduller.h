@@ -18,7 +18,7 @@ Example:
         }
 
         // ITickHandler
-        void OnTick(::ext::tick::TickParam) SSH_NOEXCEPT override
+        void OnTick(::ext::tick::TickParam) EXT_NOEXCEPT override
         {
             ... // execute text each 5 minutes
         }
@@ -60,7 +60,7 @@ public://---------------------------------------------------------------------//
                                        const std::chrono::high_resolution_clock::time_point& time,
                                        CallbackId callbackId = kInvalidId);
 
-    SSH_NODISCARD bool IsCallbackExists(CallbackId callbackId) SSH_NOEXCEPT;
+    EXT_NODISCARD bool IsCallbackExists(CallbackId callbackId) EXT_NOEXCEPT;
 
     void RemoveCallback(CallbackId callbackId);
 private:
@@ -91,11 +91,11 @@ struct Scheduler::CallbackInfo
         , callingPeriod(period)
     {}
 
-    CallbackInfo(std::function<void()>&& function, std::chrono::high_resolution_clock::time_point&& callTime) SSH_THROWS()
+    CallbackInfo(std::function<void()>&& function, std::chrono::high_resolution_clock::time_point&& callTime) EXT_THROWS()
         : callback(function)
         , nextCallTime(callTime)
     {
-        SSH_ASSERT(nextCallTime > std::chrono::high_resolution_clock::now());
+        EXT_ASSERT(nextCallTime > std::chrono::high_resolution_clock::now());
     }
 };
 
@@ -104,7 +104,7 @@ inline Scheduler::Scheduler(): m_thread(&MainThread, this)
 
 inline Scheduler::~Scheduler()
 {
-    SSH_ASSERT(m_thread.joinable());
+    EXT_ASSERT(m_thread.joinable());
     m_interrupted = true;
     m_cvCallbacks.notify_all();
     m_thread.join();
@@ -126,7 +126,7 @@ inline CallbackId Scheduler::SubscribeCallbackByPeriod(std::function<void()>&& c
         if (callbackId == kInvalidId || m_callbacks.find(callbackId) != m_callbacks.end())
             callbackId = m_callbacks.empty() ? 0 : (m_callbacks.rbegin()->first + 1);
 
-        SSH_DUMP_IF(!m_callbacks.try_emplace(callbackId, std::move(callback), callingPeriod).second);
+        EXT_DUMP_IF(!m_callbacks.try_emplace(callbackId, std::move(callback), callingPeriod).second);
     }
     m_cvCallbacks.notify_one();
     return callbackId;
@@ -142,7 +142,7 @@ inline CallbackId Scheduler::SubscribeCallbackAtTime(std::function<void()>&& cal
         if (callbackId == kInvalidId || m_callbacks.find(callbackId) != m_callbacks.end())
             callbackId = m_callbacks.empty() ? 0 : (m_callbacks.rbegin()->first + 1);
 
-        SSH_DUMP_IF(!m_callbacks.try_emplace(callbackId, std::move(callback), time).second);
+        EXT_DUMP_IF(!m_callbacks.try_emplace(callbackId, std::move(callback), time).second);
     }
     m_cvCallbacks.notify_one();
     return callbackId;
@@ -156,7 +156,7 @@ inline bool Scheduler::IsCallbackExists(CallbackId callbackId) noexcept
 
 inline void Scheduler::RemoveCallback(CallbackId callbackId)
 {
-    SSH_EXPECT(callbackId != kInvalidId);
+    EXT_EXPECT(callbackId != kInvalidId);
     {
         std::lock_guard<std::mutex> lock(m_mutexCallbacks);
         const auto it = m_callbacks.find(callbackId);

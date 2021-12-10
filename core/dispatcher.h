@@ -170,8 +170,8 @@ void Dispatcher::Subscribe(IEvent* recipient)
     static_assert(std::is_base_of_v<IBaseEvent, IEvent>, "Event must be inherited from IBaseEvent!");
 
     std::lock_guard<std::mutex> lock(m_recipientsMutex);
-    SSH_DUMP_IF(!m_eventRecipients[__uuidof(IEvent)].syncRecipients.insert(static_cast<IBaseEvent*>(recipient)).second)
-        << SSH_TRACE_FUNCTION << "Already subscribed";
+    EXT_DUMP_IF(!m_eventRecipients[__uuidof(IEvent)].syncRecipients.insert(static_cast<IBaseEvent*>(recipient)).second)
+        << EXT_TRACE_FUNCTION << "Already subscribed";
 }
 
 template <typename IEvent>
@@ -191,10 +191,10 @@ void Dispatcher::Unsubscribe(IEvent* recipient)
                 m_eventRecipients.erase(eventIt);
         }
         else
-            SSH_DUMP_IF(false) << SSH_TRACE_FUNCTION << "Recipient already unsubscribed";
+            EXT_DUMP_IF(false) << EXT_TRACE_FUNCTION << "Recipient already unsubscribed";
     }
     else
-        SSH_DUMP_IF(false) << SSH_TRACE_FUNCTION << "No one subscribed to event";
+        EXT_DUMP_IF(false) << EXT_TRACE_FUNCTION << "No one subscribed to event";
 }
 
 template <typename IEvent>
@@ -203,8 +203,8 @@ void Dispatcher::SubscribeAsync(IEvent* recipient)
     static_assert(std::is_base_of_v<IBaseEvent, IEvent>, "Event must be inherited from IBaseEvent!");
 
     std::lock_guard<std::mutex> lock(m_recipientsMutex);
-    SSH_DUMP_IF(!m_eventRecipients[__uuidof(IEvent)].asyncRecipients.insert(static_cast<IBaseEvent*>(recipient)).second)
-        << SSH_TRACE_FUNCTION << "Already subscribed";
+    EXT_DUMP_IF(!m_eventRecipients[__uuidof(IEvent)].asyncRecipients.insert(static_cast<IBaseEvent*>(recipient)).second)
+        << EXT_TRACE_FUNCTION << "Already subscribed";
 }
 
 template <typename IEvent>
@@ -224,10 +224,10 @@ void Dispatcher::UnsubscribeAsync(IEvent* recipient)
                 m_eventRecipients.erase(eventIt);
         }
         else
-            SSH_DUMP_IF(false) << SSH_TRACE_FUNCTION << "Recipient already unsubscribed";
+            EXT_DUMP_IF(false) << EXT_TRACE_FUNCTION << "Recipient already unsubscribed";
     }
     else
-        SSH_DUMP_IF(false) << SSH_TRACE_FUNCTION << "No one subscribed to event";
+        EXT_DUMP_IF(false) << EXT_TRACE_FUNCTION << "No one subscribed to event";
 }
 
 template <typename IEvent, typename Function, typename... Args>
@@ -243,7 +243,7 @@ void Dispatcher::SendEvent(Function IEvent::* function, Args&&... eventArgs)
             for (size_t index = 0; index < recipients.size(); ++index)
             {
                 IEvent* recipient = dynamic_cast<IEvent*>(*std::next(recipients.begin(), index));
-                SSH_DUMP_IF(!recipient) << "How we skip this situation in subscribe?";
+                EXT_DUMP_IF(!recipient) << "How we skip this situation in subscribe?";
 
                 if (!recipient)
                     continue;
@@ -261,7 +261,7 @@ void Dispatcher::SendEvent(Function IEvent::* function, Args&&... eventArgs)
         callFunction(it->second.asyncRecipients);
     }
     else
-        SSH_ASSERT(false) << "No subscribers on event";
+        EXT_ASSERT(false) << "No subscribers on event";
 }
 
 template <typename IEvent, typename Function, typename... Args>

@@ -10,22 +10,22 @@ namespace ext::registry {
 
 struct Key
 {
-    Key(const wchar_t* registryPath, HKEY rootKey = HKEY_LOCAL_MACHINE, REGSAM accessMask = KEY_READ /*| KEY_WOW64_64KEY*/) SSH_THROWS(std::exception)
+    Key(const wchar_t* registryPath, HKEY rootKey = HKEY_LOCAL_MACHINE, REGSAM accessMask = KEY_READ /*| KEY_WOW64_64KEY*/) EXT_THROWS(std::exception)
     {
-        SSH_CHECK(::RegOpenKeyExW(rootKey, registryPath, 0, accessMask, &m_key) == ERROR_SUCCESS);
+        EXT_CHECK(::RegOpenKeyExW(rootKey, registryPath, 0, accessMask, &m_key) == ERROR_SUCCESS);
     }
     ~Key()
     {
-        SSH_DUMP_IF(::RegCloseKey(m_key) != ERROR_SUCCESS) << SSH_TRACE_FUNCTION "Failed to close key";
+        EXT_DUMP_IF(::RegCloseKey(m_key) != ERROR_SUCCESS) << EXT_TRACE_FUNCTION "Failed to close key";
     }
 
-    SSH_NODISCARD bool GetRegistryValue(const wchar_t* valueName, DWORD& value) const SSH_NOEXCEPT
+    EXT_NODISCARD bool GetRegistryValue(const wchar_t* valueName, DWORD& value) const EXT_NOEXCEPT
     {
         DWORD dwBufferSize(sizeof(DWORD));
         return ::RegQueryValueExW(m_key, valueName, 0, NULL, reinterpret_cast<LPBYTE>(&value), &dwBufferSize) == ERROR_SUCCESS;
     }
 
-    SSH_NODISCARD bool GetRegistryValue(const wchar_t* valueName, bool& value) const SSH_NOEXCEPT
+    EXT_NODISCARD bool GetRegistryValue(const wchar_t* valueName, bool& value) const EXT_NOEXCEPT
     {
         DWORD valueDword;
         if (GetRegistryValue(valueName, valueDword))
@@ -36,7 +36,7 @@ struct Key
         return false;
     }
 
-    SSH_NODISCARD bool GetRegistryValue(const wchar_t* valueName, std::wstring& value) const SSH_NOEXCEPT
+    EXT_NODISCARD bool GetRegistryValue(const wchar_t* valueName, std::wstring& value) const EXT_NOEXCEPT
     {
         WCHAR szBuffer[MAX_PATH * 2];
         DWORD dwBufferSize = sizeof(szBuffer);

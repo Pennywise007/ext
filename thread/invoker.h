@@ -28,11 +28,11 @@ public:
 
     typedef std::function<void()> CallFunction;
     // synch execution of the function in main thread
-    void CallSync(CallFunction&& func) const SSH_THROWS();
+    void CallSync(CallFunction&& func) const EXT_THROWS();
     // async execution of the function in main thread
-    void CallAsync(CallFunction&& func) SSH_THROWS();
+    void CallAsync(CallFunction&& func) EXT_THROWS();
     // checking that we are in the main thread
-    SSH_NODISCARD static bool IsMainThread();
+    EXT_NODISCARD static bool IsMainThread();
 
 private:
     // create hidden window, must be called from main thread
@@ -78,18 +78,18 @@ inline void MethodInvoker::Init()
     }
 }
 
-inline void MethodInvoker::CallSync(CallFunction&& func) const SSH_THROWS()
+inline void MethodInvoker::CallSync(CallFunction&& func) const EXT_THROWS()
 {
     if (IsMainThread())
         func();         // main thread - execute immediately
     else
     {
         // if called from an auxiliary thread - send a message with the required function to the main thread
-        SSH_EXPECT(::IsWindow(m_hWnd)) << SSH_TRACE_FUNCTION;
+        EXT_EXPECT(::IsWindow(m_hWnd)) << EXT_TRACE_FUNCTION;
         const auto callFunc = std::make_shared<CallFuncInfo>(std::move(func));
 
         // send a message to the window in order to process the message in the main UI thread
-        SSH_DUMP_IF(CWnd::SendMessage(kCallFunctionMessage, 0, reinterpret_cast<LPARAM>(callFunc.get())) != 0);
+        EXT_DUMP_IF(CWnd::SendMessage(kCallFunctionMessage, 0, reinterpret_cast<LPARAM>(callFunc.get())) != 0);
 
         // if there was an unhandled exception during execution, throw it here
         if (callFunc->exception)
@@ -97,24 +97,24 @@ inline void MethodInvoker::CallSync(CallFunction&& func) const SSH_THROWS()
     }
 }
 
-inline void MethodInvoker::CallAsync(CallFunction&& func) SSH_THROWS()
+inline void MethodInvoker::CallAsync(CallFunction&& func) EXT_THROWS()
 {
     // send a message with the required function to the main thread
-    SSH_EXPECT(::IsWindow(m_hWnd)) << SSH_TRACE_FUNCTION;
+    EXT_EXPECT(::IsWindow(m_hWnd)) << EXT_TRACE_FUNCTION;
 
     // if called from an auxiliary thread - send a message with the required function to the main thread
     auto callFunc = std::make_unique<CallFuncInfo>(std::move(func));
-    SSH_DUMP_IF(CWnd::PostMessage(kCallFunctionMessage, 0, reinterpret_cast<LPARAM>(callFunc.release())) != TRUE);
+    EXT_DUMP_IF(CWnd::PostMessage(kCallFunctionMessage, 0, reinterpret_cast<LPARAM>(callFunc.release())) != TRUE);
 }
 
-SSH_NODISCARD inline bool MethodInvoker::IsMainThread()
+EXT_NODISCARD inline bool MethodInvoker::IsMainThread()
 {
     return get_service<MethodInvoker>().m_windowThreadId == ::GetCurrentProcessId();
 }
 
 inline void MethodInvoker::CreateMainThreadWindow()
 {
-    SSH_DUMP_IF(!IsMainThread()) << SSH_TRACE_FUNCTION << "Creation of MethodInvoker must be called from main thread!";
+    EXT_DUMP_IF(!IsMainThread()) << EXT_TRACE_FUNCTION << "Creation of MethodInvoker must be called from main thread!";
 
     HINSTANCE instance = AfxGetInstanceHandle();
     const char* editLabelClassName(typeid(*this).name());
@@ -155,11 +155,11 @@ inline void MethodInvoker::CreateMainThreadWindow()
         wndClass.hInstance = instance;
         wndClass.lpszClassName = editLabelClassName;
 
-        SSH_EXPECT(RegisterClassExA(&wndClass)) << SSH_TRACE_FUNCTION << "Can`t register class";
+        EXT_EXPECT(RegisterClassExA(&wndClass)) << EXT_TRACE_FUNCTION << "Can`t register class";
     }
 
-    SSH_DUMP_IF(CWnd::CreateEx(0, CString(typeid(*this).name()), L"", 0, 0, 0, 0, 0, NULL, nullptr, nullptr) == FALSE)
-        << SSH_TRACE_FUNCTION << "Can`t create synchronization window";
+    EXT_DUMP_IF(CWnd::CreateEx(0, CString(typeid(*this).name()), L"", 0, 0, 0, 0, 0, NULL, nullptr, nullptr) == FALSE)
+        << EXT_TRACE_FUNCTION << "Can`t create synchronization window";
 }
 
 inline DWORD MethodInvoker::GetMainThreadId()
@@ -181,7 +181,7 @@ inline DWORD MethodInvoker::GetMainThreadId()
         }
     }
     else
-        SSH_DUMP_IF(true) << SSH_TRACE_FUNCTION << "Failed";
+        EXT_DUMP_IF(true) << EXT_TRACE_FUNCTION << "Failed";
 
     return result;
 }

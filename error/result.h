@@ -40,7 +40,7 @@ inline T& operator<<(T& stream, const ::ext::ResultCodes res)
         return stream << "eUnknown";
     }
 
-    SSH_UNREACHABLE();
+    EXT_UNREACHABLE();
 }
 
 namespace result {
@@ -52,7 +52,7 @@ struct CheckResultFailedException : ::ext::exception
         , m_result(result)
     {}
 
-    SSH_NODISCARD std::string external_text() const override
+    EXT_NODISCARD std::string external_text() const override
     {
         std::ostringstream externalText;
         externalText << "result: " << (int)m_result << "(" << m_result << ")";
@@ -80,7 +80,7 @@ struct CheckResultFailedException : ::ext::exception
 template <class CharType>
 inline ResultCodes ManageExceptionResultCode(const CharType* prefixText) noexcept
 {
-    SSH_UNUSED(ext::ManageExceptionText(prefixText));
+    EXT_UNUSED(ext::ManageExceptionText(prefixText));
     try
     {
         throw;
@@ -106,9 +106,9 @@ inline ResultCodes ManageExceptionResultCode(const CharType* prefixText) noexcep
 } // namespace ext
 
 // Checks ext::result expression, in case of fail - throw CheckResultFailedException
-// Example:  SSH_CHECK_SUCCEEDED(ext::ResultCode) << "Check failed";
-#define SSH_CHECK_SUCCEEDED(expr)       \
-    SSH_CHECK_RESULT(expr, SSH_SUCCEEDED(_result), ::ext::result::CheckResultFailedException(SSH_SRC_LOCATION, _result))
+// Example:  EXT_CHECK_SUCCEEDED(ext::ResultCode) << "Check failed";
+#define EXT_CHECK_SUCCEEDED(expr)       \
+    EXT_CHECK_RESULT(expr, EXT_SUCCEEDED(_result), ::ext::result::CheckResultFailedException(EXT_SRC_LOCATION, _result))
 
 /*
 Checks ext::result expression,  if check failes:
@@ -116,10 +116,10 @@ Checks ext::result expression,  if check failes:
 * throw exception
 
 Example:
-SSH_EXPECT_SUCCEEDED(ext::result) << "Check failed";
+EXT_EXPECT_SUCCEEDED(ext::result) << "Check failed";
 */
-#define SSH_EXPECT_SUCCEEDED(expr)      \
-    SSH_EXPECT_RESULT(expr, SSH_SUCCEEDED(_result), ::ext::result::CheckResultFailedException(SSH_SRC_LOCATION, _result))
+#define EXT_EXPECT_SUCCEEDED(expr)      \
+    EXT_EXPECT_RESULT(expr, EXT_SUCCEEDED(_result), ::ext::result::CheckResultFailedException(EXT_SRC_LOCATION, _result))
 
-inline constexpr SSH_NODISCARD bool SSH_FAILED(const ext::ResultCodes res) noexcept    { return (res < 0); }
-inline constexpr SSH_NODISCARD bool SSH_SUCCEEDED(const ext::ResultCodes res) noexcept { return (res >= 0); }
+inline constexpr EXT_NODISCARD bool EXT_FAILED(const ext::ResultCodes res) noexcept    { return (res < 0); }
+inline constexpr EXT_NODISCARD bool EXT_SUCCEEDED(const ext::ResultCodes res) noexcept { return (res >= 0); }

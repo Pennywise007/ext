@@ -111,10 +111,26 @@ inline void SerializerText::WriteField(const std::wstring& name, const Serializa
 {
     *m_outputText += GenerateIndent(fieldLevel) + std::string_swprintf(LR"("%s": )", name.c_str());
 
-    if (value.Type == SerializableValue::ValueType::eString)
+    switch (value.Type)
+    {
+    case SerializableValue::ValueType::eString:
+    {
+        std::wstring escapedString = value;
+        for (size_t length = escapedString.length(); length != 0; --length)
+        {
+            if (escapedString.at(length - 1) == L'\"')
+                escapedString.insert(length - 1, 1, L'\\');
+        }
+        *m_outputText += L'\"' + escapedString + L'\"';
+    }
+    break;
+    case SerializableValue::ValueType::eFloat:  // do not write text like value: 4,5
         *m_outputText += L'\"' + value + L'\"';
-    else
+        break;
+    default:
         *m_outputText += value;
+        break;
+    }
 
     if (nextFieldExist)
         *m_outputText += L',';
@@ -246,30 +262,52 @@ inline void SerializerText::GetFieldValue(std::wstring_view& text, std::optional
 {
     EXT_EXPECT(!value.has_value()) << "Value already found";
 
+    EXT_EXPECT(!text.empty()) << "Field value text empty";
+
+    const bool startsWithQuotes = text.at(0) == L'\"';
+    const wchar_t lastValueSymbol = startsWithQuotes ? L'\"' : L',';
+
     // field value like: "extScheduleFlags": 0,
-    for (size_t valueIndex = 0, length = text.size(); valueIndex < length; ++valueIndex)
+    for (size_t valueIndex = startsWithQuotes, length = text.size(); valueIndex < length; ++valueIndex)
     {
-        if (text.at(valueIndex) == L',')
+        if (text.at(valueIndex) == lastValueSymbol && (!startsWithQuotes || text.at(valueIndex - 1) != L'\\'))
         {
-            auto fieldValue = text.substr(0, valueIndex);
-            EXT_EXPECT(TrimRight(fieldValue)) << "Field value empty " << text;
+            auto fieldValue = text.substr(startsWithQuotes, valueIndex - startsWithQuotes);
+            TrimRight(fieldValue);
             value.emplace(fieldValue);
             text = text.substr(valueIndex + 1);
             TrimLeft(text);
-
+            if (startsWithQuotes && !text.empty() && text.at(0) == L',')
+            {
+                text = text.substr(1);
+                TrimLeft(text);
+            }
             break;
         }
     }
+
     if (!value.has_value())
     {
+        EXT_EXPECT(!startsWithQuotes) << "Can`t find field value";
         EXT_EXPECT(TrimRight(text)) << "Field value empty";
         value.emplace(text);
         std::wstring_view().swap(text);
     }
 
-    // remove quotes for string values
-    if (value->front() == L'\"' && value->back() == L'\"')
-        value.emplace(value->substr(1, value->size() - 2));
+    if (value == L"null")
+        value->Type = SerializableValue::ValueType::eNull;
+    else if (startsWithQuotes)
+    {
+        // remove escaping symbols
+        for (size_t length = value->length(); length != 0; --length)
+        {
+            if (value->at(length - 1) == L'\"')
+            {
+                EXT_EXPECT(length >= 2 && value->at(length - 2) == L'\\') << "Can`t find escape symbol in text: " << value->c_str();
+                value->erase(length-- - 2, 1);
+            }
+        }
+    }
 }
 
 } // namespace ext::serializable::serializer

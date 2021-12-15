@@ -70,7 +70,7 @@ struct Executor
 class Visitor
 {
 public:
-    Visitor(const ISerializable* rootObject) EXT_THROWS();
+    explicit Visitor(const ISerializable* rootObject) EXT_THROWS();
 
 public:
     // Current serializable object type
@@ -78,7 +78,8 @@ public:
     {
         eCollectionStart = 0,   // Start of current collection
         eCollectionEnd,         // End of current collection
-        eField                  // Field
+        eField,                 // Field
+        eOptional               // Optional field
     };
     // Get type of current visitor serializable object
     EXT_NODISCARD ObjectType GetCurrentObjectType() const EXT_NOEXCEPT { return m_currentObjectType; }
@@ -119,6 +120,7 @@ private:
         operator const ISerializable*() const { return serializableObjectPointer; }
         operator const ISerializableField*() const { return dynamic_cast<const ISerializableField*>(serializableObjectPointer); }
         operator const ISerializableCollection*() const { return dynamic_cast<const ISerializableCollection*>(serializableObjectPointer); }
+        operator const ISerializableOptional*() const { return dynamic_cast<const ISerializableOptional*>(serializableObjectPointer); }
 
         EXT_NODISCARD const wchar_t* GetName() const EXT_NOEXCEPT { return serializableObjectPointer->GetName(); }
 

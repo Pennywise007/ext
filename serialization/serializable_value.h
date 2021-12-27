@@ -4,6 +4,7 @@
 
 #include <string>
 #include <type_traits>
+#include <optional>
 
 #include <ext/core/defines.h>
 #include <ext/utils/string.h>
@@ -15,6 +16,7 @@ struct SerializableValue : std::wstring
 {
     enum class ValueType
     {
+        eNull,
         eString,
         eBool,
         eData,
@@ -32,6 +34,12 @@ struct SerializableValue : std::wstring
     {
         SerializableValue val(std::move(str));
         val.Type = type;
+        return val;
+    }
+    static SerializableValue CreateNull()
+    {
+        SerializableValue val(L"null");
+        val.Type = ValueType::eNull;
         return val;
     }
 };

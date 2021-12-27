@@ -252,7 +252,7 @@ private:
 
         void DetachThread(ext::thread& thread)
         {
-            if (thread.joinable())
+            if (thread.thread_works())
             {
                 {
                     std::lock_guard interruptMutex(m_workingThreadsMutex);
@@ -269,10 +269,14 @@ private:
                     return;
                 }
             }
-            else
-                EXT_ASSERT(false);
+            else if (thread.joinable())
+            {
+                // thread finished but not joined
+                EXT_ASSERT(m_workingThreadsInterruptionEvents.find(thread.get_id()) != m_workingThreadsInterruptionEvents.end());
+                m_workingThreadsInterruptionEvents.erase(thread.get_id());
+            }
 
-            thread.detach();
+            static_cast<std::thread&>(thread).detach();
             CleanupDetachedThreads();
         }
 

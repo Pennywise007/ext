@@ -16,8 +16,8 @@
 
 #include <ext/serialization/iserializable.h>
 
+#include <ext/detail/type_traits.h>
 #include <ext/utils/string.h>
-#include <ext/utils/type_traits.h>
 
 namespace ext::serializable {
 namespace impl {
@@ -183,12 +183,12 @@ protected:
         {
             if (is_based_on<ISerializableCollection, std::extract_value_type_v<Type>> ||
                 std::dynamic_pointer_cast<ISerializableCollection>(get_as_serializable<std::extract_value_type_v<Type>>(Base::GetName(), nullptr)))
-                *Base::GetType() = create_default_value<std::extract_value_type_v<Type>>();
+                Base::GetType()->emplace(create_default_value<std::extract_value_type_v<Type>>());
             else
                 EXT_ASSERT(false);
         }
         else if (serializableTree->Value.value_or(SerializableValue::CreateNull()).Type != SerializableValue::ValueType::eNull)
-            *Base::GetType() = create_default_value<std::extract_value_type_v<Type>>();
+            Base::GetType()->emplace(create_default_value<std::extract_value_type_v<Type>>());
     }
 // ISerializableOptional
     EXT_NODISCARD std::shared_ptr<ISerializable> Get() const override

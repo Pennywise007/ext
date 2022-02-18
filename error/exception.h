@@ -11,9 +11,9 @@
 #include <sstream>
 
 #include <ext/core/defines.h>
+#include <ext/detail/type_traits.h>
 #include <ext/trace/itracer.h>
 #include <ext/utils/string.h>
-#include <ext/utils/type_traits.h>
 
 namespace ext {
 

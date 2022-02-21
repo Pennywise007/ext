@@ -17,7 +17,7 @@ namespace std {
 
 // remove in v142 toolset VS 2019
 template <class _Rep, class _Period>
-_NODISCARD auto _To_absolute_time(const chrono::duration<_Rep, _Period>& _Rel_time) noexcept {
+_NODISCARD auto _To_absolute_time_custom(const chrono::duration<_Rep, _Period>& _Rel_time) noexcept {
     constexpr auto _Zero                 = chrono::duration<_Rep, _Period>::zero();
     const auto _Now                      = chrono::steady_clock::now();
     decltype(_Now + _Rel_time) _Abs_time = _Now; // return common type
@@ -400,7 +400,7 @@ void interruptible_sleep_until(const std::chrono::time_point<_Clock, _Duration>&
 template <class _Rep, class _Period>
 void interruptible_sleep_for(const std::chrono::duration<_Rep, _Period>& duration) EXT_THROWS(ext::thread::thread_interrupted())
 {
-    interruptible_sleep_until(std::_To_absolute_time(duration));
+    interruptible_sleep_until(std::_To_absolute_time_custom(duration));
 }
 
 } // namespace this_thread

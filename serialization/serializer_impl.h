@@ -294,7 +294,7 @@ inline bool Executor::SerializeObject(const std::unique_ptr<serializer::ISeriali
 
 inline bool Executor::DeserializeObject(const std::unique_ptr<serializer::IDeserializer>& deserializer, ISerializable* object)
 {
-    EXT_REQUIRE(deserializer) << "didn't pass what to serialize";
+    EXT_REQUIRE(deserializer && object) << "didn't pass what to deserialize";;
 
     std::shared_ptr<SerializableNode> deserializationTreeRoot;
     if (!deserializer->Deserialize(deserializationTreeRoot))
@@ -393,6 +393,7 @@ inline bool Executor::DeserializeObject(const std::unique_ptr<serializer::IDeser
             else
                 EXT_ASSERT(false) << "Can`t find node for field " << optionalField->GetName();
         }
+        break;
         default:
             EXT_UNREACHABLE();
         }

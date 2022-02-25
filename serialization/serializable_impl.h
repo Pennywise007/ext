@@ -9,6 +9,7 @@
 #include <optional>
 #include <string>
 #include <set>
+#include <yvals_core.h>
 
 #include <ext/core/defines.h>
 #include <ext/core/check.h>

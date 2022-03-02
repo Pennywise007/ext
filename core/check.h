@@ -13,7 +13,6 @@
 #include <ext/trace/tracer.h>
 #include <ext/utils/call_once.h>
 
-
 namespace ext::check {
 
 struct CheckFailedException : ::ext::exception

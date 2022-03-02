@@ -247,7 +247,7 @@ if (!bool_expression)
 if (!bool_expression)
 {
 	if (IsDebuggerPresent())                                            
-        DebugBreak();                                                   
+		DebugBreak();                                                   
 	else                                                                
 		EXT_DUMP_CREATE();
 	throw ::ext::check::CheckFailedException(EXT_SRC_LOCATION, #bool_expression "Text"));
@@ -260,13 +260,13 @@ if (!bool_expression)
 
 ```c++
 #ifdef _DEBUG
-	if (!bool_expression)
-	{
-		if (IsDebuggerPresent())                                            
-			DebugBreak();                                                   
-		else                                                                
-			EXT_DUMP_CREATE();
-	}
+if (!bool_expression)
+{
+	if (IsDebuggerPresent())                                            
+		DebugBreak();                                                   
+	else                                                                
+		EXT_DUMP_CREATE();
+}
 #endif
 ```
 

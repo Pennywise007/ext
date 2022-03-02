@@ -19,6 +19,43 @@ int value = 0;
 		int value = 0;
 	```
 
+<details><summary>Inside details</summary>
+```c++
+int value = 0;
+```
+
+```c#
+int value = 0;
+```
+
+```c#
+	int value = 0;
+```
+
+	```c#
+		int value = 0;
+	```
+</details>
+
+<details><summary>Inside details2</summary>
+
+```c++
+int value = 0;
+```
+
+```c#
+int value = 0;
+```
+
+```c#
+	int value = 0;
+```
+
+	```c#
+		int value = 0;
+	```
+	
+</details>
 # Dependency injection
 Usage simple with .Net [Microsoft.Extensions.DependencyInjection](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection/)
 <details><summary>Example</summary>

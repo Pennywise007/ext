@@ -6,7 +6,8 @@ Test project [ext_test](https://github.com/Pennywise007/ext_test)
 # Dependency injection
 Usage simple with .Net [Microsoft.Extensions.DependencyInjection](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection/)
 <details><summary>Example</summary>
-```c++
+```
+
     #include <ext/core/dependency_injection.h>
     
     

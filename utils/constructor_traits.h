@@ -3,7 +3,7 @@
 #include <type_traits>
 
 #include <ext/core/mpl.h>
-#include <ext/detail/type_traits.h>
+#include <ext/std/type_traits.h>
 
 namespace ext::detail {
 namespace constructor {

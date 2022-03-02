@@ -17,8 +17,8 @@
 
 #include <ext/serialization/iserializable.h>
 
-#include <ext/detail/type_traits.h>
-#include <ext/utils/string.h>
+#include <ext/std/type_traits.h>
+#include <ext/std/string.h>
 
 namespace ext::serializable {
 namespace impl {

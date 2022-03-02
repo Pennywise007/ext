@@ -25,7 +25,7 @@
 #include <ext/core/mpl.h>
 
 #include <ext/error/exception.h>
-#include <ext/utils/string.h>
+#include <ext/std/string.h>
 
 // Internal macro to call scope tracer, allow adding extra text to stream after call
 #define EXT_TRACE_SCOPE_TYPE_EX(traceType, name)                                \

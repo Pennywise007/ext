@@ -1,4 +1,4 @@
-# ext
+# ext library
 Header only C++17 extensions library
 
 Test project [ext_test](https://github.com/Pennywise007/ext_test) 
@@ -6,7 +6,7 @@ Test project [ext_test](https://github.com/Pennywise007/ext_test)
 # Dependency injection
 Usage simple with .Net [Microsoft.Extensions.DependencyInjection](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection/)
 <details><summary>Example</summary>
-```
+```c
 #include <ext/core/dependency_injection.h>
 
 
@@ -55,7 +55,7 @@ const std::shared_ptr<CreatedObjectExample> object = ext::CreateObject<CreatedOb
 # Serialization
 Serialization struct to/from text, xml and others(in progress)
 <details><summary>Example</summary>
-```
+```c
 
 #include <ext/serialization/iserializable.h>
 
@@ -101,7 +101,7 @@ struct TestStruct :  SerializableObject<TestStruct>
 # Event dispatcher
 Allow to register events and notify subscribers
 <details><summary>Example</summary>
-```
+```c
 #include <ext/core/dispatcher.h>
 
 // Example of event interface
@@ -124,7 +124,7 @@ struct Recipient : ext::events::ScopeSubscription<IEvent>
 
 # Threading
 <details><summary>Interruptible thread(boost/thread analog)</summary>
-```
+```c
 #include <ext/thread/thread.h>
 
 ext::thread myThread(thread_function, []()
@@ -150,7 +150,7 @@ EXPECT_TRUE(myThread.interrupted());
 </details>
 
 <details><summary>Thread pool</summary>
-```
+```c
 #include <ext/thread/thread_pool.h>
 
 std::set<ext::task::TaskId, ext::task::TaskIdComparer> taskList;
@@ -182,7 +182,7 @@ And others:
 
 # Tracer
 <details><summary>Show traces with defferent levels and time stamps in cout/cerr/output/trace file</summary>
-```
+```c
 #include <ext/traces/tracer.h>
 ext::get_tracer()->EnableTraces(true);
 ```
@@ -209,12 +209,12 @@ Can be called for scope call function check. Trace start and end scope with the 
 # Check code execution and handling errors
 <details><summary>Allow to add simple checks inside executing code and manage ezxceptions</summary>
 
-```
+```c
 #include <ext/core/check.h>
 ```
 **EXT_CHECK** - throws exception if expression is false
 EXT_CHECK(bool_expression) << "Text";
-```
+```c
 if (!bool_expression)
 	throw ::ext::check::CheckFailedException(EXT_SRC_LOCATION, #bool_expression "Text"));
 ```
@@ -224,7 +224,7 @@ if (!bool_expression)
 - throws exception
 
 EXT_EXPECT(bool_expression) << "Text";
-```
+```c
 if (!bool_expression)
 {
 	if (IsDebuggerPresent())                                            
@@ -237,7 +237,7 @@ if (!bool_expression)
 
 **EXT_ASSERT / EXT_REQUIRE** - if expression is false in debug mode. Only on first failure: debug break if debugger presents, create dump otherwise
 EXT_ASSERT(bool_expression) << "Text";
-```
+```c
 #ifdef _DEBUG
 	if (!bool_expression)
 	{
@@ -254,7 +254,7 @@ EXT_ASSERT(bool_expression) << "Text";
 # Managing exceptions
 <details><summary>Allow to simplify managing exceptions and output error text</summary>
 
-```
+```c
 #include <ext/error/exception.h>
 
 try
@@ -282,7 +282,7 @@ catch (...)
 <details><summary>Allow to catch unhandled exceptions and generate dump file</summary>
 
 Declare unhandled exceptions handler(called automatic on calling ext::dump::create_dump())
-```
+```c
 #include <ext/error/dump_writer.h>
 
 void main()
@@ -293,7 +293,7 @@ void main()
 ```
 	
 If you need to catch error inside you code you add check:
-```
+```c
 EXT_DUMP_IF(is_something_wrong());
 ``` 
 In this case if debugger presents - it will be stopped here, otherwise generate dump file and **continue** execution, @see DEBUG_BREAK_OR_CREATE_DUMP.

@@ -4,19 +4,19 @@ Header only C++17 extensions library
 Test project [ext_test](https://github.com/Pennywise007/ext_test) 
 
 ```c++
-test
+int value = 0;
 ```
 
 ```c#
-test2
+int value = 0;
 ```
 
 ```c#
-	test2
+	int value = 0;
 ```
 
 	```c#
-		test3
+		int value = 0;
 	```
 
 # Dependency injection

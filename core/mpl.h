@@ -131,8 +131,7 @@ struct ForEach<list<typename Type, TConverters...>>
 template<typename Type>
 struct ForEach<list<Type>>
 {
-    template<typename Function>
-    static void Call(Function&& function)
+    static void Call(std::function<void(Type*)>&& function)
     {
         Type* converter = nullptr;
         function(converter);

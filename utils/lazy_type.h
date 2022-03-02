@@ -2,9 +2,8 @@
 
 #include <optional>
 
+#include <ext/core/check.h>
 #include <ext/core/defines.h>
-
-#undef GetObject
 
 namespace ext {
 
@@ -13,7 +12,9 @@ struct lazy_type
 {
     lazy_type(GetObjectFunction&& getterFunction) EXT_NOEXCEPT
         : m_getterFunction(std::move(getterFunction))
-    {}
+    {
+        EXT_REQUIRE(!!m_getterFunction);
+    }
     lazy_type(lazy_type<Type, GetObjectFunction>&& other) EXT_NOEXCEPT
         : m_object(std::move(other.m_object))
         , m_getterFunction(std::move(other.m_getterFunction))
@@ -27,14 +28,22 @@ struct lazy_type
     EXT_NODISCARD const Type& value() const EXT_THROWS(...)
     {
         if (!m_object.has_value())
+        {
+            EXT_EXPECT(!!m_getterFunction);
             m_object.emplace(m_getterFunction());
+            m_getterFunction = nullptr;
+        }
         return m_object.value();
     }
 
     EXT_NODISCARD Type& value() EXT_THROWS(...)
     {
         if (!m_object.has_value())
-            const_cast<std::optional<Type>&>(m_object).emplace(m_getterFunction());
+        {
+            EXT_EXPECT(!!m_getterFunction);
+            m_object.emplace(m_getterFunction());
+            m_getterFunction = nullptr;
+        }
         return m_object.value();
     }
 
@@ -74,7 +83,7 @@ struct lazy_type
     }
 
 protected:
-    std::optional<Type> m_object;
+    mutable std::optional<Type> m_object;
     GetObjectFunction m_getterFunction;
 };
 

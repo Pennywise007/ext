@@ -7,7 +7,7 @@
 #include <optional>
 
 #include <ext/core/defines.h>
-#include <ext/utils/string.h>
+#include <ext/std/string.h>
 
 namespace ext::serializable {
 

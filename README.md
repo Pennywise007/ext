@@ -146,9 +146,9 @@ ext::thread myThread(thread_function, []()
 			...
 		}
 		catch (const ext::thread::thread_interrupted&)
-        {
-            break;
-        }
+		{
+			break;
+		}
 	}
 });
 

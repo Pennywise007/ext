@@ -49,6 +49,7 @@ Usage simple with .Net [Microsoft.Extensions.DependencyInjection](https://www.nu
     const std::shared_ptr<CreatedObjectExample> object = ext::CreateObject<CreatedObjectExample>(serviceCollection.BuildServiceProvider());
     
 ```
+
 </details>
 - [Source](https://github.com/Pennywise007/ext/blob/main/core/dependency_injection.h)
 - [Tests](https://github.com/Pennywise007/ext_test/blob/main/ext_test/Tests/DependencyInjection.cpp)

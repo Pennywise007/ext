@@ -52,6 +52,7 @@ const std::shared_ptr<CreatedObjectExample> object = ext::CreateObject<CreatedOb
 ```
 
 </details>
+
 - [Source](https://github.com/Pennywise007/ext/blob/main/core/dependency_injection.h)
 - [Tests](https://github.com/Pennywise007/ext_test/blob/main/ext_test/Tests/DependencyInjection.cpp)
 
@@ -99,6 +100,7 @@ struct TestStruct :  SerializableObject<TestStruct>
 
 ```
 </details>
+
 - [Source](https://github.com/Pennywise007/ext/tree/main/serialization)
 - [Tests](https://github.com/Pennywise007/ext_test/blob/main/ext_test/Tests/Serialization.cpp)
 
@@ -126,6 +128,7 @@ struct Recipient : ext::events::ScopeSubscription<IEvent>
 ```
 
 </details>
+
 - [Source](https://github.com/Pennywise007/ext/blob/main/core/dispatcher.h)
 
 # Threading
@@ -155,6 +158,7 @@ EXPECT_TRUE(myThread.interrupted());
 
 - [Source](https://github.com/Pennywise007/ext/blob/main/thread/thread.h)
 - [Tests](https://github.com/Pennywise007/ext_test/blob/main/ext_test/Tests/Threads.cpp)
+
 </details>
 
 <details><summary>Thread pool</summary>
@@ -181,6 +185,7 @@ threadPool.wait_for_tasks();
 
 - [Source](https://github.com/Pennywise007/ext/blob/main/thread/thread_pool.h)
 - [Tests](https://github.com/Pennywise007/ext_test/blob/main/ext_test/Tests/ThreadPool.cpp)
+
 </details>
 
 And others:
@@ -216,6 +221,7 @@ Can be called for scope call function check. Trace start and end scope with the 
 `	EXT_TRACE_SCOPE() << EXT_TRACE_FUNCTION << "Main function called with " << args;`
 
 - [Source](https://github.com/Pennywise007/ext/tree/main/trace)
+
 </details>
 
 # Check code execution and handling errors
@@ -265,6 +271,7 @@ if (!bool_expression)
 ```
 
 - [Source](https://github.com/Pennywise007/ext/blob/main/core/check.h)
+
 </details>
 
 # Managing exceptions
@@ -291,6 +298,7 @@ catch (...)
 ```
 
 - [Source](https://github.com/Pennywise007/ext/blob/main/error/exception.h)
+
 </details>
 
 # Dumper and debugging
@@ -316,4 +324,5 @@ In this case if debugger presents - it will be stopped here, otherwise generate 
 Dump generation and debug break in case with EXT_DUMP_IF generates only once to avoid spam.
 
 - [Source](https://github.com/Pennywise007/ext/blob/main/error/dump_writer.h)
+
 </details>

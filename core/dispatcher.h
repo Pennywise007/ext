@@ -3,8 +3,8 @@
 /*
     Implementation of the event-driven singleton Dispatcher, serve to notify subscribers about events
 
-Example event interface
-    DECLARE_EVENT_IFACE(IEvent, "515CB11E-2B96-4685-9555-69B28A89B830")
+Example of event interface
+    struct IEvent : ext::events::IBaseEvent
     {
         virtual void Event(int val) = 0;
     };
@@ -12,18 +12,17 @@ Example event interface
 Example of sending an event:
     ext::send_event(&IEvent::Event, 10);
 
-Example recipient:
+Example of recipient:
     struct Recipient : ext::events::ScopeSubscription<IEvent>
     {
         void Event(int val) override { std::cout << "Event"; }
     }
 */
 #include <map>
-#include <mutex>
+#include <shared_mutex>
 #include <set>
 
 #include <type_traits>
-#include <combaseapi.h>
 
 #include "ext/core/check.h"
 #include "ext/core/defines.h"
@@ -61,21 +60,6 @@ interface IBaseEvent
     virtual ~IBaseEvent() = default;
 };
 
-/* Declaration of event interface
- * Example:
-   DECLARE_EVENT_IFACE(IEvent, "515CB11E-2B96-4685-9555-69B28A89B830")
-   {
-        virtual void Event(int val) = 0;
-   };
-
- * Same as:
-   struct DECLSPEC_UUID("515CB11E-2B96-4685-9555-69B28A89B830") IEvent : ::ext::events::IBaseEvent
-   {
-        virtual void Event(int val) = 0;
-   };
-*/
-#define DECLARE_EVENT_IFACE(iface, iid) DECLARE_INTERFACE_IID_(iface, ::ext::events::IBaseEvent, iid)
-
 // Event dispatcher class
 class Dispatcher
 {
@@ -109,13 +93,9 @@ private:
         std::set<IBaseEvent*> asyncRecipients;
     };
 
-    struct IIDComparer
-    {
-        bool operator()(const IID& Left, const IID& Right) const { return memcmp(&Left, &Right, sizeof(Right)) < 0; }
-    };
-
-    std::map<IID, EventRecipients, IIDComparer> m_eventRecipients;
-    std::mutex m_recipientsMutex;
+    typedef size_t EventId;
+    std::map<EventId, EventRecipients> m_eventRecipients;
+    std::shared_mutex m_recipientsMutex;
 
     thread_pool m_threadPool = { nullptr, 1 };
 };
@@ -169,8 +149,8 @@ void Dispatcher::Subscribe(IEvent* recipient)
 {
     static_assert(std::is_base_of_v<IBaseEvent, IEvent>, "Event must be inherited from IBaseEvent!");
 
-    std::lock_guard<std::mutex> lock(m_recipientsMutex);
-    EXT_DUMP_IF(!m_eventRecipients[__uuidof(IEvent)].syncRecipients.insert(static_cast<IBaseEvent*>(recipient)).second)
+    std::unique_lock<std::mutex> lock(m_recipientsMutex);
+    EXT_DUMP_IF(!m_eventRecipients[typeid(IEvent).hash_code()].syncRecipients.insert(static_cast<IBaseEvent*>(recipient)).second)
         << EXT_TRACE_FUNCTION << "Already subscribed";
 }
 
@@ -179,9 +159,9 @@ void Dispatcher::Unsubscribe(IEvent* recipient)
 {
     static_assert(std::is_base_of_v<IBaseEvent, IEvent>, "Event must be inherited from IBaseEvent!");
 
-    std::lock_guard<std::mutex> lock(m_recipientsMutex);
+    std::unique_lock<std::mutex> lock(m_recipientsMutex);
 
-    if (auto eventIt = m_eventRecipients.find(__uuidof(IEvent)); eventIt != m_eventRecipients.end())
+    if (auto eventIt = m_eventRecipients.find(typeid(IEvent).hash_code()); eventIt != m_eventRecipients.end())
     {
         if (const auto recipientIt = eventIt->second.syncRecipients.find(static_cast<IBaseEvent*>(recipient));
             recipientIt != eventIt->second.syncRecipients.end())
@@ -202,8 +182,8 @@ void Dispatcher::SubscribeAsync(IEvent* recipient)
 {
     static_assert(std::is_base_of_v<IBaseEvent, IEvent>, "Event must be inherited from IBaseEvent!");
 
-    std::lock_guard<std::mutex> lock(m_recipientsMutex);
-    EXT_DUMP_IF(!m_eventRecipients[__uuidof(IEvent)].asyncRecipients.insert(static_cast<IBaseEvent*>(recipient)).second)
+    std::unique_lock<std::mutex> lock(m_recipientsMutex);
+    EXT_DUMP_IF(!m_eventRecipients[typeid(IEvent).hash_code()].asyncRecipients.insert(static_cast<IBaseEvent*>(recipient)).second)
         << EXT_TRACE_FUNCTION << "Already subscribed";
 }
 
@@ -212,9 +192,9 @@ void Dispatcher::UnsubscribeAsync(IEvent* recipient)
 {
     static_assert(std::is_base_of_v<IBaseEvent, IEvent>, "Event must be inherited from IBaseEvent!");
 
-    std::lock_guard<std::mutex> lock(m_recipientsMutex);
+    std::unique_lock<std::mutex> lock(m_recipientsMutex);
 
-    if (auto eventIt = m_eventRecipients.find(__uuidof(IEvent)); eventIt != m_eventRecipients.end())
+    if (auto eventIt = m_eventRecipients.find(typeid(IEvent).hash_code()); eventIt != m_eventRecipients.end())
     {
         if (const auto recipientIt = eventIt->second.asyncRecipients.find(static_cast<IBaseEvent*>(recipient));
             recipientIt != eventIt->second.asyncRecipients.end())
@@ -233,9 +213,9 @@ void Dispatcher::UnsubscribeAsync(IEvent* recipient)
 template <typename IEvent, typename Function, typename... Args>
 void Dispatcher::SendEvent(Function IEvent::* function, Args&&... eventArgs)
 {
-    std::lock_guard<std::mutex> lock(m_recipientsMutex);
+    std::shared_lock<std::mutex> lock(m_recipientsMutex);
 
-    auto it = m_eventRecipients.find(__uuidof(IEvent));
+    auto it = m_eventRecipients.find(typeid(IEvent).hash_code());
     if (it != m_eventRecipients.end())
     {
         auto callFunction = [&function, &eventArgs..., mutex = &m_recipientsMutex](std::set<IBaseEvent*>& recipients)
@@ -248,12 +228,12 @@ void Dispatcher::SendEvent(Function IEvent::* function, Args&&... eventArgs)
                 if (!recipient)
                     continue;
 
-                mutex->unlock();
+                mutex->unlock_shared();
 
                 // call function without mutex to allow unsubscription during event call
                 (recipient->*function)(std::forward<Args>(eventArgs)...);
 
-                mutex->lock();
+                mutex->lock_shared();
             }
         };
 

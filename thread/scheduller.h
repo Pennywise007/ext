@@ -1,28 +1,21 @@
 #pragma once
 
 /*
-    Service TickService
-
-    Implementation of a class with a timer and the ability to connect timer tick handlers,
-    You can set different intervals for the timer and specific identifiers for each timer.
-    Available to set invoked UI timer and async
-
-    Implemented a helper class CTickHandlerImpl that monitors timers and simplifies working with them
+    Task scheduller for executing task by period or at specific time
 
 Example:
-    struct Test : ::ext::tick::TickSubscriber
-    {
-        Test()
-        {
-            TickSubscriber::SubscribeTimer(std::chrono::minutes(5));
-        }
+#include <ext/thread/scheduller.h>
 
-        // ITickHandler
-        void OnTick(::ext::tick::TickParam) EXT_NOEXCEPT override
+    bool executed = false;
+    const auto taskIdAtTime = scheduler.SubscribeTaskAtTime(
+        [&executed]()
         {
-            ... // execute text each 5 minutes
-        }
-    };
+            executed = true;
+        },
+        std::chrono::high_resolution_clock::now());
+    EXPECT_EQ(taskIdAtTime, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    EXPECT_TRUE(executed);
 */
 
 #include <chrono>
@@ -30,143 +23,148 @@ Example:
 #include <mutex>
 #include <optional>
 
+#include <ext/core/check.h>
 #include <ext/core/defines.h>
 #include <ext/core/noncopyable.h>
-
-#include <ext/thread/invoker.h>
+#include <ext/error/dump_writer.h>
 
 namespace ext {
 
-typedef UINT CallbackId;
-constexpr CallbackId kInvalidId = -1;
+typedef size_t TaskId;
+constexpr TaskId kInvalidId = -1;
 
-// Tick service implementation, creates Invoker and Async timers for sending information about ticks to subscribers
-// You can set the tick interval (it will work with kDefTickInterval precision)
-// see TickSubscriber
+// Task scheduller, allow to set the execution schedule for task or execute it at specific time
+// You can use global scheduller instance for fast task, or use own copy for long executing tasks
 class Scheduler : ext::NonCopyable
 {
-    friend ext::Singleton<Scheduler>;
-public://---------------------------------------------------------------------//
-    Scheduler();
+public:
+    explicit Scheduler() EXT_NOEXCEPT;
     ~Scheduler();
 
-    static Scheduler& GlobalInstance();
+    // Getting global instance of scheduller
+    EXT_NODISCARD static Scheduler& GlobalInstance() EXT_NOEXCEPT;
 
-    CallbackId SubscribeCallbackByPeriod(std::function<void()>&& callback,
-                                         const std::chrono::high_resolution_clock::duration& callingPeriod,
-                                         CallbackId callbackId = kInvalidId);
+    // Setting task call period by task id, next call will be now() + callingPeriod
+    TaskId SubscribeTaskByPeriod(std::function<void()>&& task,
+                                 std::chrono::high_resolution_clock::duration callingPeriod,
+                                 TaskId taskId = kInvalidId);
 
-    CallbackId SubscribeCallbackAtTime(std::function<void()>&& callback,
-                                       const std::chrono::high_resolution_clock::time_point& time,
-                                       CallbackId callbackId = kInvalidId);
+    // Setting next task call time by task id, if time < now() execute it immediatly
+    TaskId SubscribeTaskAtTime(std::function<void()>&& task,
+                               std::chrono::high_resolution_clock::time_point time,
+                               TaskId taskId = kInvalidId);
 
-    EXT_NODISCARD bool IsCallbackExists(CallbackId callbackId) EXT_NOEXCEPT;
+    // Checking is task exist
+    EXT_NODISCARD bool IsTaskExists(TaskId taskId) EXT_NOEXCEPT;
 
-    void RemoveCallback(CallbackId callbackId);
+    // Removing task by id
+    void RemoveTask(TaskId taskId);
+
 private:
+    // Task execution thread
     void MainThread();
 
 private:
-    struct CallbackInfo;
+    struct TaskInfo;
 
-    std::map<CallbackId, CallbackInfo> m_callbacks;
+    std::map<TaskId, TaskInfo> m_tasks;
 
-    std::mutex m_mutexCallbacks;
-    std::condition_variable m_cvCallbacks;
+    std::mutex m_mutexTasks;
+    std::condition_variable m_cvTasks;
 
     std::atomic_bool m_interrupted = false;
     std::thread m_thread;
-};
+};;
 
-struct Scheduler::CallbackInfo
+struct Scheduler::TaskInfo
 {
-    std::function<void()> callback;
+    std::function<void()> task;
 
     std::chrono::high_resolution_clock::time_point nextCallTime;
     std::optional<std::chrono::high_resolution_clock::duration> callingPeriod;
 
-    CallbackInfo(std::function<void()>&& function, std::chrono::high_resolution_clock::duration&& period)
-        : callback(function)
-        , nextCallTime(std::chrono::high_resolution_clock::now())
-        , callingPeriod(period)
+    explicit TaskInfo(std::function<void()>&& function, std::chrono::high_resolution_clock::duration&& period) EXT_NOEXCEPT
+        : task(function)
+        , nextCallTime(std::chrono::high_resolution_clock::now() + period)
+        , callingPeriod(std::move(period))
     {}
 
-    CallbackInfo(std::function<void()>&& function, std::chrono::high_resolution_clock::time_point&& callTime) EXT_THROWS()
-        : callback(function)
-        , nextCallTime(callTime)
+    explicit TaskInfo(std::function<void()>&& function, std::chrono::high_resolution_clock::time_point&& callTime) EXT_NOEXCEPT
+        : task(function)
+        , nextCallTime(std::move(callTime))
     {
         EXT_ASSERT(nextCallTime > std::chrono::high_resolution_clock::now());
     }
 };
 
-inline Scheduler::Scheduler(): m_thread(&MainThread, this)
+inline Scheduler::Scheduler() EXT_NOEXCEPT : m_thread(&Scheduler::MainThread, this)
 {}
 
 inline Scheduler::~Scheduler()
 {
     EXT_ASSERT(m_thread.joinable());
     m_interrupted = true;
-    m_cvCallbacks.notify_all();
+    m_cvTasks.notify_all();
     m_thread.join();
 }
 
-inline Scheduler& Scheduler::GlobalInstance()
+inline Scheduler& Scheduler::GlobalInstance() EXT_NOEXCEPT
 {
     static Scheduler globalScheduler;
     return globalScheduler;
 }
 
-inline CallbackId Scheduler::SubscribeCallbackByPeriod(std::function<void()>&& callback,
-                                                       const std::chrono::high_resolution_clock::duration&
-                                                       callingPeriod, CallbackId callbackId)
+inline TaskId Scheduler::SubscribeTaskByPeriod(std::function<void()>&& task,
+                                               std::chrono::high_resolution_clock::duration callingPeriod,
+                                               TaskId taskId)
 {
     {
-        std::lock_guard<std::mutex> lock(m_mutexCallbacks);
+        std::lock_guard<std::mutex> lock(m_mutexTasks);
 
-        if (callbackId == kInvalidId || m_callbacks.find(callbackId) != m_callbacks.end())
-            callbackId = m_callbacks.empty() ? 0 : (m_callbacks.rbegin()->first + 1);
+        if (taskId == kInvalidId || m_tasks.find(taskId) != m_tasks.end())
+            taskId = m_tasks.empty() ? 0 : (m_tasks.rbegin()->first + 1);
 
-        EXT_DUMP_IF(!m_callbacks.try_emplace(callbackId, std::move(callback), callingPeriod).second);
+        EXT_DUMP_IF(!m_tasks.try_emplace(taskId, std::move(task), std::move(callingPeriod)).second);
     }
-    m_cvCallbacks.notify_one();
-    return callbackId;
+    m_cvTasks.notify_one();
+    return taskId;
 }
 
-inline CallbackId Scheduler::SubscribeCallbackAtTime(std::function<void()>&& callback,
-                                                     const std::chrono::high_resolution_clock::time_point& time,
-                                                     CallbackId callbackId)
+inline TaskId Scheduler::SubscribeTaskAtTime(std::function<void()>&& task,
+                                             std::chrono::high_resolution_clock::time_point time,
+                                             TaskId taskId)
 {
     {
-        std::lock_guard<std::mutex> lock(m_mutexCallbacks);
+        std::lock_guard<std::mutex> lock(m_mutexTasks);
 
-        if (callbackId == kInvalidId || m_callbacks.find(callbackId) != m_callbacks.end())
-            callbackId = m_callbacks.empty() ? 0 : (m_callbacks.rbegin()->first + 1);
+        if (taskId == kInvalidId || m_tasks.find(taskId) != m_tasks.end())
+            taskId = m_tasks.empty() ? 0 : (m_tasks.rbegin()->first + 1);
 
-        EXT_DUMP_IF(!m_callbacks.try_emplace(callbackId, std::move(callback), time).second);
+        EXT_DUMP_IF(!m_tasks.try_emplace(taskId, std::move(task), std::move(time)).second);
     }
-    m_cvCallbacks.notify_one();
-    return callbackId;
+    m_cvTasks.notify_one();
+    return taskId;
 }
 
-inline bool Scheduler::IsCallbackExists(CallbackId callbackId) noexcept
+inline bool Scheduler::IsTaskExists(TaskId taskId) EXT_NOEXCEPT
 {
-    std::lock_guard<std::mutex> lock(m_mutexCallbacks);
-    return m_callbacks.find(callbackId) != m_callbacks.end();
+    std::lock_guard<std::mutex> lock(m_mutexTasks);
+    return m_tasks.find(taskId) != m_tasks.end();
 }
 
-inline void Scheduler::RemoveCallback(CallbackId callbackId)
+inline void Scheduler::RemoveTask(TaskId taskId)
 {
-    EXT_EXPECT(callbackId != kInvalidId);
+    EXT_EXPECT(taskId != kInvalidId);
     {
-        std::lock_guard<std::mutex> lock(m_mutexCallbacks);
-        const auto it = m_callbacks.find(callbackId);
-        if (it == m_callbacks.end())
+        std::lock_guard<std::mutex> lock(m_mutexTasks);
+        const auto it = m_tasks.find(taskId);
+        if (it == m_tasks.end())
             return;
 
-        m_callbacks.erase(it);
+        m_tasks.erase(it);
     }
 
-    m_cvCallbacks.notify_one();
+    m_cvTasks.notify_one();
 }
 
 inline void Scheduler::MainThread()
@@ -175,19 +173,19 @@ inline void Scheduler::MainThread()
     {
         std::function<void()> callBack = nullptr;
         {
-            std::unique_lock<std::mutex> lk(m_mutexCallbacks);
+            std::unique_lock<std::mutex> lk(m_mutexTasks);
 
             // wait for scheduled tasks
-            while (m_callbacks.empty())
+            while (m_tasks.empty())
             {
-                m_cvCallbacks.wait(lk);
+                m_cvTasks.wait(lk);
 
                 // notification call can be connected with interrupting
                 if (m_interrupted)
                     return;
             }
 
-            const auto it = std::min_element(m_callbacks.begin(), m_callbacks.end(),
+            const auto it = std::min_element(m_tasks.begin(), m_tasks.end(),
                                              [](const auto &a, const auto &b)
                                              {
                                                  return a.second.nextCallTime < b.second.nextCallTime;
@@ -195,22 +193,22 @@ inline void Scheduler::MainThread()
 
             const auto nextCallTime = it->second.nextCallTime;
             if (nextCallTime <= std::chrono::high_resolution_clock::now() ||
-                m_cvCallbacks.wait_until(lk, nextCallTime) == std::cv_status::timeout)
+                m_cvTasks.wait_until(lk, nextCallTime) == std::cv_status::timeout)
             {
                 if (!it->second.callingPeriod.has_value())
                 {
-                    callBack = std::move(it->second.callback);
-                    m_callbacks.erase(it);
+                    callBack = std::move(it->second.task);
+                    m_tasks.erase(it);
                 }
                 else
                 {
                     it->second.nextCallTime = std::chrono::high_resolution_clock::now() + *it->second.callingPeriod;
-                    callBack = it->second.callback;
+                    callBack = it->second.task;
                 }
             }
         }
 
-        // выполняем задание
+        // executing task
         if (callBack)
             callBack();
     }

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <algorithm>
-#include <afx.h>        // CException
 #include <comdef.h>     // _com_error
 #include <exception>
 #include <filesystem>
@@ -156,6 +155,7 @@ inline auto /*std::string*/ManageExceptionText(const CharType* prefixText, bool 
             else
                 exceptionStream << e.to_string().c_str();
         }
+#ifdef __AFX_H__
         catch (CException* e)
         {
             WCHAR errorText[MAX_PATH];
@@ -166,6 +166,7 @@ inline auto /*std::string*/ManageExceptionText(const CharType* prefixText, bool 
             else
                 exceptionStream << errorText;
         }
+#endif // __AFX_H__
         catch (const std::exception& e)
         {
             if constexpr (std::is_same_v<CharType, wchar_t>)

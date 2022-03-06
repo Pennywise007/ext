@@ -117,11 +117,11 @@ inline void MethodInvoker::CreateMainThreadWindow()
     EXT_DUMP_IF(!IsMainThread()) << EXT_TRACE_FUNCTION << "Creation of MethodInvoker must be called from main thread!";
 
     HINSTANCE instance = AfxGetInstanceHandle();
-    const char* editLabelClassName(typeid(*this).name());
+    const char* className(typeid(*this).name());
 
     // Registering internal window
     WNDCLASSEXA wndClass;
-    if (!::GetClassInfoExA(instance, editLabelClassName, &wndClass))
+    if (!::GetClassInfoExA(instance, className, &wndClass))
     {
         memset(&wndClass, 0, sizeof(WNDCLASSEXA));
         wndClass.cbSize = sizeof(WNDCLASSEXA);
@@ -153,7 +153,7 @@ inline void MethodInvoker::CreateMainThreadWindow()
 
         // TODO CHECK IF NEEDED
         wndClass.hInstance = instance;
-        wndClass.lpszClassName = editLabelClassName;
+        wndClass.lpszClassName = className;
 
         EXT_EXPECT(RegisterClassExA(&wndClass)) << EXT_TRACE_FUNCTION << "Can`t register class";
     }

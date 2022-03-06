@@ -1,9 +1,30 @@
 #pragma once
 
+/*
+ * Thread pool implementation, allow to add task for execution on already existed threads
+ * Example:
+
+#include <ext/thread/thread_pool.h>
+
+std::set<ext::task::TaskId, ext::task::TaskIdComparer> taskList;
+ext::thread_pool threadPool([&taskList, &listMutex](const ext::task::TaskId& taskId)
+{
+	taskList.erase(taskId);
+});
+
+const auto maxThreads = std::thread::hardware_concurrency();
+for (auto i = maxThreads; i != 0; --i)
+{
+	taskList.emplace(threadPool.add_task([]()
+	{
+		...
+	}));
+}
+threadPool.wait_for_tasks();
+
+ */
 #include <algorithm>
 #include <future>
-#include <guiddef.h>
-#include <vector>
 #include <mutex>
 #include <stdint.h>
 #include <thread>

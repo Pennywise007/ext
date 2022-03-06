@@ -1,5 +1,28 @@
 #pragma once
 
+/*
+ * Allow to manage exception text
+ *
+ * Example
+
+#include <ext/error/exception.h>
+
+try
+{
+    EXT_EXPECT(is_ok()) << "Something wrong!";
+}
+catch (...)
+{
+    try
+    {
+        std::throw_with_nested(ext::exception(EXT_SRC_LOCATION, "Job failed"));
+    }
+    catch (...)
+    {
+        ::MessageBox(NULL, ext::ManageExceptionText("Big bang"));
+    }
+}
+ */
 #include <algorithm>
 #include <comdef.h>     // _com_error
 #include <exception>
@@ -10,9 +33,9 @@
 #include <sstream>
 
 #include <ext/core/defines.h>
+#include <ext/std/string.h>
+#include <ext/std/type_traits.h>
 #include <ext/trace/itracer.h>
-#include <ext/utils/string.h>
-#include <ext/utils/type_traits.h>
 
 namespace ext {
 

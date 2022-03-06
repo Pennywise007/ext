@@ -73,6 +73,36 @@ struct list : std::tuple<T...>
 };
 
 /*
+* Add template parameter to obj
+* push_back<list<int, bool>, long> => list<int, bool, long>
+*/
+template <typename L, typename... T>
+struct push_back_impl
+{};
+template <template <typename...> class L, typename... U, typename... T>
+struct push_back_impl<L<U...>, T...>
+{
+    using type = L<U..., T...>;
+};
+template <typename L, typename... T>
+using push_back = typename push_back_impl<L, T...>::type;
+
+/*
+* apply function to types list
+* ssh::mpl::apply<std::is_constructible, list<Test, int>> => std::is_constructible<Test, int>
+*/
+template <template <typename...> class Function, typename List>
+struct apply_impl
+{};
+template <template <typename...> class Function, template <typename...> class List, typename... Types>
+struct apply_impl<Function, List<Types...>>
+{
+    using type = Function<Types...>;
+};
+template <template <typename...> class Function, typename List>
+using apply = typename apply_impl<Function, List>::type;
+
+/*
 * Help struct to call function for each element in list.
 * !!! Do not forget that the function will receive a pointer to the class to avoid unnecessary constructions.
 *
@@ -101,8 +131,7 @@ struct ForEach<list<typename Type, TConverters...>>
 template<typename Type>
 struct ForEach<list<Type>>
 {
-    template<typename Function>
-    static void Call(Function&& function)
+    static void Call(std::function<void(Type*)>&& function)
     {
         Type* converter = nullptr;
         function(converter);

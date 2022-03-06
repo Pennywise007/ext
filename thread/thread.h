@@ -1,10 +1,29 @@
 #pragma once
 
+/*
+ * Interruptible thread implementation(boost/thread analog)
+ *
+ * Allow to create thread and check in any function is it interrupted and not check any flags or something everywhere
+ *
+ * Example:
+
+#include <ext/thread/thread.h>
+
+ext::thread myThread(thread_function, []()
+{
+    while (!ext::this_thread::interruption_requested())
+    {
+        ...
+    }
+});
+
+myThread.interrupt();
+EXPECT_TRUE(myThread.interrupted());
+ */
 #include <atomic>
 #include <thread>
 #include <chrono>
-#include <set>
-#include <mutex>
+#include <shared_mutex>
 
 #include <ext/core/defines.h>
 #include <ext/core/check.h>
@@ -13,11 +32,11 @@
 
 #include <ext/thread/event.h>
 
-namespace std
-{
+namespace std {
+
 // remove in v142 toolset VS 2019
 template <class _Rep, class _Period>
-_NODISCARD auto _To_absolute_time(const chrono::duration<_Rep, _Period>& _Rel_time) noexcept {
+_NODISCARD auto _To_absolute_time_custom(const chrono::duration<_Rep, _Period>& _Rel_time) noexcept {
     constexpr auto _Zero                 = chrono::duration<_Rep, _Period>::zero();
     const auto _Now                      = chrono::steady_clock::now();
     decltype(_Now + _Rel_time) _Abs_time = _Now; // return common type
@@ -59,47 +78,49 @@ class thread : public std::thread
 public:
     // constructors from std::thread
     thread() EXT_NOEXCEPT = default;
-    thread(base&& _Other) EXT_NOEXCEPT
-        : base(std::forward<base>(_Other))
+    explicit thread(base&& other) EXT_NOEXCEPT
+        : base(std::forward<base>(other))
     {
         if (joinable())
-            ext::get_service<InterruptedThreads>().OnStartThread(get_id());
+            ext::get_service<InterruptionManager>().OnStartThread(get_id());
     }
-    thread(thread&& _Other) EXT_NOEXCEPT
-        : base(std::forward<base>(_Other))
-        , m_interrupted(static_cast<bool>(_Other.m_interrupted))
+    explicit thread(thread&& other) EXT_NOEXCEPT
+        : base(std::forward<base>(other))
+        , m_interrupted(static_cast<bool>(other.m_interrupted))
     {}
 
     template<class _Fn, class... _Args>
-    explicit thread(_Fn&& _Fx, _Args&&... _Ax) EXT_NOEXCEPT
-        : base(std::forward<_Fn>(_Fx), std::forward<_Args>(_Ax)...)
-    {
-        if (joinable())
-            ext::get_service<InterruptedThreads>().OnStartThread(get_id());
-    }
+    explicit thread(_Fn&& _Fx, _Args&&... _Ax)
+        : base([_Fx, _Ax...]()
+        {
+            // register thread before call function to awoid problemS with interruptible checks inside call function
+            ext::get_service<InterruptionManager>().OnStartThread(std::this_thread::get_id());
+            _Fx(_Ax...);
+        })
+    {}
 
-    thread& operator=(base&& _Other) EXT_NOEXCEPT
+    thread& operator=(base&& other) EXT_NOEXCEPT
     {
         if (joinable())
-            ext::get_service<InterruptedThreads>().DetachThread(*this);
-        base::operator=(std::forward<base>(_Other));
+            ext::get_service<InterruptionManager>().DetachThread(*this);
+        base::operator=(std::forward<base>(other));
         m_interrupted = false;
         if (joinable())
-            ext::get_service<InterruptedThreads>().OnStartThread(get_id());
+            ext::get_service<InterruptionManager>().OnStartThread(get_id());
         return *this;
     }
 
-    thread& operator=(thread&& _Other) EXT_NOEXCEPT
+    thread& operator=(thread&& other) EXT_NOEXCEPT
     {
         if (joinable())
-            ext::get_service<InterruptedThreads>().DetachThread(*this);
-        m_interrupted = (bool)_Other.m_interrupted;
-        base::operator=(std::forward<base>(_Other));
+            ext::get_service<InterruptionManager>().DetachThread(*this);
+        m_interrupted = (bool)other.m_interrupted;
+        base::operator=(std::forward<base>(other));
         return *this;
     }
 
-    void swap(base& _Other)   EXT_NOEXCEPT { operator=(std::move(_Other)); }
-    void swap(thread& _Other) EXT_NOEXCEPT { operator=(std::move(_Other)); }
+    void swap(base& other)   EXT_NOEXCEPT { operator=(std::move(other)); }
+    void swap(thread& other) EXT_NOEXCEPT { operator=(std::move(other)); }
 
     // Run function for execution in current thread
     template<class _Fn, class... _Args>
@@ -112,12 +133,12 @@ public:
     ~thread() EXT_NOEXCEPT
     {
         if (joinable())
-            ext::get_service<InterruptedThreads>().OnDestroyThread(get_id());
+            ext::get_service<InterruptionManager>().OnDestroyThread(get_id());
     }
 
     void detach()
     {
-        ext::get_service<InterruptedThreads>().DetachThread(*this);
+        ext::get_service<InterruptionManager>().DetachThread(*this);
         EXT_ASSERT(!joinable()) << EXT_TRACE_FUNCTION "Service must detach us";
     }
 
@@ -125,7 +146,7 @@ public:
     {
         const auto currentThreadId = get_id();
         base::join();
-        ext::get_service<InterruptedThreads>().OnDestroyThread(currentThreadId);
+        ext::get_service<InterruptionManager>().OnDestroyThread(currentThreadId);
     }
 
 public:
@@ -139,7 +160,7 @@ public:
             return;
         m_interrupted = true;
         EXT_EXPECT(joinable()) << EXT_TRACE_FUNCTION "No function call for execution in this thread";
-        ext::get_service<InterruptedThreads>().Interrupt(get_id());
+        ext::get_service<InterruptionManager>().Interrupt(get_id());
     }
 
     // check if thread has been interrupted
@@ -152,11 +173,11 @@ public:
     void interrupt_and_join() EXT_THROWS() { interrupt(); if (joinable()) base::join(); }
 
     // check if thread function is executing
-    EXT_NODISCARD bool thread_works() EXT_NOEXCEPT
+    EXT_NODISCARD bool thread_works() const EXT_NOEXCEPT
     {
         if (joinable())
         {
-            return WaitForSingleObject(native_handle(), 0) != WAIT_OBJECT_0;
+            return WaitForSingleObject(const_cast<thread*>(this)->native_handle(), 0) != WAIT_OBJECT_0;
             /*if (DWORD retCode = 0; GetExitCodeThread(native_handle(), &retCode) != 0)
                 return retCode == STILL_ACTIVE;*/
         }
@@ -196,9 +217,9 @@ private:
     std::atomic_bool m_interrupted = false;
 
     // global storage of information about interrupted ext::threads
-    class InterruptedThreads
+    class InterruptionManager
     {
-        friend ext::Singleton<InterruptedThreads>;
+        friend ext::Singleton<InterruptionManager>;
 
         enum class ThreadStatus
         {
@@ -208,19 +229,20 @@ private:
         };
 
         // map with working ext::threads and their interruption events
-        std::mutex m_workingThreadsMutex;
         std::map<std::thread::id, std::shared_ptr<ext::Event>> m_workingThreadsInterruptionEvents;
+        mutable std::shared_mutex m_workingThreadsMutex;
 
         // list of detached threads
-        std::recursive_mutex m_detachedInterruptedThreadsMutex;
+        mutable std::shared_mutex m_detachedInterruptedThreadsMutex;
         std::map<std::thread::id, ext::thread> m_detachedInterruptedThreads;
 
     public:
+        // Call this function when you move std::thead into ext::thread for register it inside manager
         void OnStartThread(const std::thread::id& id) EXT_NOEXCEPT
         {
             EXT_ASSERT(id != kInvalidThreadId);
             {
-                std::lock_guard lock(m_workingThreadsMutex);
+                std::unique_lock lock(m_workingThreadsMutex);
                 auto emplaceRes = m_workingThreadsInterruptionEvents.emplace(id, std::make_shared<ext::Event>());
                 EXT_ASSERT(emplaceRes.second) << "Double start of thread with same id " << id;
                 emplaceRes.first->second->Create(true);
@@ -228,43 +250,36 @@ private:
             CleanupDetachedThreads();
         }
 
+        // Call this function when you ext::thread destroying
         void OnDestroyThread(const std::thread::id& id) EXT_NOEXCEPT
         {
             EXT_ASSERT(id != kInvalidThreadId);
             {
-                std::lock_guard lock(m_workingThreadsMutex);
+                std::unique_lock lock(m_workingThreadsMutex);
                 EXT_ASSERT(m_workingThreadsInterruptionEvents.find(id) != m_workingThreadsInterruptionEvents.end());
                 m_workingThreadsInterruptionEvents.erase(id);
             }
             CleanupDetachedThreads();
         }
 
-        void OnThreadJoined(const std::thread::id& id) EXT_NOEXCEPT
-        {
-            EXT_ASSERT(id != kInvalidThreadId);
-            {
-                std::lock_guard lock(m_workingThreadsMutex);
-                EXT_ASSERT(m_workingThreadsInterruptionEvents.find(id) != m_workingThreadsInterruptionEvents.end());
-                m_workingThreadsInterruptionEvents.erase(id);
-            }
-            CleanupDetachedThreads();
-        }
-
+        // Call this function for detaching ext::thread
         void DetachThread(ext::thread& thread)
         {
             if (thread.thread_works())
             {
                 {
-                    std::lock_guard interruptMutex(m_workingThreadsMutex);
+                    std::unique_lock interruptMutex(m_workingThreadsMutex);
                     EXT_ASSERT(m_workingThreadsInterruptionEvents.find(thread.get_id()) != m_workingThreadsInterruptionEvents.end());
                     m_workingThreadsInterruptionEvents.erase(thread.get_id());
                 }
 
                 if (thread.interrupted() && thread.thread_works())
                 {
-                    std::lock_guard detachedMutex(m_detachedInterruptedThreadsMutex);
-                    EXT_ASSERT(m_detachedInterruptedThreads.find(thread.get_id()) == m_detachedInterruptedThreads.end());
-                    m_detachedInterruptedThreads.emplace(thread.get_id(), std::move(thread));
+                    {
+                        std::unique_lock detachedMutex(m_detachedInterruptedThreadsMutex);
+                        EXT_ASSERT(m_detachedInterruptedThreads.find(thread.get_id()) == m_detachedInterruptedThreads.end());
+                        m_detachedInterruptedThreads.emplace(thread.get_id(), std::move(thread));
+                    }
                     CleanupDetachedThreads();
                     return;
                 }
@@ -280,27 +295,30 @@ private:
             CleanupDetachedThreads();
         }
 
-        EXT_NODISCARD bool IsInterrupted(const std::thread::id& id) EXT_NOEXCEPT
+        // Call this function for check if thread interrupted by thread id
+        EXT_NODISCARD bool IsInterrupted(const std::thread::id& id) const EXT_NOEXCEPT
         {
             EXT_ASSERT(id != kInvalidThreadId);
             {
-                std::lock_guard lock(m_workingThreadsMutex);
+                std::shared_lock lock(m_workingThreadsMutex);
                 if (const auto it = m_workingThreadsInterruptionEvents.find(id); it != m_workingThreadsInterruptionEvents.end())
                     return !*it->second;
             }
+            std::shared_lock detachedMutex(m_detachedInterruptedThreadsMutex);
             return m_detachedInterruptedThreads.find(id) != m_detachedInterruptedThreads.end();
         }
 
-        EXT_NODISCARD std::shared_ptr<ext::Event> GetInterruptionEvent(const std::thread::id& id) EXT_NOEXCEPT
+        // Call this function for try getting interruption event for thread by id
+        EXT_NODISCARD std::shared_ptr<ext::Event> TryGetInterruptionEvent(const std::thread::id& id) EXT_NOEXCEPT
         {
             EXT_ASSERT(id != kInvalidThreadId);
             {
-                std::lock_guard lock(m_workingThreadsMutex);
+                std::shared_lock lock(m_workingThreadsMutex);
                 if (const auto it = m_workingThreadsInterruptionEvents.find(id); it != m_workingThreadsInterruptionEvents.end())
                     return it->second;
             }
             {
-                std::lock_guard detachedMutex(m_detachedInterruptedThreadsMutex);
+                std::shared_lock detachedMutex(m_detachedInterruptedThreadsMutex);
                 if (m_detachedInterruptedThreads.find(id) == m_detachedInterruptedThreads.end())
                     return nullptr;
             }
@@ -311,11 +329,12 @@ private:
             return res;
         }
 
+        // Call this function for interrupting thread by thread id
         void Interrupt(const std::thread::id& id) EXT_NOEXCEPT
         {
             EXT_ASSERT(id != kInvalidThreadId);
 
-            std::lock_guard lock(m_workingThreadsMutex);
+            std::unique_lock lock(m_workingThreadsMutex);
             EXT_ASSERT(m_workingThreadsInterruptionEvents.find(id) != m_workingThreadsInterruptionEvents.end());
             auto& interruptionEvent = m_workingThreadsInterruptionEvents.at(id);
             EXT_ASSERT(interruptionEvent);
@@ -324,7 +343,7 @@ private:
         }
 
     private:
-        ~InterruptedThreads()
+        ~InterruptionManager()
         {
             std::for_each(m_detachedInterruptedThreads.begin(), m_detachedInterruptedThreads.end(), [](auto& threadPair)
             {
@@ -334,7 +353,7 @@ private:
 
         void CleanupDetachedThreads()
         {
-            std::lock_guard detachedMutex(m_detachedInterruptedThreadsMutex);
+            std::unique_lock detachedMutex(m_detachedInterruptedThreadsMutex);
             for (auto it = m_detachedInterruptedThreads.begin(), end = m_detachedInterruptedThreads.end(); it != end;)
             {
                 if (!it->second.thread_works())
@@ -368,7 +387,7 @@ void interruption_point() EXT_THROWS(ext::thread::thread_interrupted())
 // Check if current ext:thread has been interrupted
 EXT_NODISCARD inline bool interruption_requested() EXT_NOEXCEPT
 {
-    return ext::get_service<::ext::thread::InterruptedThreads>().IsInterrupted(ext::this_thread::get_id());
+    return ext::get_service<::ext::thread::InterruptionManager>().IsInterrupted(ext::this_thread::get_id());
 }
 
 template <class _Clock, class _Duration>
@@ -378,7 +397,7 @@ void interruptible_sleep_until(const std::chrono::time_point<_Clock, _Duration>&
     static_assert(std::chrono::is_clock_v<_Clock>, "Clock type required");
 #endif // _HAS_CXX20
 
-    if (const auto interruptionEvent = ext::get_service<::ext::thread::InterruptedThreads>().GetInterruptionEvent(ext::this_thread::get_id()))
+    if (const auto interruptionEvent = ext::get_service<::ext::thread::InterruptionManager>().TryGetInterruptionEvent(ext::this_thread::get_id()))
     {
         auto _Now = _Clock::now();
         if (timePoint <= _Now)
@@ -402,7 +421,7 @@ void interruptible_sleep_until(const std::chrono::time_point<_Clock, _Duration>&
 template <class _Rep, class _Period>
 void interruptible_sleep_for(const std::chrono::duration<_Rep, _Period>& duration) EXT_THROWS(ext::thread::thread_interrupted())
 {
-    interruptible_sleep_until(std::_To_absolute_time(duration));
+    interruptible_sleep_until(std::_To_absolute_time_custom(duration));
 }
 
 } // namespace this_thread

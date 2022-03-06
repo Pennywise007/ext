@@ -12,8 +12,8 @@
 #include <ext/core/noncopyable.h>
 #include <ext/core/mpl.h>
 #include <ext/error/dump_writer.h>
+#include <ext/std/filesystem.h>
 #include <ext/trace/itracer.h>
-#include <ext/utils/filesystem.h>
 
 namespace ext::trace::workers {
 

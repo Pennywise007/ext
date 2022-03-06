@@ -3,9 +3,10 @@
 Show traces with defferent levels and time stamps in cout/cerr/output/trace file
 
 Don`t forget enable traces via 
-	#include <ext/traces/tracer.h>
-	ext::get_tracer()->EnableTraces(true);
-
+```C++
+#include <ext/traces/tracer.h>
+ext::get_tracer()->EnableTraces(true);
+```
 Simple macroses:
 Default information trace
 
@@ -22,3 +23,4 @@ Error trace to cerr, mostly used in EXT_CHECK/EXT_EXPECT
 Can be called for scope call function check. Trace start and end scope with the given text
 
 	EXT_TRACE_SCOPE() << EXT_TRACE_FUNCTION << "Main function called with " << args;
+

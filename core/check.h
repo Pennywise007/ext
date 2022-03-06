@@ -13,7 +13,6 @@
 #include <ext/trace/tracer.h>
 #include <ext/utils/call_once.h>
 
-
 namespace ext::check {
 
 struct CheckFailedException : ::ext::exception
@@ -74,16 +73,6 @@ EXT_EXPECT(val == true) << "Check failed";
     EXT_EXPECT_RESULT(bool_expression, !!(__result), ::ext::check::CheckFailedException(EXT_SRC_LOCATION, #bool_expression))
 
 /*
-Checks boolean expression or HRESULT, if check failes:
-* generate breakpoint if debuuger present, othervise - create dump.
-* throw exception
-
-Example:
-EXT_REQUIRE(MainInterface) << "No main interface";
-*/
-#define EXT_REQUIRE(bool_expression) EXT_EXPECT(bool_expression)
-
-/*
 Checks boolean expression or HRESULT in DEBUG, if check failes:
 * generate breakpoint if debugger present, otherwise - create dump.
 * show error in log
@@ -96,3 +85,13 @@ EXT_ASSERT(val == true) << "Check failed";
 #else
 #define EXT_ASSERT(bool_expression) if (true) {} else EXT_TRACE_ERR()
 #endif	// _DEBUG
+
+/*
+Checks boolean expression or HRESULT, if check failes:
+* generate breakpoint if debuuger present, othervise - create dump.
+* throw exception
+
+Example:
+EXT_REQUIRE(MainInterface) << "No main interface";
+*/
+#define EXT_REQUIRE(bool_expression) EXT_ASSERT(bool_expression)

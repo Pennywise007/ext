@@ -17,7 +17,10 @@ Example:
             TickSubscriber::SubscribeTimer(std::chrono::minutes(5));
         }
 
-        // ITickHandler
+    // ITickHandler
+    private:
+        /// <summary>Called when the timer ticks</summary>
+        /// <param name="tickParam">Parameter passed during subscription.</param>
         void OnTick(::ext::tick::TickParam) EXT_NOEXCEPT override
         {
             ... // execute text each 5 minutes
@@ -241,7 +244,7 @@ private:
     private:
         void StartTimer() override
         {
-            EXT_ASSERT(m_timerId.has_value());
+            EXT_ASSERT(!m_timerId.has_value());
             ext::InvokeMethod([timerId = &m_timerId]()
             {
                 timerId->emplace(::SetTimer(nullptr, NULL, (UINT)kDefTickInterval.count(),
@@ -250,7 +253,7 @@ private:
                     get_service<TickService>().m_invokedTimer.OnTickTimer();
                 }));
             });
-            EXT_ASSERT(m_timerId.value_or(0) == 0) << "Timer must be set";
+            EXT_ASSERT(m_timerId.value_or(0) != 0) << "Timer must be set";
         }
 
         void StopTimer() override
@@ -284,7 +287,7 @@ private:
                         ext::this_thread::interruptible_sleep_for(kDefTickInterval);
                     }
                 }
-                catch (const ext::thread::thread_interrupted& interrupted)
+                catch (const ext::thread::thread_interrupted& /*interrupted*/)
                 {}
             });
         }

@@ -6,19 +6,19 @@
 
 #include <ext/thread/thread_pool.h>
 
-std::set<ext::task::TaskId, ext::task::TaskIdComparer> taskList;
+std::set<ext::task::TaskId, ext::task::TaskIdHelper> taskList;
 ext::thread_pool threadPool([&taskList, &listMutex](const ext::task::TaskId& taskId)
 {
-	taskList.erase(taskId);
+    taskList.erase(taskId);
 });
 
 const auto maxThreads = std::thread::hardware_concurrency();
 for (auto i = maxThreads; i != 0; --i)
 {
-	taskList.emplace(threadPool.add_task([]()
-	{
-		...
-	}));
+    taskList.emplace(threadPool.add_task([]()
+    {
+        ...
+    }));
 }
 threadPool.wait_for_tasks();
 
@@ -44,10 +44,21 @@ namespace task {
 // task identifier
 typedef GUID TaskId;
 
-struct TaskIdComparer
+struct TaskIdHelper
 {
     // @see also IsEqualGUID
-    bool operator()(const TaskId& Left, const TaskId& Right) const { return memcmp(&Left, &Right, sizeof(Right)) < 0;     }
+    bool operator()(const TaskId& Left, const TaskId& Right) const { return memcmp(&Left, &Right, sizeof(Right)) < 0; }
+    // Check equality of task ids
+    EXT_NODISCARD inline static bool Compare(const TaskId& Left, const TaskId& Right) EXT_NOEXCEPT
+    {
+        return memcmp(&Left, &Right, sizeof(Right)) == 0;
+    }
+    EXT_NODISCARD inline static TaskId Create() EXT_THROWS(std::exception)
+    {
+        task::TaskId newTaskId;
+        EXT_EXPECT(SUCCEEDED(CoCreateGuid(&newTaskId))) << "Failed to create GUID";
+        return newTaskId;
+    }
 };
 
 } // namespace task
@@ -88,6 +99,7 @@ public:
      * \return created task identifier
      */
     task::TaskId add_task(std::function<void()>&& task, const TaskPriority priority = TaskPriority::eNormal);
+    void add_task_by_id(const task::TaskId& taskId, std::function<void()>&& task, const TaskPriority priority = TaskPriority::eNormal);
 
     /**
      * \brief Add task function to queue
@@ -136,15 +148,13 @@ private:
 // struct with task information
 struct thread_pool::TaskInfo : ext::NonCopyable
 {
-    TaskInfo(std::function<void()>&& _task, const TaskPriority _priority)
-        : task(std::move(_task)), priority(_priority)
-    {
-        EXT_EXPECT(SUCCEEDED(CoCreateGuid(&taskId))) << "Failed to create GUID";
-    }
+    explicit TaskInfo(task::TaskId id, std::function<void()>&& _task, const TaskPriority _priority) EXT_NOEXCEPT
+        : task(std::move(_task)), priority(_priority), taskId(std::move(id))
+    {}
 
-    std::function<void()> task;
-    TaskPriority priority;
-    task::TaskId taskId;
+    const std::function<void()> task;
+    const TaskPriority priority;
+    const task::TaskId taskId;
 };
 
 inline thread_pool& thread_pool::GlobalInstance()
@@ -155,20 +165,25 @@ inline thread_pool& thread_pool::GlobalInstance()
 
 inline task::TaskId thread_pool::add_task(std::function<void()>&& task, const TaskPriority priority)
 {
-    task::TaskId newTaskId;
+    const task::TaskId newTaskId = task::TaskIdHelper::Create();
+    add_task_by_id(newTaskId, std::move(task), priority);
+    return newTaskId;
+}
+
+inline void thread_pool::add_task_by_id(const task::TaskId& taskId, std::function<void()>&& task, const TaskPriority priority)
+{
     {
         std::lock_guard<std::mutex> lock(m_mutex);
 
         const auto priorityIt = std::find_if(m_queueTasks.cbegin(), m_queueTasks.cend(),
-            [priority](const TaskInfoPtr& task)
+            [&priority](const TaskInfoPtr& task)
             {
                 return task->priority > priority;
             });
 
-        newTaskId = m_queueTasks.emplace(priorityIt, std::make_unique<TaskInfo>(std::move(task), priority))->get()->taskId;
+        m_queueTasks.emplace(priorityIt, std::make_unique<TaskInfo>(taskId, std::move(task), priority));
     }
     m_notifier.notify_one();
-    return newTaskId;
 }
 
 template <typename Result, typename ... FunctionArgs, typename ... Args>
@@ -196,7 +211,7 @@ std::pair<task::TaskId, std::future<Result>> thread_pool::add_task(Result(task)(
         }
     }, priority);
 
-    return std::make_pair(std::move(taskId), resultFuture);
+    return std::make_pair(std::move(taskId), std::move(resultFuture));
 }
 
 inline void thread_pool::erase_task(const task::TaskId& taskId)

@@ -21,7 +21,7 @@ class MethodInvoker : private CWnd
     MethodInvoker();
     ~MethodInvoker();
 
-    // passing a function for execution in the main thread of the application
+// passing a function for execution in the main thread of the application
 public:
     // Initialization function, should be called from main thread
     void Init();
@@ -109,12 +109,12 @@ inline void MethodInvoker::CallAsync(CallFunction&& func) EXT_THROWS()
 
 EXT_NODISCARD inline bool MethodInvoker::IsMainThread()
 {
-    return get_service<MethodInvoker>().m_windowThreadId == ::GetCurrentProcessId();
+    return get_service<MethodInvoker>().m_windowThreadId == ::GetCurrentThreadId();
 }
 
 inline void MethodInvoker::CreateMainThreadWindow()
 {
-    EXT_DUMP_IF(!IsMainThread()) << EXT_TRACE_FUNCTION << "Creation of MethodInvoker must be called from main thread!";
+    EXT_DUMP_IF(m_windowThreadId != ::GetCurrentThreadId()) << EXT_TRACE_FUNCTION << "Creation of MethodInvoker must be called from main thread!";
 
     HINSTANCE instance = AfxGetInstanceHandle();
     const char* className(typeid(*this).name());

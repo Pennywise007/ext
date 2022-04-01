@@ -7,12 +7,12 @@ Example:
 #include <ext/thread/scheduller.h>
 
     bool executed = false;
-    const auto taskIdAtTime = scheduler.SubscribeTaskAtTime(
+    const auto taskIdAtTime = ext::Scheduler::GlobalInstance().SubscribeTaskAtTime(
         [&executed]()
         {
             executed = true;
         },
-        std::chrono::high_resolution_clock::now());
+        std::chrono::system_clock::now());
     EXPECT_EQ(taskIdAtTime, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
     EXPECT_TRUE(executed);
@@ -33,8 +33,8 @@ namespace ext {
 typedef size_t TaskId;
 constexpr TaskId kInvalidId = -1;
 
-// Task scheduller, allow to set the execution schedule for task or execute it at specific time
-// You can use global scheduller instance for fast task, or use own copy for long executing tasks
+// Task schedule, allow to set the execution schedule for task or execute it at specific time
+// You can use global schedule instance for fast task, or use own copy for long executing tasks
 class Scheduler : ext::NonCopyable
 {
 public:
@@ -49,9 +49,9 @@ public:
                                  std::chrono::high_resolution_clock::duration callingPeriod,
                                  TaskId taskId = kInvalidId);
 
-    // Setting next task call time by task id, if time < now() execute it immediatly
+    // Setting next task call time by task id, if time < now() execute it immediately
     TaskId SubscribeTaskAtTime(std::function<void()>&& task,
-                               std::chrono::high_resolution_clock::time_point time,
+                               std::chrono::system_clock::time_point time,
                                TaskId taskId = kInvalidId);
 
     // Checking is task exist
@@ -80,20 +80,20 @@ struct Scheduler::TaskInfo
 {
     std::function<void()> task;
 
-    std::chrono::high_resolution_clock::time_point nextCallTime;
+    std::chrono::system_clock::time_point nextCallTime;
     std::optional<std::chrono::high_resolution_clock::duration> callingPeriod;
 
     explicit TaskInfo(std::function<void()>&& function, std::chrono::high_resolution_clock::duration&& period) EXT_NOEXCEPT
         : task(function)
-        , nextCallTime(std::chrono::high_resolution_clock::now() + period)
+        , nextCallTime(std::chrono::system_clock::now() + std::chrono::duration_cast<std::chrono::system_clock::duration>(period))
         , callingPeriod(std::move(period))
     {}
 
-    explicit TaskInfo(std::function<void()>&& function, std::chrono::high_resolution_clock::time_point&& callTime) EXT_NOEXCEPT
+    explicit TaskInfo(std::function<void()>&& function, std::chrono::system_clock::time_point&& callTime) EXT_NOEXCEPT
         : task(function)
         , nextCallTime(std::move(callTime))
     {
-        EXT_ASSERT(nextCallTime > std::chrono::high_resolution_clock::now());
+        EXT_ASSERT(nextCallTime > std::chrono::system_clock::now());
     }
 };
 
@@ -131,7 +131,7 @@ inline TaskId Scheduler::SubscribeTaskByPeriod(std::function<void()>&& task,
 }
 
 inline TaskId Scheduler::SubscribeTaskAtTime(std::function<void()>&& task,
-                                             std::chrono::high_resolution_clock::time_point time,
+                                             std::chrono::system_clock::time_point time,
                                              TaskId taskId)
 {
     {
@@ -192,7 +192,7 @@ inline void Scheduler::MainThread()
                                              });
 
             const auto nextCallTime = it->second.nextCallTime;
-            if (nextCallTime <= std::chrono::high_resolution_clock::now() ||
+            if (nextCallTime <= std::chrono::system_clock::now() ||
                 m_cvTasks.wait_until(lk, nextCallTime) == std::cv_status::timeout)
             {
                 if (!it->second.callingPeriod.has_value())
@@ -202,7 +202,8 @@ inline void Scheduler::MainThread()
                 }
                 else
                 {
-                    it->second.nextCallTime = std::chrono::high_resolution_clock::now() + *it->second.callingPeriod;
+                    it->second.nextCallTime = std::chrono::system_clock::now() +
+                        std::chrono::duration_cast<std::chrono::system_clock::duration>(*it->second.callingPeriod);
                     callBack = it->second.task;
                 }
             }

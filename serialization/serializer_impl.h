@@ -254,6 +254,10 @@ inline bool Executor::SerializeObject(const std::unique_ptr<serializer::ISeriali
                 currentNode->ChildNodes.emplace_back(std::make_shared<SerializableNode>(objectsVisitor.GetCurrentObject()->GetName(), currentNode));
                 currentNode = currentNode->ChildNodes.back();
             }
+
+            const auto* collection = dynamic_cast<const ISerializableCollection*>(objectsVisitor.GetCurrentObject());
+            EXT_ASSERT(collection);
+            const_cast<ISerializableCollection*>(collection)->OnSerializationStart();
         }
         break;
         case Visitor::ObjectType::eCollectionEnd:
@@ -261,6 +265,10 @@ inline bool Executor::SerializeObject(const std::unique_ptr<serializer::ISeriali
             EXT_EXPECT(currentNode);
             EXT_ASSERT(currentNode->Name == objectsVisitor.GetCurrentObject()->GetName());
             currentNode = currentNode->Parent.lock();
+
+            const auto* collection = dynamic_cast<const ISerializableCollection*>(objectsVisitor.GetCurrentObject());
+            EXT_ASSERT(collection);
+            const_cast<ISerializableCollection*>(collection)->OnSerializationEnd();
         }
         break;
         case Visitor::ObjectType::eField:
@@ -313,6 +321,7 @@ inline bool Executor::DeserializeObject(const std::unique_ptr<serializer::IDeser
         {
             const auto* collection = dynamic_cast<const ISerializableCollection*>(objectsVisitor.GetCurrentObject());
             EXT_ASSERT(collection);
+            const_cast<ISerializableCollection*>(collection)->OnDeserializationStart();
 
             std::shared_ptr<SerializableNode> childNode;
             if (!currentNode)
@@ -341,6 +350,11 @@ inline bool Executor::DeserializeObject(const std::unique_ptr<serializer::IDeser
         {
             EXT_EXPECT(currentNode);
             EXT_ASSERT(currentNode->Name == objectsVisitor.GetCurrentObject()->GetName()) << "Invalid name for cuurent collection";
+
+            const auto* collection = dynamic_cast<const ISerializableCollection*>(objectsVisitor.GetCurrentObject());
+            EXT_ASSERT(collection);
+            const_cast<ISerializableCollection*>(collection)->OnDeserializationEnd();
+
             currentNode = currentNode->Parent.lock();
         }
         break;

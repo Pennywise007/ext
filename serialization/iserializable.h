@@ -53,6 +53,7 @@ struct TestStruct :  ext::serializable::SerializableObject<TestStruct>, Internal
 #include <list>
 #include <type_traits>
 #include <memory>
+#include <optional>
 
 #include <ext/core/defines.h>
 #include <ext/core/check.h>
@@ -77,7 +78,7 @@ struct TestStruct :  ext::serializable::SerializableObject<TestStruct>, Internal
 * Calls SerializableObject:RegisterField function, return object with same type and constructed with __VA_ARGS__ parameters
 */
 #define REGISTER_SERIALIZABLE_OBJECT_N(name, object) \
-SerializableObject<std::remove_pointer_t<decltype(this)>>::RegisterField(name, &std::remove_pointer_t<decltype(this)>::object)
+SerializableObjectType::RegisterField(name, &std::remove_pointer_t<decltype(this)>::object)
 
 #define REGISTER_SERIALIZABLE_OBJECT(object) \
 REGISTER_SERIALIZABLE_OBJECT_N(TEXT(STRINGINIZE(object)), object)
@@ -105,7 +106,7 @@ DECLARE_SERIALIZABLE_N(GET_OBJECT_NAME(GET_OBJECT(Property)), Property, __VA_ARG
 operator ISerializable*() { return static_cast<SerializableObject<std::remove_pointer_t<decltype(this)>>*>(this); }     \
 const bool ___BaseClassRegistrator = [this]()                                                                           \
     {                                                                                                                   \
-        SerializableObject<std::remove_pointer_t<decltype(this)>>::RegisterSerializableBaseClasses<__VA_ARGS__>();      \
+        SerializableObjectType::RegisterSerializableBaseClasses<__VA_ARGS__>();      \
         return true;                                                                                                    \
     }();
 
@@ -163,6 +164,16 @@ struct ISerializableCollection : ISerializable
     EXT_NODISCARD virtual size_t Size() const EXT_NOEXCEPT = 0;
     // Get collection element by index
     EXT_NODISCARD virtual std::shared_ptr<ISerializable> Get(const size_t& index) const = 0;
+
+    // Called before collection serialization
+    virtual void OnSerializationStart() {}
+    // Called after collection serialization
+    virtual void OnSerializationEnd() {};
+
+    // Called before collection deserialization
+    virtual void OnDeserializationStart() {}
+    // Called after collection deserialization
+    virtual void OnDeserializationEnd() {};
 };
 
 // Interface for optional value like std::optional<T>
@@ -183,10 +194,13 @@ struct ISerializableFieldInfo
 /*
 * Base class for class with serializable fields, register field by RegisterField function or DECLARE_SERIALIZABLE macros.
 */
-template <class Type, const wchar_t* TypeName = nullptr>
-struct SerializableObject : ISerializableCollection
+template <class Type, const wchar_t* TypeName = nullptr, class ICollectionInterface = ISerializableCollection>
+struct SerializableObject : public ICollectionInterface
 {
+    static_assert(std::is_base_of_v<ISerializableCollection, ICollectionInterface>, "Collection should be derived from ISerializableCollection");
 protected:
+    typedef SerializableObject<Type, TypeName, ICollectionInterface> SerializableObjectType;
+
     template <class Field>
     void RegisterField(const wchar_t* name, Field Type::* field);
 

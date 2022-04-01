@@ -1,7 +1,10 @@
 #pragma once
 
+#include <functional>
 #include <tuple>
 #include <type_traits>
+
+#include <ext/core/defines.h>
 
 namespace ext::mpl {
 
@@ -19,6 +22,41 @@ struct contain_type<TypeToFound, Type, OtherTypes...>
 
 template <typename TypeToFound, typename... Types>
 inline constexpr bool contain_type_v = contain_type<TypeToFound, Types...>::value;
+
+
+/*
+Get type from types list by index
+find_type_by_index<0, 0, int, float>::type == int;
+find_type_by_index<0, 1, int, float>::type == float;
+*/
+template<size_t CurrentIndex, size_t SearchedIndex, typename... Types>
+struct find_type_by_index;
+
+template <size_t SearchedIndex, typename CurrentType, typename... Types>
+struct find_type_by_index<SearchedIndex, SearchedIndex, CurrentType, Types...>
+{
+    using type = CurrentType;
+};
+
+template <size_t CurrentIndex, size_t SearchedIndex, typename CurrentType, typename... Types>
+struct find_type_by_index<CurrentIndex, SearchedIndex, CurrentType, Types...>
+{
+    using type = typename find_type_by_index<CurrentIndex + 1, SearchedIndex, Types...>::type;
+};
+
+template <size_t CurrentIndex, size_t SearchedIndex, typename CurrentType>
+struct find_type_by_index<CurrentIndex, SearchedIndex, CurrentType>
+{
+    using type = typename CurrentType::index_out_of_bounds;
+};
+
+/*
+Get type from types list by index
+get_type_t<0, int, float> == int;
+get_type_t<0, int, float> == float;
+*/
+template <size_t SearchedIndex, typename... Types>
+using get_type_t = typename find_type_by_index<0, SearchedIndex, Types...>::type;
 
 /*
 Mulptiple template arguments list
@@ -52,21 +90,26 @@ struct list : std::tuple<T...>
     }
 
     // Get count of elements
-    constexpr static auto Count()
+    EXT_NODISCARD constexpr static auto Count()
     {
-        return std::tuple_size_v<std::tuple<T...>>;
+        return std::tuple_size_v<std::tuple<T*...>>;
     }
 
     // Get element from list
     template <std::size_t index>
-    constexpr static decltype(auto) Get()
+    EXT_NODISCARD constexpr decltype(auto) Get()
     {
-        return std::get<index>(std::tuple<T...>());
+        return std::get<index>(*this);
     }
+
+    // Get list type
+    // list<bool, float>::ElementType<1> == float&&)
+    template <std::size_t index>
+    using ElementType = get_type_t<index, T...>;
 
     // Get element from list
     template <std::size_t index>
-    constexpr decltype(auto) GetItem()
+    EXT_NODISCARD constexpr decltype(auto) GetItem()
     {
         return std::get<index>(*this);
     }
@@ -97,10 +140,10 @@ struct apply_impl
 template <template <typename...> class Function, template <typename...> class List, typename... Types>
 struct apply_impl<Function, List<Types...>>
 {
-    using type = Function<Types...>;
+    using result = Function<Types...>;
 };
 template <template <typename...> class Function, typename List>
-using apply = typename apply_impl<Function, List>::type;
+using apply = typename apply_impl<Function, List>::result;
 
 /*
 * Help struct to call function for each element in list.
@@ -118,7 +161,7 @@ template<typename T>
 struct ForEach;
 
 template<typename Type, typename... TConverters>
-struct ForEach<list<typename Type, TConverters...>>
+struct ForEach<list<Type, TConverters...>>
 {
     template<typename Function>
     static void Call(Function&& function)

@@ -154,7 +154,7 @@ struct ServiceCollection
 
 private:
     // Internal registration class in InterfaceMap
-    template <typename Class, typename Interface>
+    template <typename Interface>
     void RegisterObject(const std::function<std::shared_ptr<ServiceProvider::IObject>()>& registerObject);
 
 private:
@@ -188,7 +188,7 @@ EXT_NODISCARD std::shared_ptr<Interface> GetInterface(ServiceProvider::Ptr servi
 // Help interface to simplify getting interfaces inside classes, holds ServiceProvider pointer and allow to easy GetInterface
 struct ServiceProviderHolder
 {
-    ServiceProviderHolder(ServiceProvider::Ptr&& serviceProvider) EXT_NOEXCEPT
+    explicit ServiceProviderHolder(ServiceProvider::Ptr serviceProvider) EXT_NOEXCEPT
         : m_serviceProvider(std::move(serviceProvider))
     {}
 
@@ -196,6 +196,12 @@ struct ServiceProviderHolder
     EXT_NODISCARD std::shared_ptr<Interface> GetInterface() const EXT_THROWS(di::not_registered, ...)
     {
         return ext::GetInterface<Interface>(m_serviceProvider);
+    }
+
+    template <typename Object>
+    EXT_NODISCARD std::shared_ptr<Object> CreateObject() const EXT_THROWS(di::not_registered, ...)
+    {
+        return ext::CreateObject<Object>(m_serviceProvider);
     }
 
     const ServiceProvider::Ptr m_serviceProvider;
@@ -293,6 +299,7 @@ EXT_NODISCARD std::shared_ptr<Type> CreateWithProviders(any_interface_provider& 
 template <typename Type>
 EXT_NODISCARD std::shared_ptr<Type> CreateObject(ServiceProvider::Ptr serviceProvider) EXT_THROWS(di::not_registered, ...)
 {
+    EXT_EXPECT(!!serviceProvider);
     di::any_interface_provider provider(std::move(serviceProvider));
     return di::CreateWithProviders<Type>(provider, std::make_index_sequence<ext::detail::constructor_size<Type>>{});
 }
@@ -303,6 +310,7 @@ EXT_NODISCARD std::shared_ptr<Type> CreateObject(ServiceProvider::Ptr servicePro
 template <typename Interface>
 EXT_NODISCARD std::shared_ptr<Interface> GetInterface(ServiceProvider::Ptr serviceProvider) EXT_THROWS(di::not_registered, ...)
 {
+    EXT_EXPECT(!!serviceProvider);
     return serviceProvider->GetInterface<Interface>();
 }
 
@@ -445,7 +453,7 @@ struct ServiceCollection::SingletonObject : ServiceProvider::IObject,
     virtual EXT_NODISCARD std::shared_ptr<ServiceProvider::IObject> CreateScopedObject() EXT_NOEXCEPT override
     {
         // only one instance on whole scopes
-        return shared_from_this();
+        return ext::enable_shared_from_this<ServiceCollection::SingletonObject<Object, Interface>, ServiceProvider::IObject>::shared_from_this();
     }
 
 private:
@@ -513,7 +521,7 @@ struct ServiceCollection::WrapperObject final : ServiceProvider::IObject,
     EXT_NODISCARD std::shared_ptr<ServiceProvider::IObject> CreateScopedObject() EXT_NOEXCEPT override
     {
         // only one instance on whole scopes
-        return shared_from_this();
+        return ext::enable_shared_from_this<ServiceCollection::WrapperObject<Object, Interface, InterfaceWrapped>, ServiceProvider::IObject>::shared_from_this();
     }
 
 private:
@@ -528,7 +536,7 @@ void ServiceCollection::RegisterTransient()
     {
         using Interface = std::remove_pointer_t<decltype(type)>;
         di::check_inheritance<Class, Interface>::Check();
-        RegisterObject<Class, Interface>([]()
+        RegisterObject<Interface>([]()
         {
             return std::make_shared<TransientObject<Class, Interface>>();;
         });
@@ -538,17 +546,15 @@ void ServiceCollection::RegisterTransient()
 template <typename Class, typename... Interfaces>
 void ServiceCollection::RegisterScoped()
 {
-    using List = ext::mpl::list<Interfaces...>;
-    using ObjectBasedInterface = std::remove_reference_t<decltype(List::Get<0>())>;
-
+    using ObjectBasedInterface = ext::mpl::get_type_t<0, Interfaces...>;
     std::shared_ptr<ScopedObject<Class, ObjectBasedInterface>> basedObject = std::make_shared<ScopedObject<Class, ObjectBasedInterface>>();
 
     std::unique_lock lock(m_registeredObjectsMutex);
-    ext::mpl::ForEach<List>::Call([&](auto* type)
+    ext::mpl::ForEach<ext::mpl::list<Interfaces...>>::Call([&](auto* type)
     {
         using Interface = std::remove_pointer_t<decltype(type)>;
         di::check_inheritance<Class, Interface>::Check();
-        RegisterObject<Class, Interface>([&basedObject]()
+        RegisterObject<Interface>([&basedObject]()
         {
             if constexpr (std::is_same_v<Interface, ObjectBasedInterface>)
                 return basedObject;
@@ -561,17 +567,15 @@ void ServiceCollection::RegisterScoped()
 template <typename Class, typename... Interfaces>
 void ServiceCollection::RegisterSingleton()
 {
-    using List = ext::mpl::list<Interfaces...>;
-    using ObjectBasedInterface = std::remove_reference_t<decltype(List::Get<0>())>;
-
+    using ObjectBasedInterface = ext::mpl::get_type_t<0, Interfaces...>;
     std::shared_ptr<SingletonObject<Class, ObjectBasedInterface>> basedObject = std::make_shared<SingletonObject<Class, ObjectBasedInterface>>();
 
     std::unique_lock lock(m_registeredObjectsMutex);
-    ext::mpl::ForEach<List>::Call([&](auto* type)
+    ext::mpl::ForEach<ext::mpl::list<Interfaces...>>::Call([&](auto* type)
     {
         using Interface = std::remove_pointer_t<decltype(type)>;
         di::check_inheritance<Class, Interface>::Check();
-        RegisterObject<Class, Interface>([&basedObject]()
+        RegisterObject<Interface>([&basedObject]()
         {
             if constexpr (std::is_same_v<Interface, ObjectBasedInterface>)
                 return basedObject;
@@ -595,7 +599,7 @@ bool ServiceCollection::Unregister() EXT_NOEXCEPT
     return m_registeredObjects.erase(typeid(Interface).hash_code()) != 0;
 }
 
-template <typename Class, typename Interface>
+template <typename Interface>
 void ServiceCollection::RegisterObject(const std::function<std::shared_ptr<ServiceProvider::IObject>()>& registerObject)
 {
     EXT_ASSERT(!m_registeredObjectsMutex.try_lock());

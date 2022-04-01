@@ -76,12 +76,12 @@ struct Event : private ext::NonCopyable
         return false;
     }
 
-    constexpr EXT_NODISCARD bool operator!() const EXT_NOEXCEPT { return !m_handle; }
-    constexpr EXT_NODISCARD operator bool() const EXT_NOEXCEPT { return m_handle; }
+    EXT_NODISCARD constexpr bool operator!() const EXT_NOEXCEPT { return !m_handle; }
+    EXT_NODISCARD constexpr operator bool() const EXT_NOEXCEPT { return m_handle; }
 
     // Get event handle
-    constexpr EXT_NODISCARD HANDLE& GetHandle() { return m_handle; }
-    constexpr EXT_NODISCARD const HANDLE& GetHandle() const { return m_handle; }
+    EXT_NODISCARD constexpr HANDLE& GetHandle() { return m_handle; }
+    EXT_NODISCARD constexpr const HANDLE& GetHandle() const { return m_handle; }
 
 private:
     ext::scope::ObjectHolder<HANDLE, decltype(&::CloseHandle)> m_handle = { &::CloseHandle, nullptr };

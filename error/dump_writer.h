@@ -32,7 +32,7 @@ void main()
 #define EXT_DUMP_CREATE() ext::dump::create_dump();
 
 // If the debugger is connected - break, otherwise - create a process dump
-#define DEBUG_BREAK_OR_CREATE_DUMP                                          \
+#define DEBUG_BREAK_OR_CREATE_DUMP()                                        \
     {                                                                       \
         if (IsDebuggerPresent())                                            \
             DebugBreak();                                                   \
@@ -50,7 +50,7 @@ Checks boolean expression, if true:
         for (bool __firstEnter = true;; __firstEnter = false)       \
             if (!__firstEnter)                                      \
             {                                                       \
-                CALL_ONCE(DEBUG_BREAK_OR_CREATE_DUMP)               \
+                CALL_ONCE((DEBUG_BREAK_OR_CREATE_DUMP()));          \
                 break;                                              \
             }                                                       \
             else                                                    \

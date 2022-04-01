@@ -65,9 +65,9 @@ inline StreamType& operator<<(StreamType& stream, const ::ext::ITracer::Type typ
         return stream << "ERR";
     case ::ext::ITracer::Type::eNormal:
         return stream << "INF";
+    default:
+        return stream << "UNKNOWN";
     }
-
-    EXT_UNREACHABLE();
 }
 
 /*

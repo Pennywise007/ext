@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cwctype>
 #include <string>
 #include <sstream>
 #include <xlocale>

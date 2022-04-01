@@ -115,16 +115,16 @@ struct ObjectHolder : ::ext::NonCopyable
         return *this;
     }
 
-    constexpr EXT_NODISCARD operator ObjectType&() { return m_object.value(); }
-    constexpr EXT_NODISCARD operator const ObjectType&() const { return m_object.value(); }
+    EXT_NODISCARD constexpr operator ObjectType&() { return m_object.value(); }
+    EXT_NODISCARD constexpr operator const ObjectType&() const { return m_object.value(); }
 
-    constexpr EXT_NODISCARD const ObjectType& value() const { return m_object.value(); }
-    constexpr EXT_NODISCARD bool has_value() const EXT_NOEXCEPT
+    EXT_NODISCARD constexpr const ObjectType& value() const { return m_object.value(); }
+    EXT_NODISCARD constexpr bool has_value() const EXT_NOEXCEPT
     {
         return m_object.has_value() && (!m_objectInvalidValue.has_value() || m_object.value() != m_objectInvalidValue.value());
     }
-    constexpr EXT_NODISCARD bool operator!() const EXT_NOEXCEPT { return !has_value(); }
-    constexpr EXT_NODISCARD operator bool() const EXT_NOEXCEPT { return has_value(); }
+    EXT_NODISCARD constexpr bool operator!() const EXT_NOEXCEPT { return !has_value(); }
+    EXT_NODISCARD constexpr operator bool() const EXT_NOEXCEPT { return has_value(); }
 
 public:
     constexpr void DestroyObject() EXT_NOEXCEPT

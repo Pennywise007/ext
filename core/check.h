@@ -1,11 +1,11 @@
 #pragma once
 
 #include <atomic>
+#include <windows.h>        // define target
 #include <debugapi.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <type_traits>
-#include <winerror.h>
 
 #include <ext/core/defines.h>
 #include <ext/error/exception.h>
@@ -25,7 +25,7 @@ struct CheckFailedException : ::ext::exception
     EXT_NODISCARD std::string external_text() const override { return "expression: '" + m_expression + "'"; }
 
     template <class T>
-    auto& operator<<(const T& data) { ::ext::exception::operator<<(data); return *this; }
+    CheckFailedException& operator<<(const T& data) { ::ext::exception::operator<<(data); return *this; }
 
     std::string m_expression;
 };
@@ -56,7 +56,7 @@ EXT_EXPECT_RESULT(val, _result == 0, ::ext::check::CheckFailedException(__FILE__
          for (bool __firstEnter = true;; __firstEnter = false)                      \
             if (__firstEnter)                                                       \
             {                                                                       \
-                CALL_ONCE(DEBUG_BREAK_OR_CREATE_DUMP)                               \
+                CALL_ONCE((DEBUG_BREAK_OR_CREATE_DUMP()))                           \
             }                                                                       \
             else                                                                    \
                 throw exception
@@ -85,6 +85,17 @@ EXT_ASSERT(val == true) << "Check failed";
 #else
 #define EXT_ASSERT(bool_expression) if (true) {} else EXT_TRACE_ERR()
 #endif	// _DEBUG
+
+/* Unreachable code
+*
+* if (true) return;
+* EXT_UNREACHABLE()
+*/
+#ifdef __GNUC__
+#define EXT_UNREACHABLE() __builtin_unreachable()
+#else
+#define EXT_UNREACHABLE(...) EXT_ASSERT(false) << EXT_TRACE_FUNCTION __VA_ARGS__; __assume(0)
+#endif
 
 /*
 Checks boolean expression or HRESULT, if check failes:

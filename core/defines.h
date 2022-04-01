@@ -10,17 +10,6 @@
 #define EXT_NOEXCEPT    noexcept
 #define EXT_THROWS(...)  noexcept(false)
 
-/* Unreachable code
- *
- * if (true) return;
- * EXT_UNREACHABLE()
-*/
-#ifdef __GNUC__
-#define EXT_UNREACHABLE() __builtin_unreachable()
-#else
-#define EXT_UNREACHABLE() __assume(0)
-#endif
-
 // EXT_PP_CAT(x, y) => xy
 #define EXT_PP_EXPAND(x)  x
 #define EXT_PP_CAT_I(x,y) EXT_PP_EXPAND(x##y)

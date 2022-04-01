@@ -14,7 +14,7 @@
 // Default trace macros, using: EXT_TRACE_TYPE(::ext::ITracer::TraceType::eNormal) << EXT_TRACE_FUNCTION << "my text";
 #define EXT_TRACE_TYPE(TraceType) \
     for (auto* __tracer = ::ext::get_tracer(); __tracer && __tracer->CanTrace(TraceType); __tracer = nullptr)   \
-        for (std::ostringstream __stream; __tracer; __tracer = nullptr)                                         \
+        if (std::ostringstream __stream; __tracer)                                                              \
             for (bool __streamIsSet = false; __tracer; __streamIsSet = true)                                    \
                 if (__streamIsSet)                                                                              \
                 {                                                                                               \

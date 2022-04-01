@@ -30,7 +30,7 @@ struct FileTracer : ITraceWorker
         auto tracesDirectory = std::filesystem::get_exe_directory().append("Traces");
         if (!std::filesystem::exists(tracesDirectory) && !std::filesystem::create_directories(tracesDirectory))
         {
-            DEBUG_BREAK_OR_CREATE_DUMP;
+            DEBUG_BREAK_OR_CREATE_DUMP();
             throw std::runtime_error("Failed to create trace directory!");
         }
 
@@ -40,7 +40,7 @@ struct FileTracer : ITraceWorker
             .append(CTime::GetCurrentTime().Format(L"_%d.%m.%Y_%H.%M.%S.log").GetString());
 
         if (std::filesystem::exists(traceFileName))
-            DEBUG_BREAK_OR_CREATE_DUMP; // it must be first file creation
+            DEBUG_BREAK_OR_CREATE_DUMP(); // it must be first file creation
 
         m_outputFile.open(traceFileName);
         if (!m_outputFile.is_open())
@@ -52,7 +52,7 @@ struct FileTracer : ITraceWorker
         if (m_outputFile.is_open())
             m_outputFile.close();
         else
-            DEBUG_BREAK_OR_CREATE_DUMP // file must be opened on creation class
+            DEBUG_BREAK_OR_CREATE_DUMP(); // file must be opened on creation class
     }
 
     // ITraceWorker
@@ -66,7 +66,7 @@ struct FileTracer : ITraceWorker
             EXT_DUMP_IF(!m_outputFile.good()) << EXT_TRACE_FUNCTION;
         }
         else
-            DEBUG_BREAK_OR_CREATE_DUMP; // file must be opened on creation class
+            DEBUG_BREAK_OR_CREATE_DUMP(); // file must be opened on creation class
     }
 
 private:

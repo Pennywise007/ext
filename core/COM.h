@@ -10,7 +10,6 @@
 #include <atlcom.h>
 #include <atlcomcli.h>
 
-#include <cassert>      // для assert()
 #include <combaseapi.h> // для DECLARE_INTERFACE_IID_
 #include <stdio.h>      // для __VA_ARGS__
 

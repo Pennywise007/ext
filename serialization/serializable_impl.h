@@ -210,17 +210,28 @@ protected:
 // ISerializable
     void PrepareToDeserialize(_Inout_ std::shared_ptr<SerializableNode>& serializableTree) EXT_THROWS() override
     {
-        if constexpr (std::is_same_v<std::unique_ptr<std::extract_value_type_v<Type>>, Type> ||
-                      std::is_same_v<std::shared_ptr<std::extract_value_type_v<Type>>, Type>)
+        using RealType = std::extract_value_type_v<Type>;
+        if constexpr (std::is_same_v<std::unique_ptr<RealType>, Type> ||
+                      std::is_same_v<std::shared_ptr<RealType>, Type>)
         {
             *Base::GetType() = nullptr;
             if constexpr (is_based_on<ISerializableCollection, Type>)
             {
                 if (!serializableTree->ChildNodes.empty())
-                    *Base::GetType() = create_default_value<Type>();
+                {
+                    if constexpr (std::is_abstract_v<RealType>)
+                        EXT_EXPECT(*Base::GetType()) << "Object should be created in constructor!";
+                    else
+                        * Base::GetType() = create_default_value<Type>();
+                }
             }
             else if (serializableTree->Value.value_or(SerializableValue::CreateNull()).Type != SerializableValue::ValueType::eNull)
-                *Base::GetType() = create_default_value<Type>();
+            {
+                if constexpr (std::is_abstract_v<RealType>)
+                    EXT_EXPECT(*Base::GetType()) << "Object should be created in constructor!";
+                else
+                    *Base::GetType() = create_default_value<Type>();
+            }
         }
     }
 // ISerializableOptional
@@ -465,16 +476,16 @@ protected:
 
 } // namespace impl
 
-template<class Type, const wchar_t* TypeName>
+template<class Type, const wchar_t* TypeName, class ICollectionInterface>
 template <class Field>
-void SerializableObject<Type, TypeName>::RegisterField(const wchar_t* name, Field Type::* field)
+void SerializableObject<Type, TypeName, ICollectionInterface>::RegisterField(const wchar_t* name, Field Type::* field)
 {
     m_fields.emplace_back(std::make_shared<impl::SerializableFieldInfo<Type, Field>>(name, field));
 }
 
-template<class Type, const wchar_t* TypeName>
+template<class Type, const wchar_t* TypeName, class ICollectionInterface>
 template<class ...Classes>
-void SerializableObject<Type, TypeName>::RegisterSerializableBaseClasses()
+void SerializableObject<Type, TypeName, ICollectionInterface>::RegisterSerializableBaseClasses()
 {
     Type* currentClass = dynamic_cast<Type*>(this);
     EXT_ASSERT(currentClass);

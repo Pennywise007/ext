@@ -1,9 +1,9 @@
 ﻿#pragma once
 
 /*
-    Интерфейсы и фабрика для загрузки/выгрузки/передачи данных
-    В настоящий момент используется только для выгрузки зугрузки в XML
-    При необходимости может быть расширен для сохранения настроек в БД/JSON/Файл
+    Interfaces and factory for upload/download/data transfer
+    Currently used only for unloading the download in XML and text
+    If necessary, it can be extended to save settings to DB/JSON/File
 */
 
 #include <filesystem>

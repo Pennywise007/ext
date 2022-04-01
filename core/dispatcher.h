@@ -10,10 +10,12 @@ Example of event interface
     };
 
 Example of sending an event:
-    ext::send_event(&IEvent::Event, 10);
+    ext::send_event(&IEvent::Event, 10);        // sending event and waiting for handling event by recepients synchroniously
+    ext::send_event_async(&IEvent::Event, 10);  // send event and don`t wait for handling, continue execution
 
 Example of recipient:
-    struct Recipient : ext::events::ScopeSubscription<IEvent>
+    struct Recipient
+        : ext::events::ScopeSubscription<IEvent> // OR ext::events::ScopeAsyncSubscription<IEvent>
     {
         void Event(int val) override { std::cout << "Event"; }
     }
@@ -29,33 +31,34 @@ Example of recipient:
 #include "ext/core/noncopyable.h"
 #include "ext/core/singleton.h"
 #include "ext/core/mpl.h"
+#include "ext/error/exception.h"
 
 #include "ext/thread/thread_pool.h"
 
 namespace ext::events { class Dispatcher; }
 namespace ext {
 
-// Send sync event to all recipients, example: ext::SendEvent(&IEvent::Event, 10);
+// Sending event and waiting for handling event by recepients synchroniously
+// Example: ext::send_event(&IEvent::Event, 10);
 template <typename IEvent, typename Function, typename... Args>
-void send_event(Function IEvent::* function, Args&&... eventArgs)
+void send_event(Function IEvent::* function, Args&&... eventArgs) EXT_THROWS(...)
 {
     get_service<events::Dispatcher>().SendEvent(function, std::forward<Args>(eventArgs)...);
 }
 
-// Send async event to all recipients, example: ext::SendEventAsync(&IEvent::Event, 10);
-// Don't forget to sync the arguments you send
+// Sending event and don`t wait for handling, continue execution, args should be copy constructible
+// Don't forget to sync the arguments you send, arguments need to have a copy constructor
+// Example: ext::send_event_async(&IEvent::Event, 10);
 template <typename IEvent, typename Function, typename... Args>
-void send_event_async(Function IEvent::* function, Args&&... eventArgs)
+void send_event_async(Function IEvent::* function, Args&&... eventArgs) EXT_NOEXCEPT
 {
     get_service<events::Dispatcher>().SendEventAsync(function, std::forward<Args>(eventArgs)...);
 }
 
-} // namespace ext
-
-namespace ext::events {
+namespace events {
 
 // base interface for all events
-interface IBaseEvent
+struct IBaseEvent
 {
     virtual ~IBaseEvent() = default;
 };
@@ -67,190 +70,178 @@ class Dispatcher
 public:
     // Subscribing / unsubscribing the synchronous event receiver
     template <typename IEvent>
-    void Subscribe(IEvent* recipient);
+    void Subscribe(IEvent* recipient) EXT_NOEXCEPT;
     template <typename IEvent>
-    void Unsubscribe(IEvent* recipient);
-
-    // Subscribing / unsubscribing the asynchronous event receiver, all event callbacks can be called from different threads
+    void Unsubscribe(IEvent* recipient) EXT_NOEXCEPT;
+    // check if recipient subscribed
     template <typename IEvent>
-    void SubscribeAsync(IEvent* recipient);
-    template <typename IEvent>
-    void UnsubscribeAsync(IEvent* recipient);
+    bool IsSubscribed(IEvent* recipient) const EXT_NOEXCEPT;
 
 // sending events
 public:
-    // synchronous notification of subscribers about an event that has occurred
+    // sending event and waiting for handling event by recepients synchroniously
     template <typename IEvent, typename Function, typename... Args>
-    void SendEvent(Function IEvent::* function, Args&&... eventArgs);
-    // asynchronous notification of subscribers about an event
+    void SendEvent(Function IEvent::* function, Args&&... eventArgs) const EXT_THROWS(...);
+    // sending event and don`t wait for handling, continue execution, args should be copy constructible
     template <typename IEvent, typename Function, typename... Args>
-    void SendEventAsync(Function IEvent::* function, Args&&... eventArgs);
+    void SendEventAsync(Function IEvent::* function, Args&&... eventArgs) const EXT_NOEXCEPT;
 
 private:
-    struct EventRecipients
-    {
-        std::set<IBaseEvent*> syncRecipients;
-        std::set<IBaseEvent*> asyncRecipients;
-    };
-
+    typedef std::set<IBaseEvent*> EventRecipients;
     typedef size_t EventId;
-    std::map<EventId, EventRecipients> m_eventRecipients;
-    std::shared_mutex m_recipientsMutex;
 
-    thread_pool m_threadPool = { nullptr, 1 };
+    std::map<EventId, EventRecipients> m_eventRecipients;
+    mutable std::shared_mutex m_recipientsMutex;
+
+    mutable thread_pool m_threadPool = { nullptr, 1 };
 };
 
 // Scope subscription manager
 template <typename... IEvents>
 struct ScopeSubscription : ext::NonCopyable, IEvents...
 {
-    explicit ScopeSubscription() { (..., ScopeSubscription::Subscribe<IEvents>()); }
-    virtual ~ScopeSubscription() { (..., ScopeSubscription::Unsubscribe<IEvents>()); }
+    explicit ScopeSubscription(const bool autoSubscription = true) EXT_NOEXCEPT
+        : m_autoSubscription(autoSubscription)
+    {
+        if (m_autoSubscription)
+            SubscribeAll();
+    }
+    virtual ~ScopeSubscription() EXT_NOEXCEPT { UnsubscribeAll(); }
 
 protected:
+    void SubscribeAll() const EXT_NOEXCEPT
+    {
+        (..., ScopeSubscription::Subscribe<IEvents>());
+    }
+    void UnsubscribeAll() const EXT_NOEXCEPT
+    {
+        (..., ScopeSubscription::Unsubscribe<IEvents>());
+    }
+
     template <typename IEvent>
-    void Subscribe()
+    void Subscribe() const EXT_NOEXCEPT
     {
         static_assert(ext::mpl::contain_type_v<IEvent, IEvents...>, "Subscribing to an event not included in the event list");
-        get_service<Dispatcher>().Subscribe(static_cast<IEvent*>(this));
+        get_service<Dispatcher>().Subscribe(GetEventPointer<IEvent>());
     }
     template <typename IEvent>
-    void Unsubscribe()
+    void Unsubscribe() const EXT_NOEXCEPT
     {
         static_assert(ext::mpl::contain_type_v<IEvent, IEvents...>, "Unsubscribing to an event not included in the event list");
-        get_service<Dispatcher>().Unsubscribe(static_cast<IEvent*>(this));
+        if (m_autoSubscription)
+        {
+            auto* event = GetEventPointer<IEvent>();
+            auto& dispatcher = get_service<Dispatcher>();
+            if (dispatcher.IsSubscribed(event))
+                dispatcher.Unsubscribe(event);
+        }
+        else
+            get_service<Dispatcher>().Unsubscribe(GetEventPointer<IEvent>());
     }
-};
 
-// Scope subscription manager
-template <typename... IEvents>
-struct ScopeAsyncSubscription : ext::NonCopyable, IEvents...
-{
-    explicit ScopeAsyncSubscription() { (..., ScopeAsyncSubscription::SubscribeAsync<IEvents>()); }
-    virtual ~ScopeAsyncSubscription() { (..., ScopeAsyncSubscription::UnsubscribeAsync<IEvents>()); }
+private:
+    template <typename IEvent>
+    IEvent* GetEventPointer() const EXT_NOEXCEPT
+    {
+        return const_cast<IEvent*>(static_cast<const IEvent*>(this));
 
-protected:
-    template <typename IEvent>
-    void SubscribeAsync()
-    {
-        static_assert(ext::mpl::contain_type_v<IEvent, IEvents...>, "Subscribing to an event not included in the event list");
-        get_service<Dispatcher>().SubscribeAsync(static_cast<IEvent*>(this));
     }
-    template <typename IEvent>
-    void UnsubscribeAsync()
-    {
-        static_assert(ext::mpl::contain_type_v<IEvent, IEvents...>, "Unsubscribing to an event not included in the event list");
-        get_service<Dispatcher>().SubscribeAsync(static_cast<IEvent*>(this));
-    }
+private:
+    const bool m_autoSubscription;
 };
 
 template <typename IEvent>
-void Dispatcher::Subscribe(IEvent* recipient)
+void Dispatcher::Subscribe(IEvent* recipient) EXT_NOEXCEPT
 {
     static_assert(std::is_base_of_v<IBaseEvent, IEvent>, "Event must be inherited from IBaseEvent!");
 
-    std::unique_lock<std::mutex> lock(m_recipientsMutex);
-    EXT_DUMP_IF(!m_eventRecipients[typeid(IEvent).hash_code()].syncRecipients.insert(static_cast<IBaseEvent*>(recipient)).second)
+    std::unique_lock<std::shared_mutex> lock(m_recipientsMutex);
+    EXT_DUMP_IF(!m_eventRecipients[typeid(IEvent).hash_code()].emplace(static_cast<IBaseEvent*>(recipient)).second)
         << EXT_TRACE_FUNCTION << "Already subscribed";
 }
 
 template <typename IEvent>
-void Dispatcher::Unsubscribe(IEvent* recipient)
+void Dispatcher::Unsubscribe(IEvent* recipient) EXT_NOEXCEPT
 {
     static_assert(std::is_base_of_v<IBaseEvent, IEvent>, "Event must be inherited from IBaseEvent!");
 
-    std::unique_lock<std::mutex> lock(m_recipientsMutex);
+    std::unique_lock<std::shared_mutex> lock(m_recipientsMutex);
 
     if (auto eventIt = m_eventRecipients.find(typeid(IEvent).hash_code()); eventIt != m_eventRecipients.end())
     {
-        if (const auto recipientIt = eventIt->second.syncRecipients.find(static_cast<IBaseEvent*>(recipient));
-            recipientIt != eventIt->second.syncRecipients.end())
+        if (const auto recipientIt = eventIt->second.find(static_cast<IBaseEvent*>(recipient));
+            recipientIt != eventIt->second.end())
         {
-            eventIt->second.syncRecipients.erase(recipientIt);
-            if (eventIt->second.syncRecipients.empty() && eventIt->second.asyncRecipients.empty())
+            eventIt->second.erase(recipientIt);
+            if (eventIt->second.empty())
                 m_eventRecipients.erase(eventIt);
         }
         else
-            EXT_DUMP_IF(false) << EXT_TRACE_FUNCTION << "Recipient already unsubscribed";
+            EXT_DUMP_IF(true) << EXT_TRACE_FUNCTION << "Recipient already unsubscribed";
     }
     else
-        EXT_DUMP_IF(false) << EXT_TRACE_FUNCTION << "No one subscribed to event";
+        EXT_DUMP_IF(true) << EXT_TRACE_FUNCTION << "No one subscribed to event";
 }
 
-template <typename IEvent>
-void Dispatcher::SubscribeAsync(IEvent* recipient)
+template<typename IEvent>
+inline bool Dispatcher::IsSubscribed(IEvent* recipient) const EXT_NOEXCEPT
 {
     static_assert(std::is_base_of_v<IBaseEvent, IEvent>, "Event must be inherited from IBaseEvent!");
 
-    std::unique_lock<std::mutex> lock(m_recipientsMutex);
-    EXT_DUMP_IF(!m_eventRecipients[typeid(IEvent).hash_code()].asyncRecipients.insert(static_cast<IBaseEvent*>(recipient)).second)
-        << EXT_TRACE_FUNCTION << "Already subscribed";
-}
-
-template <typename IEvent>
-void Dispatcher::UnsubscribeAsync(IEvent* recipient)
-{
-    static_assert(std::is_base_of_v<IBaseEvent, IEvent>, "Event must be inherited from IBaseEvent!");
-
-    std::unique_lock<std::mutex> lock(m_recipientsMutex);
-
-    if (auto eventIt = m_eventRecipients.find(typeid(IEvent).hash_code()); eventIt != m_eventRecipients.end())
-    {
-        if (const auto recipientIt = eventIt->second.asyncRecipients.find(static_cast<IBaseEvent*>(recipient));
-            recipientIt != eventIt->second.asyncRecipients.end())
-        {
-            eventIt->second.asyncRecipients.erase(recipientIt);
-            if (eventIt->second.asyncRecipients.empty() && eventIt->second.syncRecipients.empty())
-                m_eventRecipients.erase(eventIt);
-        }
-        else
-            EXT_DUMP_IF(false) << EXT_TRACE_FUNCTION << "Recipient already unsubscribed";
-    }
-    else
-        EXT_DUMP_IF(false) << EXT_TRACE_FUNCTION << "No one subscribed to event";
+    std::unique_lock<std::shared_mutex> lock(m_recipientsMutex);
+    auto eventIt = m_eventRecipients.find(typeid(IEvent).hash_code());
+    return eventIt != m_eventRecipients.end() &&
+        eventIt->second.find(static_cast<IBaseEvent*>(recipient)) != eventIt->second.end();
 }
 
 template <typename IEvent, typename Function, typename... Args>
-void Dispatcher::SendEvent(Function IEvent::* function, Args&&... eventArgs)
+void Dispatcher::SendEvent(Function IEvent::* function, Args&&... eventArgs) const EXT_THROWS(...)
 {
-    std::shared_lock<std::mutex> lock(m_recipientsMutex);
+    std::shared_lock<std::shared_mutex> lock(m_recipientsMutex);
 
     auto it = m_eventRecipients.find(typeid(IEvent).hash_code());
     if (it != m_eventRecipients.end())
     {
-        auto callFunction = [&function, &eventArgs..., mutex = &m_recipientsMutex](std::set<IBaseEvent*>& recipients)
+        for (size_t index = 0; index < it->second.size() && !ext::this_thread::interruption_requested(); ++index)
         {
-            for (size_t index = 0; index < recipients.size(); ++index)
-            {
-                IEvent* recipient = dynamic_cast<IEvent*>(*std::next(recipients.begin(), index));
-                EXT_DUMP_IF(!recipient) << "How we skip this situation in subscribe?";
+            IEvent* recipient = dynamic_cast<IEvent*>(*std::next(it->second.begin(), index));
+            EXT_DUMP_IF(!recipient) << "How we skip this situation in subscribe?";
 
-                if (!recipient)
-                    continue;
+            if (!recipient)
+                continue;
 
-                mutex->unlock_shared();
+            m_recipientsMutex.unlock_shared();
 
-                // call function without mutex to allow unsubscription during event call
-                (recipient->*function)(std::forward<Args>(eventArgs)...);
+            // call function without mutex to allow unsubscription during event call
+            (recipient->*function)(std::forward<Args>(eventArgs)...);
 
-                mutex->lock_shared();
-            }
-        };
+            m_recipientsMutex.lock_shared();
 
-        callFunction(it->second.syncRecipients);
-        callFunction(it->second.asyncRecipients);
+            // during subscriptions\resubscriptions iterator may become invalid
+            it = m_eventRecipients.find(typeid(IEvent).hash_code());
+            if (it == m_eventRecipients.end())
+                return;
+        }
     }
     else
         EXT_ASSERT(false) << "No subscribers on event";
 }
 
 template <typename IEvent, typename Function, typename... Args>
-void Dispatcher::SendEventAsync(Function IEvent::* function, Args&&... eventArgs)
+void Dispatcher::SendEventAsync(Function IEvent::* function, Args&&... eventArgs) const EXT_NOEXCEPT
 {
     m_threadPool.add_task([function, eventArgs...]()
                           {
-                               get_service<Dispatcher>().SendEvent(function, eventArgs...);
+                               try
+                               {
+                                   get_service<Dispatcher>().SendEvent(function, eventArgs...);
+                               }
+                               catch (...)
+                               {
+                                   ext::ManageException((L"Failure during asynch sending events to " + std::widen(typeid(IEvent).name())).c_str());
+                               }
                           });
 }
 
-} // namespace ext::events
+} // namespace events
+} // namespace ext

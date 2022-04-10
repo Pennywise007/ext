@@ -82,6 +82,19 @@ EXT_NODISCARD inline std::wstring widen(const char* str)
     return result;
 }
 
+EXT_NODISCARD inline std::wstring widen(const std::string& str)
+{
+    std::wstring result;
+    result.reserve(str.size());
+    // do not forget about std::locale::global(std::locale("")); for some characters
+    const auto& facet = use_facet<std::ctype<wchar_t>>(std::wostringstream().getloc());
+    for (char ch : str)
+    {
+        result.append(1, facet.widen(ch));
+    }
+    return result;
+}
+
 EXT_NODISCARD inline std::string narrow(const wchar_t* str)
 {
     const auto length = wcslen(str);
@@ -95,6 +108,19 @@ EXT_NODISCARD inline std::string narrow(const wchar_t* str)
     {
         return facet.narrow(ch);
     });
+    return result;
+}
+
+EXT_NODISCARD inline std::string narrow(const std::wstring& str)
+{
+    std::string result;
+    result.reserve(str.size());
+    // do not forget about std::locale::global(std::locale("")); for some characters
+    const auto& facet = use_facet<std::ctype<wchar_t>>(std::ostringstream().getloc());
+    for (wchar_t ch : str)
+    {
+        result.append(1, facet.narrow(ch));
+    }
     return result;
 }
 

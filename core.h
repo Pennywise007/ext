@@ -1,13 +1,15 @@
 #pragma once
 
-#include <afx.h>
 #include <locale>
 
+#ifdef __AFX_H__
 #include "core/check.h"
+#include "thread/invoker.h"
+#endif
+
 #include "core/singleton.h"
 #include "error/dump_writer.h"
 #include "trace/tracer.h"
-#include "thread/invoker.h"
 
 namespace ext::core {
 
@@ -32,8 +34,10 @@ inline void Init()
 
     EXT_DUMP_DECLARE_HANDLER();
 
+#ifdef __AFX_H__
     EXPECT_TRUE(AfxWinInit(::GetModuleHandle(NULL), NULL, ::GetCommandLine(), 0)) << L"Failed to initalize afx";
     ext::get_service<ext::invoke::MethodInvoker>().Init();
+#endif
 }
 
 } // namespace ext

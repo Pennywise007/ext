@@ -214,7 +214,6 @@ protected:
         if constexpr (std::is_same_v<std::unique_ptr<RealType>, Type> ||
                       std::is_same_v<std::shared_ptr<RealType>, Type>)
         {
-            *Base::GetType() = nullptr;
             if constexpr (is_based_on<ISerializableCollection, Type>)
             {
                 if (!serializableTree->ChildNodes.empty())
@@ -222,8 +221,11 @@ protected:
                     if constexpr (std::is_abstract_v<RealType>)
                         EXT_EXPECT(*Base::GetType()) << "Object should be created in constructor!";
                     else
-                        * Base::GetType() = create_default_value<Type>();
+                        *Base::GetType() = create_default_value<Type>();
                 }
+                else
+                    *Base::GetType() = nullptr;
+
             }
             else if (serializableTree->Value.value_or(SerializableValue::CreateNull()).Type != SerializableValue::ValueType::eNull)
             {
@@ -232,6 +234,8 @@ protected:
                 else
                     *Base::GetType() = create_default_value<Type>();
             }
+            else
+                *Base::GetType() = nullptr;
         }
     }
 // ISerializableOptional

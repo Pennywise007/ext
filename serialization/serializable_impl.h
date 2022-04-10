@@ -222,6 +222,7 @@ protected:
                         EXT_EXPECT(*Base::GetType()) << "Object should be created in constructor!";
                     else
                         *Base::GetType() = create_default_value<Type>();
+                    Base::GetType()->get()->PrepareToDeserialize(serializableTree);
                 }
                 else
                     *Base::GetType() = nullptr;
@@ -233,6 +234,7 @@ protected:
                     EXT_EXPECT(*Base::GetType()) << "Object should be created in constructor!";
                 else
                     *Base::GetType() = create_default_value<Type>();
+                Base::GetType()->get()->PrepareToDeserialize(serializableTree);
             }
             else
                 *Base::GetType() = nullptr;

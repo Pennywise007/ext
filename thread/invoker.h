@@ -43,9 +43,10 @@ private:
 private:
     struct CallFuncInfo
     {
-        CallFuncInfo(CallFunction&& func) : callFunc(std::move(func)) {}
+        CallFuncInfo(bool syncCall, CallFunction&& func) : callFunc(std::move(func)), synchroniousCall(syncCall) {}
 
         CallFunction callFunc;
+        const bool synchroniousCall;                // if true then we need to return answer and handled exception, false - destroy object
         std::exception_ptr exception = nullptr;     // an exception that may have been thrown during the execution of a function
     };
     // A message to the main thread window, about the need to call function, lParam = CallFunction
@@ -86,7 +87,7 @@ inline void MethodInvoker::CallSync(CallFunction&& func) const EXT_THROWS()
     {
         // if called from an auxiliary thread - send a message with the required function to the main thread
         EXT_EXPECT(::IsWindow(m_hWnd)) << EXT_TRACE_FUNCTION;
-        const auto callFunc = std::make_shared<CallFuncInfo>(std::move(func));
+        auto callFunc = std::make_shared<CallFuncInfo>(true, std::move(func));
 
         // send a message to the window in order to process the message in the main UI thread
         EXT_DUMP_IF(CWnd::SendMessage(kCallFunctionMessage, 0, reinterpret_cast<LPARAM>(callFunc.get())) != 0);
@@ -103,7 +104,7 @@ inline void MethodInvoker::CallAsync(CallFunction&& func) EXT_THROWS()
     EXT_EXPECT(::IsWindow(m_hWnd)) << EXT_TRACE_FUNCTION;
 
     // if called from an auxiliary thread - send a message with the required function to the main thread
-    auto callFunc = std::make_unique<CallFuncInfo>(std::move(func));
+    auto callFunc = std::make_unique<CallFuncInfo>(false, std::move(func));
     EXT_DUMP_IF(CWnd::PostMessage(kCallFunctionMessage, 0, reinterpret_cast<LPARAM>(callFunc.release())) != TRUE);
 }
 
@@ -132,16 +133,20 @@ inline void MethodInvoker::CreateMainThreadWindow()
             {
             case kCallFunctionMessage:
             {
-                std::shared_ptr<CallFuncInfo> callFuncInfo(reinterpret_cast<CallFuncInfo*>(lparam));
+                CallFuncInfo* callFuncInfo(reinterpret_cast<CallFuncInfo*>(lparam));
 
                 try
                 {
                     callFuncInfo->callFunc();
+                    delete callFuncInfo;
                 }
                 catch (...)
                 {
-                    // return exception to caller
-                    callFuncInfo->exception = std::current_exception();
+                    if (callFuncInfo->synchroniousCall)
+                        // return exception to caller
+                        callFuncInfo->exception = std::current_exception();
+                    else
+                        delete callFuncInfo;
                 }
 
                 return 0;

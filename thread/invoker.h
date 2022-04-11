@@ -138,7 +138,8 @@ inline void MethodInvoker::CreateMainThreadWindow()
                 try
                 {
                     callFuncInfo->callFunc();
-                    delete callFuncInfo;
+                    if (!callFuncInfo->synchroniousCall)
+                        delete callFuncInfo;
                 }
                 catch (...)
                 {

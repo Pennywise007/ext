@@ -35,7 +35,7 @@ inline void Init()
     EXT_DUMP_DECLARE_HANDLER();
 
 #ifdef __AFX_H__
-    EXPECT_TRUE(AfxWinInit(::GetModuleHandle(NULL), NULL, ::GetCommandLine(), 0)) << L"Failed to initalize afx";
+    EXT_EXPECT(AfxWinInit(::GetModuleHandle(NULL), NULL, ::GetCommandLine(), 0)) << L"Failed to initalize afx";
     ext::get_service<ext::invoke::MethodInvoker>().Init();
 #endif
 }

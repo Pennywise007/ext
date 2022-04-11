@@ -150,11 +150,12 @@ private:
   }
 */
 template <class CharType>
-inline auto /*std::string*/ManageExceptionText(const CharType* prefixText, bool splitExceptionText = true) noexcept
+inline auto /*std::string*/ManageExceptionText(const CharType* prefixText = nullptr, bool splitExceptionText = true) noexcept
 {
     // std::ostringstream / wostringstream
     std::basic_ostringstream<CharType, std::char_traits<CharType>, std::allocator<CharType>> exceptionStream;
-    exceptionStream << prefixText;
+    if (prefixText)
+        exceptionStream << prefixText;
     if (!exceptionStream.str().empty())
         exceptionStream << ".";
     else
@@ -247,12 +248,12 @@ inline auto /*std::string*/ManageExceptionText(const CharType* prefixText, bool 
 * Example:
 * ManageException(EXT_TRACE_FUNCTION));
 */
-inline void ManageException(const char* prefixText) noexcept
+inline void ManageException(const char* prefixText = nullptr) noexcept
 {
     EXT_UNUSED(ManageExceptionText(prefixText, false));
 }
 
-inline void ManageException(const wchar_t* prefixText) noexcept
+inline void ManageException(const wchar_t* prefixText = nullptr) noexcept
 {
     EXT_UNUSED(ManageExceptionText(prefixText, false));
 }

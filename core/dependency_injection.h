@@ -62,6 +62,7 @@ const std::shared_ptr<CreatedObjectExample> object = ext::CreateObject<CreatedOb
 #include <ext/std/memory.h>
 #include <ext/utils/constructor_traits.h>
 
+#pragma push_macro("GetObject")
 #undef GetObject
 
 namespace ext {
@@ -822,3 +823,5 @@ inline void ServiceCollection::ResetObjects() EXT_NOEXCEPT
 #pragma endregion Implementation
 
 } // namespace ext
+
+#pragma pop_macro("GetObject")

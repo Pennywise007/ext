@@ -129,14 +129,14 @@ protected:
     {
         static_assert(ext::mpl::contain_type_v<IEvent, IEvents...>, "Unsubscribing to an event not included in the event list");
         if (m_autoSubscription)
+            get_service<Dispatcher>().Unsubscribe(GetEventPointer<IEvent>());
+        else
         {
             auto* event = GetEventPointer<IEvent>();
             auto& dispatcher = get_service<Dispatcher>();
             if (dispatcher.IsSubscribed(event))
                 dispatcher.Unsubscribe(event);
         }
-        else
-            get_service<Dispatcher>().Unsubscribe(GetEventPointer<IEvent>());
     }
 
 private:
@@ -144,7 +144,6 @@ private:
     IEvent* GetEventPointer() const EXT_NOEXCEPT
     {
         return const_cast<IEvent*>(static_cast<const IEvent*>(this));
-
     }
 private:
     const bool m_autoSubscription;

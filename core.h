@@ -7,9 +7,11 @@
 #include "thread/invoker.h"
 #endif
 
+#include "core/dispatcher.h"
 #include "core/singleton.h"
 #include "error/dump_writer.h"
 #include "trace/tracer.h"
+#include "thread/tick.h"
 
 namespace ext::core {
 
@@ -35,9 +37,14 @@ inline void Init()
     EXT_DUMP_DECLARE_HANDLER();
 
 #ifdef __AFX_H__
-    EXT_EXPECT(AfxWinInit(::GetModuleHandle(NULL), NULL, ::GetCommandLine(), 0)) << L"Failed to initalize afx";
+    if (afxCurrentAppName == NULL) // avoid double initialization
+        EXT_EXPECT(AfxWinInit(::GetModuleHandle(NULL), NULL, ::GetCommandLine(), 0)) << L"Failed to initalize afx";
     ext::get_service<ext::invoke::MethodInvoker>().Init();
 #endif
+
+    // initializing some core services so that they are the last to be destroyed
+    ext::get_service<ext::events::Dispatcher>();
+    ext::get_service<ext::tick::TickService>();
 }
 
 } // namespace ext

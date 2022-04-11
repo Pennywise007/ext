@@ -776,7 +776,7 @@ void ServiceCollection::UnregisterObject() EXT_NOEXCEPT
                     return object->GetHash() == hash;
                 });
 
-            interfaceIt->second.erase(interfaceIt->second.begin(), eraseIt);
+            interfaceIt->second.erase(eraseIt, interfaceIt->second.end());
             if (interfaceIt->second.empty())
                 m_registeredObjects.erase(interfaceIt);
         }

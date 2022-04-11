@@ -5,13 +5,13 @@
 #ifdef __AFX_H__
 #include "core/check.h"
 #include "thread/invoker.h"
+#include "thread/tick.h"
 #endif
 
 #include "core/dispatcher.h"
 #include "core/singleton.h"
 #include "error/dump_writer.h"
 #include "trace/tracer.h"
-#include "thread/tick.h"
 
 namespace ext::core {
 
@@ -44,7 +44,9 @@ inline void Init()
 
     // initializing some core services so that they are the last to be destroyed
     ext::get_service<ext::events::Dispatcher>();
+#ifdef __AFX_H__
     ext::get_service<ext::tick::TickService>();
+#endif
 }
 
 } // namespace ext

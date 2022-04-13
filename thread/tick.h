@@ -182,6 +182,8 @@ private:
                         if (handler != m_handlers.end())
                             handler->second.lastTickTime = tick_clock::now();
                     }
+                    else
+                        handler->second.lastTickTime = tick_clock::now();
                 }
 
                 ++index;

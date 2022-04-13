@@ -1,13 +1,17 @@
 #pragma once
 
-#include <afx.h>
 #include <locale>
 
+#ifdef __AFX_H__
 #include "core/check.h"
+#include "thread/invoker.h"
+#include "thread/tick.h"
+#endif
+
+#include "core/dispatcher.h"
 #include "core/singleton.h"
 #include "error/dump_writer.h"
 #include "trace/tracer.h"
-#include "thread/invoker.h"
 
 namespace ext::core {
 
@@ -32,8 +36,17 @@ inline void Init()
 
     EXT_DUMP_DECLARE_HANDLER();
 
-    EXPECT_TRUE(AfxWinInit(::GetModuleHandle(NULL), NULL, ::GetCommandLine(), 0)) << L"Failed to initalize afx";
+#ifdef __AFX_H__
+    if (afxCurrentAppName == NULL) // avoid double initialization
+        EXT_EXPECT(AfxWinInit(::GetModuleHandle(NULL), NULL, ::GetCommandLine(), 0)) << L"Failed to initalize afx";
     ext::get_service<ext::invoke::MethodInvoker>().Init();
+#endif
+
+    // initializing some core services so that they are the last to be destroyed
+    ext::get_service<ext::events::Dispatcher>();
+#ifdef __AFX_H__
+    ext::get_service<ext::tick::TickService>();
+#endif
 }
 
 } // namespace ext

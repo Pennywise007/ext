@@ -20,9 +20,9 @@ Example of recipient:
         void Event(int val) override { std::cout << "Event"; }
     }
 */
+#include <list>
 #include <map>
 #include <shared_mutex>
-#include <set>
 
 #include <type_traits>
 
@@ -76,6 +76,9 @@ public:
     // check if recipient subscribed
     template <typename IEvent>
     bool IsSubscribed(IEvent* recipient) const EXT_NOEXCEPT;
+    // Update priority for event subscriber - on raising event this subscriber will receive information first
+    template <typename IEvent>
+    void SetFirstPriority(IEvent* recipient) EXT_THROWS(ext::check::CheckFailedException);
 
 // sending events
 public:
@@ -87,7 +90,7 @@ public:
     void SendEventAsync(Function IEvent::* function, Args&&... eventArgs) const EXT_NOEXCEPT;
 
 private:
-    typedef std::set<IBaseEvent*> EventRecipients;
+    typedef std::list<IBaseEvent*> EventRecipients;
     typedef size_t EventId;
 
     std::map<EventId, EventRecipients> m_eventRecipients;
@@ -129,14 +132,21 @@ protected:
     {
         static_assert(ext::mpl::contain_type_v<IEvent, IEvents...>, "Unsubscribing to an event not included in the event list");
         if (m_autoSubscription)
+            get_service<Dispatcher>().Unsubscribe(GetEventPointer<IEvent>());
+        else
         {
             auto* event = GetEventPointer<IEvent>();
             auto& dispatcher = get_service<Dispatcher>();
             if (dispatcher.IsSubscribed(event))
                 dispatcher.Unsubscribe(event);
         }
-        else
-            get_service<Dispatcher>().Unsubscribe(GetEventPointer<IEvent>());
+    }
+
+    // Update priority for event subscriber - on raising event this subscriber will receive information first
+    template <typename IEvent>
+    void SetFirstPriority() const EXT_THROWS(ext::check::CheckFailedException)
+    {
+        get_service<Dispatcher>().SetFirstPriority(GetEventPointer<IEvent>());
     }
 
 private:
@@ -144,7 +154,6 @@ private:
     IEvent* GetEventPointer() const EXT_NOEXCEPT
     {
         return const_cast<IEvent*>(static_cast<const IEvent*>(this));
-
     }
 private:
     const bool m_autoSubscription;
@@ -156,8 +165,10 @@ void Dispatcher::Subscribe(IEvent* recipient) EXT_NOEXCEPT
     static_assert(std::is_base_of_v<IBaseEvent, IEvent>, "Event must be inherited from IBaseEvent!");
 
     std::unique_lock<std::shared_mutex> lock(m_recipientsMutex);
-    EXT_DUMP_IF(!m_eventRecipients[typeid(IEvent).hash_code()].emplace(static_cast<IBaseEvent*>(recipient)).second)
+    auto& eventRecipients = m_eventRecipients[typeid(IEvent).hash_code()];
+    EXT_ASSERT(std::find(eventRecipients.begin(), eventRecipients.end(), static_cast<IBaseEvent*>(recipient)) == eventRecipients.end())
         << EXT_TRACE_FUNCTION << "Already subscribed";
+    eventRecipients.emplace_back(static_cast<IBaseEvent*>(recipient));
 }
 
 template <typename IEvent>
@@ -169,7 +180,7 @@ void Dispatcher::Unsubscribe(IEvent* recipient) EXT_NOEXCEPT
 
     if (auto eventIt = m_eventRecipients.find(typeid(IEvent).hash_code()); eventIt != m_eventRecipients.end())
     {
-        if (const auto recipientIt = eventIt->second.find(static_cast<IBaseEvent*>(recipient));
+        if (const auto recipientIt = std::find(eventIt->second.begin(), eventIt->second.end(), static_cast<IBaseEvent*>(recipient));
             recipientIt != eventIt->second.end())
         {
             eventIt->second.erase(recipientIt);
@@ -191,7 +202,21 @@ inline bool Dispatcher::IsSubscribed(IEvent* recipient) const EXT_NOEXCEPT
     std::unique_lock<std::shared_mutex> lock(m_recipientsMutex);
     auto eventIt = m_eventRecipients.find(typeid(IEvent).hash_code());
     return eventIt != m_eventRecipients.end() &&
-        eventIt->second.find(static_cast<IBaseEvent*>(recipient)) != eventIt->second.end();
+        std::find(eventIt->second.begin(), eventIt->second.end(), static_cast<IBaseEvent*>(recipient)) != eventIt->second.end();
+}
+
+template<typename IEvent>
+inline void Dispatcher::SetFirstPriority(IEvent* recipient) EXT_THROWS(ext::check::CheckFailedException)
+{
+    static_assert(std::is_base_of_v<IBaseEvent, IEvent>, "Event must be inherited from IBaseEvent!");
+
+    std::unique_lock<std::shared_mutex> lock(m_recipientsMutex);
+    auto eventIt = m_eventRecipients.find(typeid(IEvent).hash_code());
+    EXT_CHECK(eventIt != m_eventRecipients.end()) << "Event recipient not registered";
+    const auto it = std::find(eventIt->second.begin(), eventIt->second.end(), static_cast<IBaseEvent*>(recipient));
+    EXT_CHECK(it != eventIt->second.end()) << "Event recipient not registered";
+    eventIt->second.erase(it);
+    eventIt->second.push_front(static_cast<IBaseEvent*>(recipient));
 }
 
 template <typename IEvent, typename Function, typename... Args>

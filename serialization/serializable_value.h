@@ -79,6 +79,19 @@ EXT_NODISCARD T deserialize_value(const SerializableValue& value)
         stream >> tempValue;
         result = static_cast<T>(tempValue);
     }
+    else if constexpr (std::is_floating_point_v<T>)
+    {
+        const static std::wstring nanString = []()
+        {
+            std::wostringstream stream;
+            stream << NAN;
+            return stream.str();
+        }();
+        if (value == nanString)
+            result = NAN;
+        else
+            stream >> result;
+    }
     else
         stream >> result;
 

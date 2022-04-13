@@ -56,6 +56,9 @@ void string_trim_all(std::basic_string<CharType, std::char_traits<CharType>, std
 {
     auto isNotSpace = [](const CharType ch)
     {
+        if (ch < 0 || ch > 255)
+            return true;
+
         if constexpr (std::is_same_v<CharType, wchar_t>)
             return !std::iswspace(ch);
         else

@@ -56,13 +56,14 @@ const std::shared_ptr<CreatedObjectExample> object = ext::CreateObject<CreatedOb
 #include <ext/core/check.h>
 #include <ext/core/defines.h>
 #include <ext/core/noncopyable.h>
+#include <ext/core/mpl.h>
 #include <ext/core/singleton.h>
 
 #include <ext/std/memory.h>
 #include <ext/utils/constructor_traits.h>
 
+#pragma push_macro("GetObject")
 #undef GetObject
-#undef UnregisterObject
 
 namespace ext {
 namespace dependency_injection {
@@ -763,7 +764,7 @@ template <typename Class, typename... Interfaces>
 void ServiceCollection::UnregisterObject() EXT_NOEXCEPT
 {
     std::unique_lock lock(m_registeredObjectsMutex);
-    ext::mpl::ForEach<ext::mpl::list<Interfaces...>>::Call([hash = typeid(Class).hash_code(), &](auto* type)
+    ext::mpl::ForEach<ext::mpl::list<Interfaces...>>::Call([&, hash = typeid(Class).hash_code()](auto* type)
     {
         using Interface = std::remove_pointer_t<decltype(type)>;
         di::check_inheritance<Class, Interface>::Check();
@@ -776,7 +777,7 @@ void ServiceCollection::UnregisterObject() EXT_NOEXCEPT
                     return object->GetHash() == hash;
                 });
 
-            interfaceIt->second.erase(interfaceIt->second.begin(), eraseIt);
+            interfaceIt->second.erase(eraseIt, interfaceIt->second.end());
             if (interfaceIt->second.empty())
                 m_registeredObjects.erase(interfaceIt);
         }
@@ -822,3 +823,5 @@ inline void ServiceCollection::ResetObjects() EXT_NOEXCEPT
 #pragma endregion Implementation
 
 } // namespace ext
+
+#pragma pop_macro("GetObject")

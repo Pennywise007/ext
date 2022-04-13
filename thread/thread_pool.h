@@ -24,6 +24,7 @@ threadPool.wait_for_tasks();
 
  */
 #include <algorithm>
+#include <atlcomcli.h>
 #include <future>
 #include <mutex>
 #include <stdint.h>
@@ -49,15 +50,19 @@ struct TaskIdHelper
     // @see also IsEqualGUID
     bool operator()(const TaskId& Left, const TaskId& Right) const { return memcmp(&Left, &Right, sizeof(Right)) < 0; }
     // Check equality of task ids
-    EXT_NODISCARD inline static bool Compare(const TaskId& Left, const TaskId& Right) EXT_NOEXCEPT
+    EXT_NODISCARD static bool Compare(const TaskId& Left, const TaskId& Right) EXT_NOEXCEPT
     {
         return memcmp(&Left, &Right, sizeof(Right)) == 0;
     }
-    EXT_NODISCARD inline static TaskId Create() EXT_THROWS(std::exception)
+    EXT_NODISCARD static TaskId Create() EXT_THROWS(std::exception)
     {
         task::TaskId newTaskId;
         EXT_EXPECT(SUCCEEDED(CoCreateGuid(&newTaskId))) << "Failed to create GUID";
         return newTaskId;
+    }
+    EXT_NODISCARD static std::wstring ToString(const TaskId& taskId)
+    {
+        return std::wstring(CComBSTR(taskId));
     }
 };
 

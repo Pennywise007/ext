@@ -171,39 +171,46 @@ inline void Scheduler::MainThread()
 {
     while (!m_interrupted)
     {
-        std::unique_lock<std::mutex> lk(m_mutexTasks);
-
-        // wait for scheduled tasks
-        while (m_tasks.empty())
+        std::function<void()> callBack = nullptr;
         {
-            m_cvTasks.wait(lk);
+            std::unique_lock<std::mutex> lk(m_mutexTasks);
 
-            // notification call can be connected with interrupting
-            if (m_interrupted)
-                return;
+            // wait for scheduled tasks
+            while (m_tasks.empty())
+            {
+                m_cvTasks.wait(lk);
+
+                // notification call can be connected with interrupting
+                if (m_interrupted)
+                    return;
+            }
+
+            const auto it = std::min_element(m_tasks.begin(), m_tasks.end(),
+                                             [](const auto &a, const auto &b)
+                                             {
+                                                 return a.second.nextCallTime < b.second.nextCallTime;
+                                             });
+
+            const auto nextCallTime = it->second.nextCallTime;
+            if (nextCallTime <= std::chrono::system_clock::now() ||
+                m_cvTasks.wait_until(lk, nextCallTime) == std::cv_status::timeout)
+            {
+                if (!it->second.callingPeriod.has_value())
+                {
+                    callBack = std::move(it->second.task);
+                    m_tasks.erase(it);
+                }
+                else
+                {
+                    it->second.nextCallTime += std::chrono::duration_cast<std::chrono::system_clock::duration>(*it->second.callingPeriod);
+                    callBack = it->second.task;
+                }
+            }
         }
 
-        const auto it = std::min_element(m_tasks.begin(), m_tasks.end(),
-                                         [](const auto &a, const auto &b)
-                                         {
-                                             return a.second.nextCallTime < b.second.nextCallTime;
-                                         });
-
-        const auto nextCallTime = it->second.nextCallTime;
-        if (nextCallTime <= std::chrono::system_clock::now() ||
-            m_cvTasks.wait_until(lk, nextCallTime) == std::cv_status::timeout)
-        {
-            // execute task
-            it->second.task();
-            if (!it->second.callingPeriod.has_value())
-            {
-                m_tasks.erase(it);
-            }
-            else
-            {
-                it->second.nextCallTime += std::chrono::duration_cast<std::chrono::system_clock::duration>(*it->second.callingPeriod);
-            }
-        }
+        // executing task
+        if (callBack)
+            callBack();
     }
 }
 

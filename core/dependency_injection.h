@@ -241,6 +241,20 @@ struct ServiceProviderHolder
     const ServiceProvider::Ptr m_serviceProvider;
 };
 
+// Lazy weak interface pointer, holds std::weak_ptr on Interface
+// Allows to delay interface getting and execute it only on first call: get() or operator->
+// !Can throw exception on first call
+template <typename Interface>
+struct lazy_weak_interface : ext::lazy_weak_ptr<Interface>
+{
+    lazy_weak_interface(const ServiceProvider::Ptr& serviceProvider)
+        : ext::lazy_weak_ptr<Interface>([serviceProvider]() -> std::weak_ptr<Interface>
+          {
+              return ext::GetInterface<Interface>(serviceProvider);
+          })
+    {}
+};
+
 // Lazy interface pointer, holds std::shared_ptr on Interface
 // Allows to delay interface getting and execute it only on first call: get() or operator->
 // !Can throw exception on first call
@@ -301,6 +315,13 @@ struct any_interface_provider
     }
 
     template <typename Interface>
+    operator std::weak_ptr<Interface>() const
+    {
+        EXT_REQUIRE(!!m_serviceProvider);
+        return m_serviceProvider->GetInterface<Interface>();
+    }
+
+    template <typename Interface>
     operator lazy_interface<Interface>() const
     {
         EXT_REQUIRE(!!m_serviceProvider);
@@ -312,6 +333,13 @@ struct any_interface_provider
     {
         EXT_REQUIRE(!!m_serviceProvider);
         return lazy_object<Object>(m_serviceProvider);
+    }
+
+    template <typename Interface>
+    operator lazy_weak_interface<Interface>() const
+    {
+        EXT_REQUIRE(!!m_serviceProvider);
+        return lazy_weak_interface<Interface>(m_serviceProvider);
     }
 
 private:

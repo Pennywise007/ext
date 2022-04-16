@@ -84,7 +84,7 @@ struct lazy_type
 
 protected:
     mutable std::optional<Type> m_object;
-    GetObjectFunction m_getterFunction;
+    mutable GetObjectFunction m_getterFunction;
 };
 
 } // namespace ext

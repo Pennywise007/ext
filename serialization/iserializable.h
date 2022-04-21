@@ -54,6 +54,7 @@ struct TestStruct :  ext::serializable::SerializableObject<TestStruct>, Internal
 #include <type_traits>
 #include <memory>
 #include <optional>
+#include <winnt.h>
 
 #include <ext/core/defines.h>
 #include <ext/core/check.h>
@@ -78,7 +79,8 @@ struct TestStruct :  ext::serializable::SerializableObject<TestStruct>, Internal
 * Calls SerializableObject:RegisterField function, return object with same type and constructed with __VA_ARGS__ parameters
 */
 #define REGISTER_SERIALIZABLE_OBJECT_N(name, object) \
-SerializableObjectType::RegisterField(name, &std::remove_pointer_t<decltype(this)>::object)
+typedef std::remove_pointer_t<decltype(this)> CurrentType;  \
+SerializableObjectType::RegisterField(name, &CurrentType::object)
 
 #define REGISTER_SERIALIZABLE_OBJECT(object) \
 REGISTER_SERIALIZABLE_OBJECT_N(TEXT(STRINGINIZE(object)), object)
@@ -92,7 +94,7 @@ REGISTER_SERIALIZABLE_OBJECT_N(TEXT(STRINGINIZE(object)), object)
 DECLARE_OBJECT(Property) = [this]()                                                 \
     {                                                                               \
         REGISTER_SERIALIZABLE_OBJECT_N(Name, GET_OBJECT(Property));                 \
-        return decltype(std::remove_pointer_t<decltype(this)>::GET_OBJECT(Property)){ __VA_ARGS__ };   \
+        return decltype(CurrentType::GET_OBJECT(Property)){ __VA_ARGS__ };   \
     }()
 
 #define DECLARE_SERIALIZABLE(Property, ...)                                         \
@@ -198,7 +200,7 @@ template <class Type, const wchar_t* TypeName = nullptr, class ICollectionInterf
 struct SerializableObject : public ICollectionInterface
 {
     static_assert(std::is_base_of_v<ISerializableCollection, ICollectionInterface>, "Collection should be derived from ISerializableCollection");
-protected:
+public:
     typedef SerializableObject<Type, TypeName, ICollectionInterface> SerializableObjectType;
 
     template <class Field>

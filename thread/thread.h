@@ -170,7 +170,7 @@ public:
     }
 
     // interrupt thread and wait for join
-    void interrupt_and_join() EXT_THROWS() { interrupt(); if (joinable()) base::join(); }
+    void interrupt_and_join() EXT_THROWS() { interrupt(); if (joinable()) join(); }
 
     // check if thread function is executing
     EXT_NODISCARD bool thread_works() const EXT_NOEXCEPT

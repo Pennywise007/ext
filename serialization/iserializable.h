@@ -200,7 +200,7 @@ template <class Type, const wchar_t* TypeName = nullptr, class ICollectionInterf
 struct SerializableObject : public ICollectionInterface
 {
     static_assert(std::is_base_of_v<ISerializableCollection, ICollectionInterface>, "Collection should be derived from ISerializableCollection");
-public:
+protected:
     typedef SerializableObject<Type, TypeName, ICollectionInterface> SerializableObjectType;
 
     template <class Field>

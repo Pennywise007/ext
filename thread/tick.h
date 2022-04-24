@@ -37,6 +37,7 @@ Example:
 #include <WinUser.h>
 
 #include <ext/core/check.h>
+#include <ext/core/defines.h>
 #include <ext/core/singleton.h>
 
 #include <ext/thread/invoker.h>

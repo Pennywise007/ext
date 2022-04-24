@@ -124,6 +124,9 @@ public:
     // remove task from queue by id
     void erase_task(const task::TaskId& taskId);
 
+    // interrupt and remove all tasks from queue
+    void interrupt_and_remove_all_tasks();
+
 private:
     // main thread for workers
     void worker();
@@ -227,6 +230,16 @@ inline void thread_pool::erase_task(const task::TaskId& taskId)
         {
             return task->taskId == taskId;
         }), m_queueTasks.end());
+    }
+    m_taskDoneEvent.Set();
+}
+
+inline void thread_pool::interrupt_and_remove_all_tasks()
+{
+    std::for_each(m_threads.begin(), m_threads.end(), std::mem_fn(&ext::thread::interrupt));
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_queueTasks.clear();
     }
     m_taskDoneEvent.Set();
 }

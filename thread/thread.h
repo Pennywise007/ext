@@ -24,6 +24,7 @@ EXPECT_TRUE(myThread.interrupted());
 #include <thread>
 #include <chrono>
 #include <shared_mutex>
+#include <map>
 
 #include <ext/core/defines.h>
 #include <ext/core/check.h>

@@ -124,7 +124,7 @@ public:
     // remove task from queue by id
     void erase_task(const task::TaskId& taskId);
 
-    // interrupt and remove all tasks from queue
+    // interrupt and remove all tasks from queue, after this action thread pool is in inconsistent state
     void interrupt_and_remove_all_tasks();
 
 private:
@@ -192,6 +192,9 @@ inline void thread_pool::add_task_by_id(const task::TaskId& taskId, std::functio
         m_queueTasks.emplace(priorityIt, std::make_unique<TaskInfo>(taskId, std::move(task), priority));
     }
     m_notifier.notify_one();
+
+    EXT_ASSERT(std::any_of(m_threads.begin(), m_threads.end(), std::mem_fn(&ext::thread::thread_works)))
+        << "Threads interrupted or stopped";
 }
 
 template <typename Result, typename ... FunctionArgs, typename ... Args>
@@ -236,6 +239,8 @@ inline void thread_pool::erase_task(const task::TaskId& taskId)
 
 inline void thread_pool::interrupt_and_remove_all_tasks()
 {
+    EXT_ASSERT(std::all_of(m_threads.begin(), m_threads.end(), std::mem_fn(&ext::thread::thread_works)))
+        << "Threads already interrupted or stopped";
     std::for_each(m_threads.begin(), m_threads.end(), std::mem_fn(&ext::thread::interrupt));
     {
         std::lock_guard<std::mutex> lock(m_mutex);

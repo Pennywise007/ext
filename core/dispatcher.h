@@ -96,7 +96,7 @@ private:
     std::map<EventId, EventRecipients> m_eventRecipients;
     mutable std::shared_mutex m_recipientsMutex;
 
-    mutable thread_pool m_threadPool = { nullptr, 1 };
+    mutable thread_pool m_threadPool = { 1 };
 };
 
 // Scope subscription manager

@@ -123,6 +123,7 @@ struct ObjectHolder : ::ext::NonCopyable
     {
         return m_object.has_value() && (!m_objectInvalidValue.has_value() || m_object.value() != m_objectInvalidValue.value());
     }
+
     EXT_NODISCARD constexpr bool operator!() const EXT_NOEXCEPT { return !has_value(); }
     EXT_NODISCARD constexpr operator bool() const EXT_NOEXCEPT { return has_value(); }
 

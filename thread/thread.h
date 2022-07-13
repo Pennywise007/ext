@@ -24,7 +24,7 @@ EXPECT_TRUE(myThread.interrupted());
 #include <thread>
 #include <chrono>
 #include <shared_mutex>
-#include <map>
+#include <unordered_map>
 
 #include <ext/core/defines.h>
 #include <ext/core/check.h>
@@ -164,6 +164,14 @@ public:
         ext::get_service<InterruptionManager>().Interrupt(get_id());
     }
 
+    // restore thread after interrupting
+    void restore_interrupted() EXT_THROWS()
+    {
+        EXT_EXPECT(m_interrupted) << EXT_TRACE_FUNCTION "Not interrupted yet";
+        m_interrupted = false;
+        ext::get_service<InterruptionManager>().RestoreInterrupted(get_id());
+    }
+
     // check if thread has been interrupted
     EXT_NODISCARD bool interrupted() const EXT_THROWS()
     {
@@ -230,12 +238,12 @@ private:
         };
 
         // map with working ext::threads and their interruption events
-        std::map<std::thread::id, std::shared_ptr<ext::Event>> m_workingThreadsInterruptionEvents;
+        std::unordered_map<std::thread::id, std::shared_ptr<ext::Event>> m_workingThreadsInterruptionEvents;
         mutable std::shared_mutex m_workingThreadsMutex;
 
         // list of detached threads
         mutable std::shared_mutex m_detachedInterruptedThreadsMutex;
-        std::map<std::thread::id, ext::thread> m_detachedInterruptedThreads;
+        std::unordered_map<std::thread::id, ext::thread> m_detachedInterruptedThreads;
 
     public:
         // Call this function when you move std::thead into ext::thread for register it inside manager
@@ -341,6 +349,18 @@ private:
             EXT_ASSERT(interruptionEvent);
             interruptionEvent->Set();
             interruptionEvent->Destroy();
+        }
+
+        // Call this function for restore interrupted thread by thread id
+        void RestoreInterrupted(const std::thread::id& id) EXT_NOEXCEPT
+        {
+            EXT_ASSERT(id != kInvalidThreadId);
+
+            std::unique_lock lock(m_workingThreadsMutex);
+            EXT_ASSERT(m_workingThreadsInterruptionEvents.find(id) != m_workingThreadsInterruptionEvents.end());
+            auto& interruptionEvent = m_workingThreadsInterruptionEvents.at(id);
+            EXT_ASSERT(interruptionEvent);
+            interruptionEvent->Create(true);
         }
 
     private:

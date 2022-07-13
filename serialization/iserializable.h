@@ -203,11 +203,14 @@ struct SerializableObject : public ICollectionInterface
 protected:
     typedef SerializableObject<Type, TypeName, ICollectionInterface> SerializableObjectType;
 
-    template <class Field>
-    void RegisterField(const wchar_t* name, Field Type::* field);
-
     template <class... Classes>
     void RegisterSerializableBaseClasses();
+
+#if (_MSC_FULL_VER < 192027508) // fix problem with on 141 toolset with inheritance
+public:
+#endif
+    template <class Field>
+    void RegisterField(const wchar_t* name, Field Type::* field);
 
 private:
 // ISerializable

@@ -76,8 +76,9 @@ public:
      * \param onTaskDone callback on execution task by id
      * \param threadsCount working threads count
      */
-    thread_pool(std::function<void(const task::TaskId&)>&& onTaskDone = nullptr,
-                std::uint_fast32_t threadsCount = std::thread::hardware_concurrency());
+    explicit thread_pool(std::function<void(const task::TaskId&)>&& onTaskDone,
+                         std::uint_fast32_t threadsCount = std::thread::hardware_concurrency());
+    thread_pool(std::uint_fast32_t threadsCount = std::thread::hardware_concurrency());
 
     // interrupt and join all existing threads
     ~thread_pool();
@@ -124,6 +125,8 @@ public:
     // remove task from queue by id
     void erase_task(const task::TaskId& taskId);
 
+    EXT_NODISCARD uint32_t running_tasks_count() const;
+
     // interrupt and remove all tasks from queue, after this action thread pool is in inconsistent state
     void interrupt_and_remove_all_tasks();
 
@@ -151,6 +154,7 @@ private:
 
     // list of worker threads
     std::list<ext::thread> m_threads;
+    std::atomic_bool m_threadPoolWorks = true;
 };
 
 // struct with task information
@@ -237,16 +241,23 @@ inline void thread_pool::erase_task(const task::TaskId& taskId)
     m_taskDoneEvent.Set();
 }
 
+inline EXT_NODISCARD uint32_t thread_pool::running_tasks_count() const
+{
+    return m_countExecutingTasksThread;
+}
+
 inline void thread_pool::interrupt_and_remove_all_tasks()
 {
     EXT_ASSERT(std::all_of(m_threads.begin(), m_threads.end(), std::mem_fn(&ext::thread::thread_works)))
         << "Threads already interrupted or stopped";
-    std::for_each(m_threads.begin(), m_threads.end(), std::mem_fn(&ext::thread::interrupt));
     {
         std::lock_guard<std::mutex> lock(m_mutex);
         m_queueTasks.clear();
     }
+    std::for_each(m_threads.begin(), m_threads.end(), std::mem_fn(&ext::thread::interrupt));
     m_taskDoneEvent.Set();
+    wait_for_tasks();
+    std::for_each(m_threads.begin(), m_threads.end(), std::mem_fn(&ext::thread::restore_interrupted));
 }
 
 inline thread_pool::thread_pool(std::function<void(const task::TaskId&)>&& onTaskDone, std::uint_fast32_t threadsCount)
@@ -260,8 +271,17 @@ inline thread_pool::thread_pool(std::function<void(const task::TaskId&)>&& onTas
         thread.run(&thread_pool::worker, this);
 }
 
+inline thread_pool::thread_pool(std::uint_fast32_t threadsCount)
+    : thread_pool(nullptr, threadsCount)
+{}
+
 inline thread_pool::~thread_pool()
 {
+    m_threadPoolWorks = false;
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_queueTasks.clear();
+    }
     std::for_each(m_threads.begin(), m_threads.end(), std::mem_fn(&ext::thread::interrupt));
     m_notifier.notify_all();
     std::for_each(m_threads.begin(), m_threads.end(), std::mem_fn(&ext::thread::join));
@@ -296,7 +316,7 @@ inline void thread_pool::detach_all()
 
 inline void thread_pool::worker()
 {
-    while (!ext::this_thread::interruption_requested())
+    while (m_threadPoolWorks)
     {
         thread_pool::TaskInfoPtr taskToExecute;
         {
@@ -306,7 +326,7 @@ inline void thread_pool::worker()
                 m_notifier.wait(lock);
 
                 // notification call can be connected with interrupting
-                if (ext::this_thread::interruption_requested())
+                if (!m_threadPoolWorks)
                     return;
             }
 

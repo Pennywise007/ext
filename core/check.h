@@ -56,7 +56,7 @@ EXT_EXPECT_RESULT(val, _result == 0, ::ext::check::CheckFailedException(__FILE__
          for (bool __firstEnter = true;; __firstEnter = false)                      \
             if (__firstEnter)                                                       \
             {                                                                       \
-                CALL_ONCE((DEBUG_BREAK_OR_CREATE_DUMP()))                           \
+                CALL_ONCE(DEBUG_BREAK_OR_CREATE_DUMP())                             \
             }                                                                       \
             else                                                                    \
                 throw exception

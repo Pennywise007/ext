@@ -125,7 +125,7 @@ public:
     // remove task from queue by id
     void erase_task(const task::TaskId& taskId);
 
-    EXT_NODISCARD uint32_t running_tasks_count() const;
+    EXT_NODISCARD uint32_t running_tasks_count() const EXT_NOEXCEPT;
 
     // interrupt and remove all tasks from queue, after this action thread pool is in inconsistent state
     void interrupt_and_remove_all_tasks();
@@ -241,7 +241,7 @@ inline void thread_pool::erase_task(const task::TaskId& taskId)
     m_taskDoneEvent.Set();
 }
 
-inline EXT_NODISCARD uint32_t thread_pool::running_tasks_count() const
+EXT_NODISCARD inline uint32_t thread_pool::running_tasks_count() const EXT_NOEXCEPT
 {
     return m_countExecutingTasksThread;
 }

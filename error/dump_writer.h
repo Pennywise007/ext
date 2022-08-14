@@ -50,7 +50,7 @@ Checks boolean expression, if true:
         for (bool __firstEnter = true;; __firstEnter = false)       \
             if (!__firstEnter)                                      \
             {                                                       \
-                CALL_ONCE((DEBUG_BREAK_OR_CREATE_DUMP()));          \
+                CALL_ONCE(DEBUG_BREAK_OR_CREATE_DUMP());            \
                 break;                                              \
             }                                                       \
             else                                                    \

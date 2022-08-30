@@ -3,12 +3,18 @@
 #include <yvals_core.h>
 
 // Unused variable or return value
-#define EXT_UNUSED(variable) static_cast<void>(variable)
+#define EXT_UNUSED(variable)    static_cast<void>(variable)
+#define EXT_IGNORE_RESULT(...)  static_cast<void>(__VA_ARGS__)
 
 // Functions declaration
-#define EXT_NODISCARD   _NODISCARD
-#define EXT_NOEXCEPT    noexcept
-#define EXT_THROWS(...)  noexcept(false)
+#define EXT_NODISCARD       _NODISCARD
+#define EXT_NOEXCEPT        noexcept
+#define EXT_THROWS(...)     noexcept(false)
+
+#define EXT_NOINLINE        __declspec(noinline)
+#define EXT_FORCEINLINE     __forceinline
+#define EXT_NOTHROW         __declspec(nothrow)
+#define EXT_CALL            __cdecl
 
 // EXT_PP_CAT(x, y) => xy
 #define EXT_PP_EXPAND(x)  x

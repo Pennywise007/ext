@@ -190,7 +190,7 @@ threadPool.wait_for_tasks();
 
 And others:
 
-- [Task scheduller](https://github.com/Pennywise007/ext/blob/main/thread/scheduller.h)
+- [Task scheduler](https://github.com/Pennywise007/ext/blob/main/thread/scheduler.h)
 - [Main thread methods invoker(for GUI and other synchronized actions)](https://github.com/Pennywise007/ext/blob/main/thread/invoker.h)
 - [Events](https://github.com/Pennywise007/ext/blob/main/thread/event.h)
 - [Tick timer, allow to synchronize sth(for example animations)](https://github.com/Pennywise007/ext/blob/main/thread/tick.h)

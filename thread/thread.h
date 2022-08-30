@@ -94,9 +94,9 @@ public:
     explicit thread(_Fn&& _Fx, _Args&&... _Ax)
         : base([_Fx, _Ax...]()
         {
-            // register thread before call function to awoid problemS with interruptible checks inside call function
+            // register thread before call function to avoid problemS with interruptible checks inside call function
             ext::get_service<InterruptionManager>().OnStartThread(std::this_thread::get_id());
-            _Fx(_Ax...);
+            _Fx(std::move(_Ax)...);
         })
     {}
 
@@ -344,11 +344,16 @@ private:
             EXT_ASSERT(id != kInvalidThreadId);
 
             std::unique_lock lock(m_workingThreadsMutex);
-            EXT_ASSERT(m_workingThreadsInterruptionEvents.find(id) != m_workingThreadsInterruptionEvents.end());
-            auto& interruptionEvent = m_workingThreadsInterruptionEvents.at(id);
-            EXT_ASSERT(interruptionEvent);
-            interruptionEvent->Set();
-            interruptionEvent->Destroy();
+            auto threadId = m_workingThreadsInterruptionEvents.find(id);
+            if (threadId != m_workingThreadsInterruptionEvents.end())
+            {
+                auto& interruptionEvent = threadId->second;
+                EXT_ASSERT(interruptionEvent);
+                interruptionEvent->Set();
+                interruptionEvent->Destroy();
+            }
+            else
+                EXT_ASSERT(false) << "Thread not registered yet";
         }
 
         // Call this function for restore interrupted thread by thread id

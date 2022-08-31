@@ -14,44 +14,9 @@
 #include <ext/trace/tracer.h>
 #include <ext/utils/nano_atomic.h>
 
+#include <ext/utils/thread_details.h>
+
 namespace ext {
-
-struct exponential_wait
-{
-    void operator()() EXT_NOEXCEPT
-    {
-        constexpr uint32_t fast_limit = 4;
-        constexpr uint32_t slow_limit = 8;
-        if (m_step < fast_limit)
-            FastWait(1u << m_step);
-        else if (m_step < slow_limit)
-            SlowWait();
-        else
-            MaxWait();
-        ++m_step;
-    }
-
-    uint32_t get_step() const EXT_NOEXCEPT { return m_step; }
-
-private:
-    static void FastWait(uint32_t mul) EXT_NOEXCEPT
-    {
-        for (uint32_t i = 0; i < mul; ++i)
-            _mm_pause();
-    }
-    static void SlowWait() EXT_NOEXCEPT
-    {
-        std::this_thread::yield();
-    }
-    static void MaxWait() EXT_NOEXCEPT
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-
-private:
-    uint32_t m_step{ 0 };
-};
-
 namespace detail {
 
 class stop_callback_control_block
@@ -85,7 +50,7 @@ public:
     {
         // Callback is currently executing on another thread, block until it finishes executing.
 
-        exponential_wait waitForExecution;
+        thread_details::exponential_wait waitForExecution;
         while (!m_invokeFinishes)
         {
             waitForExecution();

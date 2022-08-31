@@ -15,6 +15,15 @@ namespace ext {
 
 struct Event : private ext::NonCopyable
 {
+    explicit Event() EXT_NOEXCEPT = default;
+    /// <summary> Initialize of event object </summary>
+    /// <param name="createWithManualReset">True if event will be reset manually by Reset function,
+    /// False to allow system automatically resets the event state to nonsignaled after a single waiting thread has been released </param>
+    explicit Event(bool createWithManualReset) EXT_THROWS(std::system_error)
+    {
+        Create(createWithManualReset);
+    }
+
     /// <summary> Initialize of event object </summary>
     /// <param name="manualReset">True if event will be reset manually by Reset function,
     /// False to allow system automatically resets the event state to nonsignaled after a single waiting thread has been released </param>

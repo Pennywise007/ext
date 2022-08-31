@@ -6,7 +6,10 @@
 
 namespace ext {
 
+using stop_token = ::std::stop_token;
 using stop_source = ::std::stop_source;
+template <typename Callback>
+using stop_callback = ::std::stop_callback<Callback>;
 
 } // namespace ext
 
@@ -96,11 +99,11 @@ private:
 class stop_source
 {
 public:
-    stop_source() EXT_NOEXCEPT = default;
-    stop_source(stop_source &&) EXT_NOEXCEPT = default;
-    stop_source(const stop_source &) EXT_NOEXCEPT = default;
-    stop_source &operator=(stop_source &&) EXT_NOEXCEPT = default;
-    stop_source &operator=(const stop_source &from) EXT_NOEXCEPT = default;
+    stop_source() EXT_NOEXCEPT {} // compiller doesn`t like = default
+    stop_source(stop_source&&) EXT_NOEXCEPT = default;
+    stop_source(const stop_source&) EXT_NOEXCEPT = default;
+    stop_source& operator=(stop_source&&) EXT_NOEXCEPT = default;
+    stop_source& operator=(const stop_source&) EXT_NOEXCEPT = default;
 
 public:
     /// <summary>
@@ -161,7 +164,7 @@ public:
         return stop_possible();
     }
 
-    void swap(stop_source &other) EXT_NOEXCEPT
+    void swap(stop_source& other) EXT_NOEXCEPT
     {
         std::swap(m_state, other.m_state);
     }

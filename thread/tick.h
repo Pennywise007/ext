@@ -140,10 +140,12 @@ private:
             if (tickParam.has_value())
             {
                 const auto handlers = m_handlers.equal_range(handler);
-                for (auto it = handlers.first; it != handlers.second; ++it)
+                for (auto it = handlers.first; it != handlers.second;)
                 {
                     if (it->second.tickParam == tickParam)
-                        m_handlers.erase(it);
+                        it = m_handlers.erase(it);
+                    else
+                        ++it;
                 }
             }
             else

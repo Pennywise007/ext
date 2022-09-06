@@ -209,7 +209,7 @@ class thread::ThreadsManager
 
     struct WorkingThreadInfo
     {
-        explicit WorkingThreadInfo(ext::stop_token&& token)
+        explicit WorkingThreadInfo(ext::stop_token&& token) EXT_NOEXCEPT
             : stopToken(std::move(token))
         {}
 
@@ -225,7 +225,7 @@ class thread::ThreadsManager
         void restore_interrupted(ext::stop_token&& token)
         {
             EXT_ASSERT(interrupted());
-            stopToken.swap(std::move(token));
+            stopToken = std::move(token);
             interruptionEvent->Reset();
         }
         const std::shared_ptr<ext::Event> interruptionEvent = std::make_shared<ext::Event>(true);

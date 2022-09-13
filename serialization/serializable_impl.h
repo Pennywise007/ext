@@ -119,14 +119,10 @@ struct SerializableValueHolder : ISerializableField
     const SerializableValue value;
 };
 
-template <class Type, class = std::void_t<>>
-struct SerializableProxy;
-
 // Proxy class for ISerializableField, used for base classes
-template <class Type>
-struct SerializableProxy<Type, std::enable_if_t<is_based_on<ISerializableField, Type>>> : ISerializableField
+struct SerializableProxyField : ISerializableField
 {
-    SerializableProxy(ISerializableField* fieldPointer, std::optional<std::wstring> name = std::nullopt)
+    SerializableProxyField(ISerializableField* fieldPointer, std::optional<std::wstring>&& name)
         : m_name(std::move(name)), m_field(fieldPointer) {}
 
 protected:
@@ -147,10 +143,9 @@ protected:
 };
 
 // Proxy class for ISerializableCollection, used for base classes
-template <class Type>
-struct SerializableProxy<Type, std::enable_if_t<is_based_on<ISerializableCollection, Type>>> : ISerializableCollection
+struct SerializableProxyCollection : ISerializableCollection
 {
-    SerializableProxy(ISerializableCollection* collectionPointer, std::optional<std::wstring> name = std::nullopt)
+    SerializableProxyCollection(ISerializableCollection* collectionPointer, std::optional<std::wstring>&& name)
        : m_name(std::move(name)), m_collection(collectionPointer) {}
 
 protected:
@@ -169,6 +164,19 @@ protected:
     const std::optional<std::wstring> m_name;
     ISerializableCollection* m_collection;
 };
+
+template <typename Type>
+EXT_NODISCARD std::shared_ptr<ISerializable> CreateSerializableProxy(Type* pointer, std::optional<std::wstring> name = std::nullopt)
+{
+    // reinterpret_cast because of private inheritance problems
+    if constexpr (std::is_base_of_v<ISerializableField, Type>)
+        return std::make_shared<SerializableProxyField>(reinterpret_cast<ISerializableField*>(pointer), std::move(name));
+    else if constexpr (std::is_base_of_v<ISerializableCollection, Type>)
+        return std::make_shared<SerializableProxyCollection>(reinterpret_cast<ISerializableCollection*>(pointer), std::move(name));
+    else
+        static_assert(false, "Unknown serializable field");
+    EXT_UNREACHABLE();
+}
 
 template <class Type>
 struct SerializableOptional : SerializableBase<ISerializableOptional, Type>
@@ -251,7 +259,8 @@ protected:
             pointer = Base::GetType();
         if (pointer == nullptr)
             return std::make_shared<SerializableValueHolder>(Base::GetName(), SerializableValue::CreateNull());
-        return std::make_shared<SerializableProxy<std::extract_value_type_v<Type>>>(pointer, Base::GetName());
+
+        return impl::CreateSerializableProxy(pointer, Base::GetName());
     }
 };
 
@@ -459,13 +468,16 @@ std::shared_ptr<ISerializable> get_as_serializable(const std::wstring& name, Typ
 template <class Type, typename Field>
 struct SerializableFieldInfo : ISerializableFieldInfo
 {
+    static_assert(std::is_base_of_v<ISerializable, Type>, "Type is not inherited from ISerializable");
+
     SerializableFieldInfo(const wchar_t* name, Field Type::* field) : m_name(name), m_field(field) {}
 
 protected:
 // ISerializableFieldInfo
     EXT_NODISCARD std::shared_ptr<ISerializable> GetField(const ISerializable* object) const override
     {
-        Type* typePointer = const_cast<Type*>(dynamic_cast<const Type*>(object));
+        // reinterpret_cast because of private ingeritance can happen
+        Type* typePointer = const_cast<Type*>(reinterpret_cast<const Type*>(object));
         EXT_ASSERT(typePointer) << "Cant get type " << typeid(Type).name() << " from object, maybe virtual table is missing, remove ATL_NO_VTABLE." 
             << " Or private inheritance problem.";
 
@@ -502,7 +514,7 @@ void SerializableObject<Type, TypeName, ICollectionInterface>::RegisterSerializa
         using BaseType = std::remove_pointer_t<decltype(type)>;
 
         auto* base = static_cast<BaseType*>(currentClass);
-        m_baseSerializableClasses.emplace_back(std::make_shared<impl::SerializableProxy<BaseType>>(base));
+        m_baseSerializableClasses.emplace_back(impl::CreateSerializableProxy(base));
     });
 }
 

@@ -258,7 +258,6 @@ inline bool Executor::SerializeObject(const std::unique_ptr<serializer::ISeriali
             const auto* collection = dynamic_cast<const ISerializableCollection*>(objectsVisitor.GetCurrentObject());
             EXT_EXPECT(collection);
             const_cast<ISerializableCollection*>(collection)->OnSerializationStart();
-            EXT_ASSERT(collection->Size() > 0) << "Empty collection '" << collection->GetName() << "', maybe you forgot to register fields?";
         }
         break;
         case Visitor::ObjectType::eCollectionEnd:

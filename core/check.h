@@ -83,7 +83,7 @@ EXT_ASSERT(val == true) << "Check failed";
 #ifdef _DEBUG
 #define EXT_ASSERT(bool_expression) EXT_DUMP_IF(!(bool_expression))
 #else
-#define EXT_ASSERT(bool_expression) if (true) {} else EXT_TRACE_ERR()
+#define EXT_ASSERT(bool_expression) if (!!(bool_expression)) {} else EXT_TRACE_ERR()
 #endif	// _DEBUG
 
 /* Unreachable code

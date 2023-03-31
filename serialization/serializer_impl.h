@@ -256,7 +256,7 @@ inline bool Executor::SerializeObject(const std::unique_ptr<serializer::ISeriali
             }
 
             const auto* collection = dynamic_cast<const ISerializableCollection*>(objectsVisitor.GetCurrentObject());
-            EXT_ASSERT(collection);
+            EXT_EXPECT(collection);
             const_cast<ISerializableCollection*>(collection)->OnSerializationStart();
         }
         break;
@@ -267,7 +267,7 @@ inline bool Executor::SerializeObject(const std::unique_ptr<serializer::ISeriali
             currentNode = currentNode->Parent.lock();
 
             const auto* collection = dynamic_cast<const ISerializableCollection*>(objectsVisitor.GetCurrentObject());
-            EXT_ASSERT(collection);
+            EXT_EXPECT(collection);
             const_cast<ISerializableCollection*>(collection)->OnSerializationEnd();
         }
         break;
@@ -320,7 +320,7 @@ inline bool Executor::DeserializeObject(const std::unique_ptr<serializer::IDeser
         case Visitor::ObjectType::eCollectionStart:
         {
             const auto* collection = dynamic_cast<const ISerializableCollection*>(objectsVisitor.GetCurrentObject());
-            EXT_ASSERT(collection);
+            EXT_EXPECT(collection);
             const_cast<ISerializableCollection*>(collection)->OnDeserializationStart();
 
             std::shared_ptr<SerializableNode> childNode;
@@ -352,7 +352,7 @@ inline bool Executor::DeserializeObject(const std::unique_ptr<serializer::IDeser
             EXT_ASSERT(currentNode->Name == objectsVisitor.GetCurrentObject()->GetName()) << "Invalid name for cuurent collection";
 
             const auto* collection = dynamic_cast<const ISerializableCollection*>(objectsVisitor.GetCurrentObject());
-            EXT_ASSERT(collection);
+            EXT_EXPECT(collection);
             const_cast<ISerializableCollection*>(collection)->OnDeserializationEnd();
 
             currentNode = currentNode->Parent.lock();
@@ -361,7 +361,7 @@ inline bool Executor::DeserializeObject(const std::unique_ptr<serializer::IDeser
         case Visitor::ObjectType::eField:
         {
             const auto* field = dynamic_cast<const ISerializableField*>(objectsVisitor.GetCurrentObject());
-            EXT_ASSERT(field);
+            EXT_EXPECT(field);
 
             std::shared_ptr<SerializableNode> childNode;
             if (!currentNode)

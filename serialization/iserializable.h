@@ -14,7 +14,7 @@ struct InternalStruct : ext::serializable::SerializableObject<InternalStruct, L"
     DECLARE_SERIALIZABLE((std::list<int>) valueList);
 };
 
-struct CustomField: ISerializableField
+struct CustomField : ISerializableField
 {
     EXT_NODISCARD virtual const wchar_t* GetName() const EXT_NOEXCEPT { return L"CustomFieldName"; }
     EXT_NODISCARD virtual SerializableValue SerializeValue() const { return L"test"; }
@@ -37,12 +37,13 @@ struct TestStruct :  ext::serializable::SerializableObject<TestStruct>, Internal
     MyTestStruct()
     {
         REGISTER_SERIALIZABLE_OBJECT(m_listOfParams); // or use DECLARE_SERIALIZABLE macro
-
+        using namespace ext::serializable::serializer;
         Executor::DeserializeObject(Fabric::XMLDeserializer(L"C:\\Test.xml"), testStruct);
     }
 
     ~MyTestStruct()
     {
+        using namespace ext::serializable::serializer;
         Executor::SerializeObject(Fabric::XMLSerializer(L"C:\\Test.xml"), testStruct);
     }
 };

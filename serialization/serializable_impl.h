@@ -465,7 +465,7 @@ protected:
 // ISerializableFieldInfo
     EXT_NODISCARD std::shared_ptr<ISerializable> GetField(const ISerializable* object) const override
     {
-        Type* typePointer = const_cast<Type*>(dynamic_cast<const Type*>(object));
+        Type* typePointer = const_cast<Type*>(reinterpret_cast<const Type*>(object));
         EXT_ASSERT(typePointer) << "Cant get type " << typeid(Type).name() << " from object, maybe virtual table is missing, remove ATL_NO_VTABLE." 
             << " Or private inheritance problem.";
 

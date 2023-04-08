@@ -30,8 +30,9 @@ struct lazy_type
         if (!m_object.has_value())
         {
             EXT_EXPECT(!!m_getterFunction);
-            m_object.emplace(m_getterFunction());
-            m_getterFunction = nullptr;
+            GetObjectFunction getFunction;
+            std::swap(getFunction, m_getterFunction);
+            m_object.emplace(getFunction());
         }
         return m_object.value();
     }
@@ -41,8 +42,9 @@ struct lazy_type
         if (!m_object.has_value())
         {
             EXT_EXPECT(!!m_getterFunction);
-            m_object.emplace(m_getterFunction());
-            m_getterFunction = nullptr;
+            GetObjectFunction getFunction;
+            std::swap(getFunction, m_getterFunction);
+            m_object.emplace(getFunction());
         }
         return m_object.value();
     }

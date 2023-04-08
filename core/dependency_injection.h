@@ -49,6 +49,7 @@ const std::shared_ptr<CreatedObjectExample> object = ext::CreateObject<CreatedOb
 #include <map>
 #include <list>
 #include <memory>
+#include <set>
 #include <shared_mutex>
 #include <string>
 #include <type_traits>
@@ -65,17 +66,28 @@ const std::shared_ptr<CreatedObjectExample> object = ext::CreateObject<CreatedOb
 #pragma push_macro("GetObject")
 #undef GetObject
 
+#define THROWS_DI_EXCEPTIONS EXT_THROWS(di::not_registered, di::cyclic_dependency, ...)
+
 namespace ext {
 namespace dependency_injection {
-// exception from DI container, occurs when the container cannot find the class/interface(not registered)
-struct not_registered : std::exception
-{
-    explicit not_registered(const std::string& error) EXT_NOEXCEPT : std::exception(error.c_str()) {}
-};
 
+// Generic container exception. Used in case of internal errors
+struct exception : std::exception { using  std::exception::exception; };
+// exception from DI container, occurs when the container cannot find the class/interface(not registered)
+struct not_registered : exception { using exception::exception; };
+// exception from DI container, occurs when the container detects a cyclic dependency
+struct cyclic_dependency : exception { using exception::exception; };
+
+struct ObjectsMonitor;
+struct any_interface_provider;
 } // namespace dependency_injection;
 
 namespace di = dependency_injection;
+
+template <typename Interface>
+struct lazy_weak_interface;
+template <typename Interface>
+struct lazy_interface;
 
 // Services provider for GetInterface and CreateInterface functions, can be created from ServiceCollection::BuildServiceProvider
 struct ServiceProvider : ext::enable_shared_from_this<ServiceProvider>, ext::NonCopyable
@@ -87,7 +99,7 @@ struct ServiceProvider : ext::enable_shared_from_this<ServiceProvider>, ext::Non
     // If interface not registered in service provider throws di::not_registered exception
     // If interface implementation can`t be created because of construction exception - throws it
     template <typename Interface>
-    EXT_NODISCARD std::shared_ptr<Interface> GetInterface() const EXT_THROWS(di::not_registered, ...);
+    EXT_NODISCARD std::shared_ptr<Interface> GetInterface() const THROWS_DI_EXCEPTIONS;
 
     // Getting interface from registered interface collection, returns last registered implementation of interface
     // Returns shared ptr on object if everything ok
@@ -95,12 +107,15 @@ struct ServiceProvider : ext::enable_shared_from_this<ServiceProvider>, ext::Non
     template <typename Interface>
     EXT_NODISCARD std::shared_ptr<Interface> TryGetInterface() const EXT_NOEXCEPT;
 
-    // Getting all interface realizations from registered interface collection
-    // Returns collection of shared ptr on object if everything ok
-    // If interface not registered in service provider throws di::not_registered exception
+    // Getting all interface implimentations from registered collection
     // If any interface implementation can`t be created because of construction exception - throws it
     template <typename Interface>
-    EXT_NODISCARD std::list<std::shared_ptr<Interface>> GetInterfaces() const EXT_THROWS(di::not_registered, ...);
+    EXT_NODISCARD std::list<std::shared_ptr<Interface>> GetInterfaces() const EXT_THROWS();
+
+    // Getting lazy objects on registered interface implimentations
+    // Allows to check how many objects registered for interface without creation of all objects.
+    template <typename Interface>
+    EXT_NODISCARD std::list<ext::lazy_shared_ptr<Interface>> GetLazyInterfaces() const EXT_THROWS();
 
     // Checking if interface registered in provider
     template <typename Interface>
@@ -114,10 +129,24 @@ struct ServiceProvider : ext::enable_shared_from_this<ServiceProvider>, ext::Non
     void Reset() EXT_NOEXCEPT;
 
 private:
-    // allow construction from ServiceCollection
-    friend struct ServiceCollection;
+    template <typename Interface>
+    EXT_NODISCARD std::shared_ptr<Interface> GetInterface(const std::shared_ptr<di::ObjectsMonitor>& monitor) const THROWS_DI_EXCEPTIONS;
 
     struct IObject;
+
+    template <typename Interface>
+    EXT_NODISCARD std::shared_ptr<Interface> GetInterface(const std::shared_ptr<IObject>& object,
+                                                          const std::shared_ptr<di::ObjectsMonitor>& monitor) const EXT_THROWS(...);
+private:
+    // allow construction from ServiceCollection
+    friend class ServiceCollection;
+
+    template <typename Interface>
+    friend struct lazy_weak_interface;
+    template <typename Interface>
+    friend struct lazy_interface;
+    friend struct di::any_interface_provider;
+
     struct IObjectWrapper;
 
     // Interface to object fabrics map
@@ -141,9 +170,13 @@ private:
 };
 
 // Service collection singleton, allow to register interfaces and their implementations
-// Can be obtained by ext::get_service<ext::ServiceCollection>() or ServiceCollection::Instance()
-struct ServiceCollection
+// Can be used as singleton and obtained by ext::get_service<ext::ServiceCollection>()
+class ServiceCollection : ext::NonCopyable
 {
+public:
+    ServiceCollection() EXT_NOEXCEPT = default;
+    ~ServiceCollection() EXT_NOEXCEPT;
+
     // Registering a class and the interfaces it implements
     // Function ServiceProvider::GetInterface will create a new object every time it called
     template <typename Class, typename... Interfaces>
@@ -186,8 +219,6 @@ private:
     template <typename Interface>
     void RegisterObject(const std::function<std::shared_ptr<ServiceProvider::IObject>()>& registerObject);
 
-    ~ServiceCollection() EXT_NOEXCEPT;
-
 private:
     friend ext::Singleton<ServiceCollection>;
 
@@ -211,13 +242,13 @@ private:
 // If any required interface not registered inside ServiceProvider - throws di::not_registered
 // If object can`t be created because of constructor exceptions - throws it
 template <typename Object>
-EXT_NODISCARD std::shared_ptr<Object> CreateObject(ServiceProvider::Ptr serviceProvider) EXT_THROWS(di::not_registered, ...);
+EXT_NODISCARD std::shared_ptr<Object> CreateObject(ServiceProvider::Ptr serviceProvider) THROWS_DI_EXCEPTIONS;
 
 // Getting interface implementation from ServiceProvider
 // If any required interface not registered inside ServiceProvider - throws di::not_registered
 // If object can`t be created because of constructor exceptions - throws it
 template <typename Interface>
-EXT_NODISCARD std::shared_ptr<Interface> GetInterface(const ServiceProvider::Ptr& serviceProvider) EXT_THROWS(di::not_registered, ...);
+EXT_NODISCARD std::shared_ptr<Interface> GetInterface(const ServiceProvider::Ptr& serviceProvider) THROWS_DI_EXCEPTIONS;
 
 // Help interface to simplify getting interfaces inside classes, holds ServiceProvider pointer and allow to easy GetInterface
 struct ServiceProviderHolder
@@ -227,13 +258,13 @@ struct ServiceProviderHolder
     {}
 
     template <typename Interface>
-    EXT_NODISCARD std::shared_ptr<Interface> GetInterface() const EXT_THROWS(di::not_registered, ...)
+    EXT_NODISCARD std::shared_ptr<Interface> GetInterface() const THROWS_DI_EXCEPTIONS
     {
         return ext::GetInterface<Interface>(m_serviceProvider);
     }
 
     template <typename Object>
-    EXT_NODISCARD std::shared_ptr<Object> CreateObject() const EXT_THROWS(di::not_registered, ...)
+    EXT_NODISCARD std::shared_ptr<Object> CreateObject() const THROWS_DI_EXCEPTIONS
     {
         return ext::CreateObject<Object>(m_serviceProvider);
     }
@@ -250,7 +281,13 @@ struct lazy_weak_interface : ext::lazy_weak_ptr<Interface>
     lazy_weak_interface(const ServiceProvider::Ptr& serviceProvider)
         : ext::lazy_weak_ptr<Interface>([serviceProvider]() -> std::weak_ptr<Interface>
           {
-              return ext::GetInterface<Interface>(serviceProvider);
+              return serviceProvider->GetInterface<Interface>();
+          })
+    {}
+    lazy_weak_interface(const ServiceProvider::Ptr& serviceProvider, const std::shared_ptr<di::ObjectsMonitor>& objectMonitor)
+        : ext::lazy_weak_ptr<Interface>([serviceProvider, objectMonitor]() -> std::weak_ptr<Interface>
+          {
+              return serviceProvider->GetInterface<Interface>(objectMonitor);
           })
     {}
 };
@@ -261,10 +298,12 @@ struct lazy_weak_interface : ext::lazy_weak_ptr<Interface>
 template <typename Interface>
 struct lazy_interface : ext::lazy_shared_ptr<Interface>
 {
-    lazy_interface(const ServiceProvider::Ptr& serviceProvider)
-        : ext::lazy_shared_ptr<Interface>([serviceProvider]()
+    lazy_interface(const ServiceProvider::Ptr& serviceProvider, std::shared_ptr<di::ObjectsMonitor> objectMonitor = nullptr)
+        : ext::lazy_shared_ptr<Interface>([serviceProvider, monitor = std::move(objectMonitor)]() mutable
           {
-              return ext::GetInterface<Interface>(serviceProvider);
+                if (!monitor)
+                    monitor = std::make_shared<di::ObjectsMonitor>();
+                return serviceProvider->GetInterface<Interface>(monitor);
           })
     {}
 };
@@ -275,10 +314,12 @@ struct lazy_interface : ext::lazy_shared_ptr<Interface>
 template <typename Object>
 struct lazy_object : ext::lazy_shared_ptr<Object>
 {
-    lazy_object(const ServiceProvider::Ptr& serviceProvider)
-        :  ext::lazy_shared_ptr<Object>([serviceProvider]()
+    lazy_object(const ServiceProvider::Ptr& serviceProvider, std::shared_ptr<di::ObjectsMonitor> objectMonitor = nullptr)
+        :  ext::lazy_shared_ptr<Object>([serviceProvider, monitor = std::move(objectMonitor)]() mutable
           {
-              return ext::CreateObject<Object>(serviceProvider);
+              if (!monitor) 
+                  monitor = std::make_shared<di::ObjectsMonitor>();
+              return ext::di::CreateObject<Object>(serviceProvider, monitor);
           })
     {}
 };
@@ -294,11 +335,52 @@ struct check_inheritance
     constexpr static void Check() { static_assert(std::is_base_of_v<Interface, Class>, "Class must implements Interface"); }
 };
 
+struct ObjectsMonitor : ext::NonCopyable
+{
+    using Ptr = std::shared_ptr<ObjectsMonitor>;
+
+    template <typename T>
+    struct ScopeObserver
+    {
+        ScopeObserver(ObjectsMonitor::Ptr monitor) EXT_THROWS(di::cyclic_dependency)
+            : m_monitor(std::move(monitor))
+        {
+            if (!m_monitor->m_creatingObjects.insert(typeid(T).hash_code()).second)
+                m_monitor->ThrowCyclicDependency<T>();
+        }
+        ~ScopeObserver()
+        {
+            [[maybe_unused]] const auto erasedObjects = m_monitor->m_creatingObjects.erase(typeid(T).hash_code());
+            EXT_ASSERT(erasedObjects == 1);
+        }
+        const ObjectsMonitor::Ptr m_monitor;
+    };
+
+    template <typename T>
+    void CheckCyclicCreation() const EXT_THROWS(di::cyclic_dependency)
+    {
+        if (m_creatingObjects.find(typeid(T).hash_code()) != m_creatingObjects.end())
+            ThrowCyclicDependency<T>();
+    }
+
+private:
+    template <typename T>
+    [[noreturn]] static void ThrowCyclicDependency() EXT_THROWS(di::cyclic_dependency)
+    {
+        throw di::cyclic_dependency(("Found cyclic dependency, object `" +
+            std::string(typeid(T).name()) + "` tried to create itself several times").c_str());
+    }
+
+private:
+    std::set<size_t> m_creatingObjects;
+};
+
 // Allow to create any object and provide it with all necessary interfaces
 struct any_interface_provider
 {
-    explicit any_interface_provider(ServiceProvider::Ptr&& serviceProvider) EXT_NOEXCEPT
+    explicit any_interface_provider(ServiceProvider::Ptr&& serviceProvider, ObjectsMonitor::Ptr monitor) EXT_NOEXCEPT
         : m_serviceProvider(std::move(serviceProvider))
+        , m_objectMonitor(std::move(monitor))
     {}
 
     operator ServiceProvider::Ptr() const EXT_NOEXCEPT
@@ -311,46 +393,59 @@ struct any_interface_provider
     operator std::shared_ptr<Interface>() const
     {
         EXT_REQUIRE(!!m_serviceProvider);
-        return m_serviceProvider->GetInterface<Interface>();
+        return m_serviceProvider->GetInterface<Interface>(m_objectMonitor);
     }
 
     template <typename Interface>
     operator std::weak_ptr<Interface>() const
     {
         EXT_REQUIRE(!!m_serviceProvider);
-        return m_serviceProvider->GetInterface<Interface>();
+        return m_serviceProvider->GetInterface<Interface>(m_objectMonitor);
     }
 
     template <typename Interface>
     operator lazy_interface<Interface>() const
     {
         EXT_REQUIRE(!!m_serviceProvider);
-        return lazy_interface<Interface>(m_serviceProvider);
+        return lazy_interface<Interface>(m_serviceProvider, m_objectMonitor);
     }
 
     template <typename Object>
     operator lazy_object<Object>() const
     {
         EXT_REQUIRE(!!m_serviceProvider);
-        return lazy_object<Object>(m_serviceProvider);
+        return lazy_object<Object>(m_serviceProvider, m_objectMonitor);
     }
 
     template <typename Interface>
     operator lazy_weak_interface<Interface>() const
     {
         EXT_REQUIRE(!!m_serviceProvider);
-        return lazy_weak_interface<Interface>(m_serviceProvider);
+        return lazy_weak_interface<Interface>(m_serviceProvider, m_objectMonitor);
     }
 
 private:
     const ServiceProvider::Ptr m_serviceProvider;
+    const ObjectsMonitor::Ptr m_objectMonitor;
 };
 
 // Creating shared pointer on any object and provide it with all necessary interfaces
 template <typename Type, size_t... Index>
-EXT_NODISCARD std::shared_ptr<Type> CreateWithProviders(any_interface_provider& provider, const std::index_sequence<Index...>&) EXT_THROWS(di::not_registered, ...)
+EXT_NODISCARD std::shared_ptr<Type> CreateWithProviders(any_interface_provider& provider, const std::index_sequence<Index...>&) THROWS_DI_EXCEPTIONS
 {
     return std::make_shared<Type>(((void)Index, provider)...);
+}
+
+// Internal function for create object with using an object monitor
+template <typename Type>
+EXT_NODISCARD std::shared_ptr<Type> CreateObject(ServiceProvider::Ptr serviceProvider, const di::ObjectsMonitor::Ptr& monitor) THROWS_DI_EXCEPTIONS
+{
+    EXT_EXPECT(!!serviceProvider);
+    EXT_EXPECT(!!monitor);
+
+    const auto observer = di::ObjectsMonitor::ScopeObserver<Type>(monitor);
+    di::any_interface_provider provider(std::move(serviceProvider), monitor);
+    return di::CreateWithProviders<Type>(provider, std::make_index_sequence<ext::detail::constructor_size<Type>>{});
 }
 
 } // namespace dependency_injection
@@ -359,18 +454,19 @@ EXT_NODISCARD std::shared_ptr<Type> CreateWithProviders(any_interface_provider& 
 // If any required interface not registered inside ServiceProvider - throws di::not_registered
 // If object can`t be created because of constructor exceptions - throws it
 template <typename Type>
-EXT_NODISCARD std::shared_ptr<Type> CreateObject(ServiceProvider::Ptr serviceProvider) EXT_THROWS(di::not_registered, ...)
+EXT_NODISCARD std::shared_ptr<Type> CreateObject(ServiceProvider::Ptr serviceProvider) THROWS_DI_EXCEPTIONS
 {
     EXT_EXPECT(!!serviceProvider);
-    di::any_interface_provider provider(std::move(serviceProvider));
-    return di::CreateWithProviders<Type>(provider, std::make_index_sequence<ext::detail::constructor_size<Type>>{});
+
+    const auto monitor = std::make_shared<di::ObjectsMonitor>();
+    return di::CreateObject<Type>(serviceProvider, monitor);
 }
 
 // Getting interface implementation from ServiceProvider
 // If any required interface not registered inside ServiceProvider - throws di::not_registered
 // If object can`t be created because of constructor exceptions - throws it
 template <typename Interface>
-EXT_NODISCARD std::shared_ptr<Interface> GetInterface(const ServiceProvider::Ptr& serviceProvider) EXT_THROWS(di::not_registered, ...)
+EXT_NODISCARD std::shared_ptr<Interface> GetInterface(const ServiceProvider::Ptr& serviceProvider) THROWS_DI_EXCEPTIONS
 {
     EXT_EXPECT(!!serviceProvider);
     return serviceProvider->GetInterface<Interface>();
@@ -386,7 +482,7 @@ struct ServiceProvider::IObject : ext::NonCopyable
     // Get class name, mostly for debug
     EXT_NODISCARD virtual const char* GetName() const EXT_NOEXCEPT { return m_objectName; }
     // Get object, if object not exist - creating it
-    EXT_NODISCARD virtual std::any GetObject(ServiceProvider::Ptr&&) = 0;
+    EXT_NODISCARD virtual std::any GetObject(ServiceProvider::Ptr&&, const di::ObjectsMonitor::Ptr& monitor) = 0;
     // On call CreateScope or BuildServiceProvider - creating new IObject
     EXT_NODISCARD virtual std::shared_ptr<IObject> CreateScopedObject() EXT_NOEXCEPT = 0;
     // Reset object if exists
@@ -407,14 +503,52 @@ struct ServiceProvider::IObjectWrapper : IObject
 };
 
 template <typename Interface>
-EXT_NODISCARD std::shared_ptr<Interface> ServiceProvider::GetInterface() const EXT_THROWS(di::not_registered, ...)
+EXT_NODISCARD std::shared_ptr<Interface> ServiceProvider::GetInterface() const THROWS_DI_EXCEPTIONS
+{
+    const auto monitor = std::make_shared<di::ObjectsMonitor>();
+    return GetInterface<Interface>(monitor);
+}
+
+template <typename Interface>
+EXT_NODISCARD std::shared_ptr<Interface> ServiceProvider::GetInterface(const std::shared_ptr<IObject>& objectHolder,
+                                                                       const di::ObjectsMonitor::Ptr& monitor) const EXT_THROWS(...)
+{
+    try
+    {
+        EXT_TRACE_DBG() << EXT_TRACE_FUNCTION << "getting " << typeid(Interface).name() << " interface";
+        const std::any object = objectHolder->GetObject(std::const_pointer_cast<ServiceProvider>(shared_from_this()), monitor);
+        try
+        {
+            return std::any_cast<std::shared_ptr<Interface>>(object);
+        }
+        catch (const std::bad_any_cast&)
+        {
+            EXT_ASSERT(false);
+            std::stringstream stream;
+            stream << "failed to get " << typeid(Interface).name() << ", internal error, can`t get it from " << object.type().name();
+            EXT_TRACE_ERR() << EXT_TRACE_FUNCTION << stream.str();
+            throw exception(stream.str().c_str());
+        }
+    }
+    catch (...)
+    {
+        EXT_TRACE_ERR() << EXT_TRACE_FUNCTION << "failed to get " << typeid(Interface).name() <<
+            " interface, failed to create object " << objectHolder->GetName();
+        throw;
+    }
+    EXT_UNREACHABLE();
+}
+
+template <typename Interface>
+EXT_NODISCARD std::shared_ptr<Interface> ServiceProvider::GetInterface(const di::ObjectsMonitor::Ptr& monitor) const THROWS_DI_EXCEPTIONS
 {
     if (auto it = m_registeredObjects.find(typeid(Interface).hash_code()); it != m_registeredObjects.end() && !it->second.empty())
     {
         try
         {
             EXT_TRACE_DBG() << EXT_TRACE_FUNCTION << "getting " << typeid(Interface).name() << " interface";
-            const std::any object = it->second.back()->GetObject(std::const_pointer_cast<ServiceProvider>(shared_from_this()));
+            const std::any object = it->second.back()->GetObject(std::const_pointer_cast<ServiceProvider>(shared_from_this()),
+                                                                 monitor);
             try
             {
                 return std::any_cast<std::shared_ptr<Interface>>(object);
@@ -433,9 +567,9 @@ EXT_NODISCARD std::shared_ptr<Interface> ServiceProvider::GetInterface() const E
             throw;
         }
     }
-    std::string error = std::string("failed to get ") + typeid(Interface).name() + " interface, not registered";
+    const std::string error = std::string("failed to get ") + typeid(Interface).name() + " interface, not registered";
     EXT_TRACE() << EXT_TRACE_FUNCTION << error;
-    throw di::not_registered(error);
+    throw di::not_registered(error.c_str());
 }
 
 template <typename Interface>
@@ -450,42 +584,39 @@ catch (...)
 }
 
 template <typename Interface>
-EXT_NODISCARD std::list<std::shared_ptr<Interface>> ServiceProvider::GetInterfaces() const EXT_THROWS(di::not_registered, ...)
+EXT_NODISCARD std::list<std::shared_ptr<Interface>> ServiceProvider::GetInterfaces() const EXT_THROWS()
 {
-    if (auto it = m_registeredObjects.find(typeid(Interface).hash_code()); it != m_registeredObjects.end() && !it->second.empty())
+    std::list<std::shared_ptr<Interface>> result;
+   
+    if (const auto it = m_registeredObjects.find(typeid(Interface).hash_code()); it != m_registeredObjects.end() && !it->second.empty())
     {
-        std::list<std::shared_ptr<Interface>> result;
+        const auto monitor = std::make_shared<di::ObjectsMonitor>();
+        for (auto& objectProvider : it->second)
+        {
+            result.emplace_back(GetInterface<Interface>(objectProvider, monitor));
+        }
+    }
+    return result;
+}
+
+template <typename Interface>
+EXT_NODISCARD std::list<ext::lazy_shared_ptr<Interface>> ServiceProvider::GetLazyInterfaces() const EXT_THROWS()
+{
+    std::list<ext::lazy_shared_ptr<Interface>> result;
+   
+    if (const auto it = m_registeredObjects.find(typeid(Interface).hash_code()); it != m_registeredObjects.end() && !it->second.empty())
+    {
+        const auto monitor = std::make_shared<di::ObjectsMonitor>();
         const auto pointer = shared_from_this();
         for (auto& objectProvider : it->second)
         {
-            try
+            result.emplace_back([provider = objectProvider, pointer, monitor]() -> std::shared_ptr<Interface>
             {
-                EXT_TRACE_DBG() << EXT_TRACE_FUNCTION << "getting " << typeid(Interface).name() << " interface";
-                const std::any object = objectProvider->GetObject(pointer);
-                try
-                {
-                    result.emplace_back(std::any_cast<std::shared_ptr<Interface>>(object));
-                }
-                catch (const std::bad_any_cast&)
-                {
-                    EXT_ASSERT(false);
-                    EXT_TRACE_ERR() << EXT_TRACE_FUNCTION << "failed to get " << typeid(Interface).name()
-                        << ", internal error, can`t get it from " << object.type().name();
-                }
-            }
-            catch (...)
-            {
-                EXT_TRACE_ERR() << EXT_TRACE_FUNCTION << "failed to get " << typeid(Interface).name() <<
-                    " interface, failed to create object " << objectProvider->GetName();
-                throw;
-            }
+                return pointer->GetInterface<Interface>(provider, monitor);
+            });
         }
-        return result;
     }
-
-    std::string error = std::string("failed to get realiztions for ") + typeid(Interface).name() + " interface, not registered";
-    EXT_TRACE() << EXT_TRACE_FUNCTION << error;
-    throw di::not_registered(error);
+    return result;
 }
 
 template <typename Interface>
@@ -621,8 +752,11 @@ struct ServiceCollection::SingletonObject : ServiceProvider::IObject,
 {
     explicit SingletonObject() EXT_NOEXCEPT : IObject(typeid(Object).name()) {}
     EXT_NODISCARD size_t GetHash() const EXT_NOEXCEPT override final { return typeid(Object).hash_code(); }
-    EXT_NODISCARD std::any GetObject(ServiceProvider::Ptr&& serviceProvider) override final
+    EXT_NODISCARD std::any GetObject(ServiceProvider::Ptr&& serviceProvider, const di::ObjectsMonitor::Ptr& monitor) override final
     {
+        // Check if we already creating this object, otherwise it might lead to the dead lock in the mutex bellow
+        monitor->CheckCyclicCreation<Object>();
+
         {
             std::shared_lock<std::shared_mutex> lock(m_mutex);
             if (m_object)
@@ -631,7 +765,7 @@ struct ServiceCollection::SingletonObject : ServiceProvider::IObject,
 
         std::unique_lock<std::shared_mutex> lock(m_mutex);
         if (!m_object)
-            m_object = std::static_pointer_cast<Interface>(ext::CreateObject<Object>(std::move(serviceProvider)));
+            m_object = std::static_pointer_cast<Interface>(ext::di::CreateObject<Object>(std::move(serviceProvider), monitor));
         return std::make_any<std::shared_ptr<Interface>>(m_object);
     }
     virtual EXT_NODISCARD std::shared_ptr<ServiceProvider::IObject> CreateScopedObject() EXT_NOEXCEPT override
@@ -662,9 +796,10 @@ struct ServiceCollection::TransientObject final : ServiceProvider::IObject
     explicit TransientObject() EXT_NOEXCEPT : IObject(typeid(Object).name()) {}
 
     EXT_NODISCARD size_t GetHash() const EXT_NOEXCEPT override final { return typeid(Object).hash_code(); }
-    EXT_NODISCARD std::any GetObject(ServiceProvider::Ptr&& serviceProvider) override final
+    EXT_NODISCARD std::any GetObject(ServiceProvider::Ptr&& serviceProvider, const di::ObjectsMonitor::Ptr& monitor) override final
     {
-        return std::make_any<std::shared_ptr<Interface>>(std::static_pointer_cast<Interface>(ext::CreateObject<Object>(std::move(serviceProvider))));
+        return std::make_any<std::shared_ptr<Interface>>(std::static_pointer_cast<Interface>(
+            ext::di::CreateObject<Object>(std::move(serviceProvider), monitor)));
     }
     EXT_NODISCARD std::shared_ptr<ServiceProvider::IObject> CreateScopedObject() EXT_NOEXCEPT override final
     {
@@ -684,12 +819,12 @@ struct ServiceCollection::WrapperObject final : ServiceProvider::IObjectWrapper,
     {}
 
     EXT_NODISCARD size_t GetHash() const EXT_NOEXCEPT override final { return typeid(Object).hash_code(); }
-    EXT_NODISCARD std::any GetObject(ServiceProvider::Ptr&& serviceProvider) override final
+    EXT_NODISCARD std::any GetObject(ServiceProvider::Ptr&& serviceProvider, const di::ObjectsMonitor::Ptr& monitor) override final
     {
         std::shared_ptr<Interface> interfacePtr;
         try
         {
-            const auto object = m_object->GetObject(std::move(serviceProvider));
+            const auto object = m_object->GetObject(std::move(serviceProvider), monitor);
             const std::shared_ptr<InterfaceWrapped> wrappedInterface = std::any_cast<std::shared_ptr<InterfaceWrapped>>(object);
             interfacePtr = std::dynamic_pointer_cast<Interface>(wrappedInterface);
         }

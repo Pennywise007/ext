@@ -23,7 +23,6 @@ struct contain_type<TypeToFound, Type, OtherTypes...>
 template <typename TypeToFound, typename... Types>
 inline constexpr bool contain_type_v = contain_type<TypeToFound, Types...>::value;
 
-
 /*
 Get type from types list by index
 find_type_by_index<0, 0, int, float>::type == int;

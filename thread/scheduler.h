@@ -39,7 +39,7 @@ class Scheduler : ext::NonCopyable
 {
 public:
     explicit Scheduler() EXT_NOEXCEPT;
-    ~Scheduler();
+    virtual ~Scheduler();
 
     // Getting global instance of scheduller
     EXT_NODISCARD static Scheduler& GlobalInstance() EXT_NOEXCEPT;

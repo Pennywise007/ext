@@ -1,3 +1,19 @@
+/*
+Example:
+
+ext::stop_source source;
+ext::thread myThread([stop_token = source.get_token()]()
+{
+    while (!stop_token.stop_requested())
+    {
+        ...
+    }
+});
+
+source.request_stop();
+myThread.join();
+*/
+
 #pragma once
 
 #if defined(__cplusplus) && __cplusplus >= 202004L

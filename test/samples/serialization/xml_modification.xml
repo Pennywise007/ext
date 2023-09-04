@@ -1,0 +1,870 @@
+<?xml version="1.0"?>
+<Collection Name="SerializableTypes">
+    <Collection Name="BaseTypes">
+        <Field Name="value" Value="213" Type="6" />
+        <Field Name="text" Value="text,\s2\&quot;\d" Type="1" />
+        <Collection Name="valueMap">
+            <Collection Name="Map pair">
+                <Field Name="Key" Value="0" Type="5" />
+                <Field Name="Value" Value="2" Type="6" />
+            </Collection>
+        </Collection>
+        <Collection Name="valueMultimap">
+            <Collection Name="Map pair">
+                <Field Name="Key" Value="0" Type="8" />
+                <Field Name="Value" Value="2" Type="6" />
+            </Collection>
+        </Collection>
+        <Collection Name="valueList">
+            <Field Name="0" Value="2" Type="5" />
+            <Field Name="1" Value="5" Type="5" />
+        </Collection>
+        <Collection Name="valueVector">
+            <Field Name="0" Value="2,4" Type="7" />
+            <Field Name="1" Value="5,7" Type="7" />
+            <Field Name="2" Value="nan" Type="7" />
+        </Collection>
+        <Collection Name="valueSet">
+            <Field Name="Value" Value="2,4" Type="7" />
+            <Field Name="Value" Value="5,7" Type="7" />
+        </Collection>
+        <Collection Name="valueMultiSet">
+            <Field Name="Value" Value="2" Type="5" />
+            <Field Name="Value" Value="5" Type="5" />
+        </Collection>
+        <Field Name="path" Value="&quot;C:\\Test&quot;" Type="1" />
+        <Field Name="optional" Value="false" Type="2" />
+        <Collection Name="optionalPair">
+            <Field Name="First" Value="453" Type="5" />
+            <Field Name="Second" Value="true" Type="2" />
+        </Collection>
+        <Collection Name="vectorOptional">
+            <Field Name="0" Value="false" Type="2" />
+            <Field Name="1" Value="true" Type="2" />
+        </Collection>
+        <Collection Name="pair">
+            <Field Name="First" Value="7" Type="5" />
+            <Field Name="Second" Value="false" Type="2" />
+        </Collection>
+        <Collection Name="listPair">
+            <Collection Name="0">
+                <Field Name="First" Value="5" Type="5" />
+                <Field Name="Second" Value="true" Type="2" />
+            </Collection>
+            <Collection Name="1">
+                <Field Name="First" Value="88" Type="5" />
+                <Field Name="Second" Value="false" Type="2" />
+            </Collection>
+        </Collection>
+        <Field Name="testField" Value="true" Type="2" />
+    </Collection>
+    <Field Name="Name" Value="test" Type="1" />
+    <Collection Name="sharedSerializableInterface">
+        <Field Name="flagTest" Value="false" Type="2" />
+    </Collection>
+    <Collection Name="uniqueSerializableInterface">
+        <Field Name="flagTest" Value="false" Type="2" />
+    </Collection>
+    <Field Name="serializableObjectField" Value="test" Type="1" />
+    <Collection Name="baseTypesField">
+        <Field Name="value" Value="213" Type="6" />
+        <Field Name="text" Value="text,\s2\&quot;\d" Type="1" />
+        <Collection Name="valueMap">
+            <Collection Name="Map pair">
+                <Field Name="Key" Value="0" Type="5" />
+                <Field Name="Value" Value="2" Type="6" />
+            </Collection>
+        </Collection>
+        <Collection Name="valueMultimap">
+            <Collection Name="Map pair">
+                <Field Name="Key" Value="0" Type="8" />
+                <Field Name="Value" Value="2" Type="6" />
+            </Collection>
+        </Collection>
+        <Collection Name="valueList">
+            <Field Name="0" Value="2" Type="5" />
+            <Field Name="1" Value="5" Type="5" />
+        </Collection>
+        <Collection Name="valueVector">
+            <Field Name="0" Value="2,4" Type="7" />
+            <Field Name="1" Value="5,7" Type="7" />
+            <Field Name="2" Value="nan" Type="7" />
+        </Collection>
+        <Collection Name="valueSet">
+            <Field Name="Value" Value="2,4" Type="7" />
+            <Field Name="Value" Value="5,7" Type="7" />
+        </Collection>
+        <Collection Name="valueMultiSet">
+            <Field Name="Value" Value="2" Type="5" />
+            <Field Name="Value" Value="5" Type="5" />
+        </Collection>
+        <Field Name="path" Value="&quot;C:\\Test&quot;" Type="1" />
+        <Field Name="optional" Value="false" Type="2" />
+        <Collection Name="optionalPair">
+            <Field Name="First" Value="453" Type="5" />
+            <Field Name="Second" Value="true" Type="2" />
+        </Collection>
+        <Collection Name="vectorOptional">
+            <Field Name="0" Value="false" Type="2" />
+            <Field Name="1" Value="true" Type="2" />
+        </Collection>
+        <Collection Name="pair">
+            <Field Name="First" Value="7" Type="5" />
+            <Field Name="Second" Value="false" Type="2" />
+        </Collection>
+        <Collection Name="listPair">
+            <Collection Name="0">
+                <Field Name="First" Value="5" Type="5" />
+                <Field Name="Second" Value="true" Type="2" />
+            </Collection>
+            <Collection Name="1">
+                <Field Name="First" Value="88" Type="5" />
+                <Field Name="Second" Value="false" Type="2" />
+            </Collection>
+        </Collection>
+        <Field Name="testField" Value="true" Type="2" />
+    </Collection>
+    <Collection Name="serializableList">
+        <Collection Name="0">
+            <Field Name="value" Value="213" Type="6" />
+            <Field Name="text" Value="text,\s2\&quot;\d" Type="1" />
+            <Collection Name="valueMap">
+                <Collection Name="Map pair">
+                    <Field Name="Key" Value="0" Type="5" />
+                    <Field Name="Value" Value="2" Type="6" />
+                </Collection>
+            </Collection>
+            <Collection Name="valueMultimap">
+                <Collection Name="Map pair">
+                    <Field Name="Key" Value="0" Type="8" />
+                    <Field Name="Value" Value="2" Type="6" />
+                </Collection>
+            </Collection>
+            <Collection Name="valueList">
+                <Field Name="0" Value="2" Type="5" />
+                <Field Name="1" Value="5" Type="5" />
+            </Collection>
+            <Collection Name="valueVector">
+                <Field Name="0" Value="2,4" Type="7" />
+                <Field Name="1" Value="5,7" Type="7" />
+                <Field Name="2" Value="nan" Type="7" />
+            </Collection>
+            <Collection Name="valueSet">
+                <Field Name="Value" Value="2,4" Type="7" />
+                <Field Name="Value" Value="5,7" Type="7" />
+            </Collection>
+            <Collection Name="valueMultiSet">
+                <Field Name="Value" Value="2" Type="5" />
+                <Field Name="Value" Value="5" Type="5" />
+            </Collection>
+            <Field Name="path" Value="&quot;C:\\Test&quot;" Type="1" />
+            <Field Name="optional" Value="false" Type="2" />
+            <Collection Name="optionalPair">
+                <Field Name="First" Value="453" Type="5" />
+                <Field Name="Second" Value="true" Type="2" />
+            </Collection>
+            <Collection Name="vectorOptional">
+                <Field Name="0" Value="false" Type="2" />
+                <Field Name="1" Value="true" Type="2" />
+            </Collection>
+            <Collection Name="pair">
+                <Field Name="First" Value="7" Type="5" />
+                <Field Name="Second" Value="false" Type="2" />
+            </Collection>
+            <Collection Name="listPair">
+                <Collection Name="0">
+                    <Field Name="First" Value="5" Type="5" />
+                    <Field Name="Second" Value="true" Type="2" />
+                </Collection>
+                <Collection Name="1">
+                    <Field Name="First" Value="88" Type="5" />
+                    <Field Name="Second" Value="false" Type="2" />
+                </Collection>
+            </Collection>
+            <Field Name="testField" Value="true" Type="2" />
+        </Collection>
+        <Collection Name="1">
+            <Field Name="value" Value="213" Type="6" />
+            <Field Name="text" Value="text,\s2\&quot;\d" Type="1" />
+            <Collection Name="valueMap">
+                <Collection Name="Map pair">
+                    <Field Name="Key" Value="0" Type="5" />
+                    <Field Name="Value" Value="2" Type="6" />
+                </Collection>
+            </Collection>
+            <Collection Name="valueMultimap">
+                <Collection Name="Map pair">
+                    <Field Name="Key" Value="0" Type="8" />
+                    <Field Name="Value" Value="2" Type="6" />
+                </Collection>
+            </Collection>
+            <Collection Name="valueList">
+                <Field Name="0" Value="2" Type="5" />
+                <Field Name="1" Value="5" Type="5" />
+            </Collection>
+            <Collection Name="valueVector">
+                <Field Name="0" Value="2,4" Type="7" />
+                <Field Name="1" Value="5,7" Type="7" />
+                <Field Name="2" Value="nan" Type="7" />
+            </Collection>
+            <Collection Name="valueSet">
+                <Field Name="Value" Value="2,4" Type="7" />
+                <Field Name="Value" Value="5,7" Type="7" />
+            </Collection>
+            <Collection Name="valueMultiSet">
+                <Field Name="Value" Value="2" Type="5" />
+                <Field Name="Value" Value="5" Type="5" />
+            </Collection>
+            <Field Name="path" Value="&quot;C:\\Test&quot;" Type="1" />
+            <Field Name="optional" Value="false" Type="2" />
+            <Collection Name="optionalPair">
+                <Field Name="First" Value="453" Type="5" />
+                <Field Name="Second" Value="true" Type="2" />
+            </Collection>
+            <Collection Name="vectorOptional">
+                <Field Name="0" Value="false" Type="2" />
+                <Field Name="1" Value="true" Type="2" />
+            </Collection>
+            <Collection Name="pair">
+                <Field Name="First" Value="7" Type="5" />
+                <Field Name="Second" Value="false" Type="2" />
+            </Collection>
+            <Collection Name="listPair">
+                <Collection Name="0">
+                    <Field Name="First" Value="5" Type="5" />
+                    <Field Name="Second" Value="true" Type="2" />
+                </Collection>
+                <Collection Name="1">
+                    <Field Name="First" Value="88" Type="5" />
+                    <Field Name="Second" Value="false" Type="2" />
+                </Collection>
+            </Collection>
+            <Field Name="testField" Value="true" Type="2" />
+        </Collection>
+    </Collection>
+    <Collection Name="serializableSharedPtr">
+        <Field Name="value" Value="213" Type="6" />
+        <Field Name="text" Value="text,\s2\&quot;\d" Type="1" />
+        <Collection Name="valueMap">
+            <Collection Name="Map pair">
+                <Field Name="Key" Value="0" Type="5" />
+                <Field Name="Value" Value="2" Type="6" />
+            </Collection>
+        </Collection>
+        <Collection Name="valueMultimap">
+            <Collection Name="Map pair">
+                <Field Name="Key" Value="0" Type="8" />
+                <Field Name="Value" Value="2" Type="6" />
+            </Collection>
+        </Collection>
+        <Collection Name="valueList">
+            <Field Name="0" Value="2" Type="5" />
+            <Field Name="1" Value="5" Type="5" />
+        </Collection>
+        <Collection Name="valueVector">
+            <Field Name="0" Value="2,4" Type="7" />
+            <Field Name="1" Value="5,7" Type="7" />
+            <Field Name="2" Value="nan" Type="7" />
+        </Collection>
+        <Collection Name="valueSet">
+            <Field Name="Value" Value="2,4" Type="7" />
+            <Field Name="Value" Value="5,7" Type="7" />
+        </Collection>
+        <Collection Name="valueMultiSet">
+            <Field Name="Value" Value="2" Type="5" />
+            <Field Name="Value" Value="5" Type="5" />
+        </Collection>
+        <Field Name="path" Value="&quot;C:\\Test&quot;" Type="1" />
+        <Field Name="optional" Value="false" Type="2" />
+        <Collection Name="optionalPair">
+            <Field Name="First" Value="453" Type="5" />
+            <Field Name="Second" Value="true" Type="2" />
+        </Collection>
+        <Collection Name="vectorOptional">
+            <Field Name="0" Value="false" Type="2" />
+            <Field Name="1" Value="true" Type="2" />
+        </Collection>
+        <Collection Name="pair">
+            <Field Name="First" Value="7" Type="5" />
+            <Field Name="Second" Value="false" Type="2" />
+        </Collection>
+        <Collection Name="listPair">
+            <Collection Name="0">
+                <Field Name="First" Value="5" Type="5" />
+                <Field Name="Second" Value="true" Type="2" />
+            </Collection>
+            <Collection Name="1">
+                <Field Name="First" Value="88" Type="5" />
+                <Field Name="Second" Value="false" Type="2" />
+            </Collection>
+        </Collection>
+        <Field Name="testField" Value="true" Type="2" />
+    </Collection>
+    <Collection Name="serializableUniquePtr">
+        <Field Name="value" Value="213" Type="6" />
+        <Field Name="text" Value="text,\s2\&quot;\d" Type="1" />
+        <Collection Name="valueMap">
+            <Collection Name="Map pair">
+                <Field Name="Key" Value="0" Type="5" />
+                <Field Name="Value" Value="2" Type="6" />
+            </Collection>
+        </Collection>
+        <Collection Name="valueMultimap">
+            <Collection Name="Map pair">
+                <Field Name="Key" Value="0" Type="8" />
+                <Field Name="Value" Value="2" Type="6" />
+            </Collection>
+        </Collection>
+        <Collection Name="valueList">
+            <Field Name="0" Value="2" Type="5" />
+            <Field Name="1" Value="5" Type="5" />
+        </Collection>
+        <Collection Name="valueVector">
+            <Field Name="0" Value="2,4" Type="7" />
+            <Field Name="1" Value="5,7" Type="7" />
+            <Field Name="2" Value="nan" Type="7" />
+        </Collection>
+        <Collection Name="valueSet">
+            <Field Name="Value" Value="2,4" Type="7" />
+            <Field Name="Value" Value="5,7" Type="7" />
+        </Collection>
+        <Collection Name="valueMultiSet">
+            <Field Name="Value" Value="2" Type="5" />
+            <Field Name="Value" Value="5" Type="5" />
+        </Collection>
+        <Field Name="path" Value="&quot;C:\\Test&quot;" Type="1" />
+        <Field Name="optional" Value="false" Type="2" />
+        <Collection Name="optionalPair">
+            <Field Name="First" Value="453" Type="5" />
+            <Field Name="Second" Value="true" Type="2" />
+        </Collection>
+        <Collection Name="vectorOptional">
+            <Field Name="0" Value="false" Type="2" />
+            <Field Name="1" Value="true" Type="2" />
+        </Collection>
+        <Collection Name="pair">
+            <Field Name="First" Value="7" Type="5" />
+            <Field Name="Second" Value="false" Type="2" />
+        </Collection>
+        <Collection Name="listPair">
+            <Collection Name="0">
+                <Field Name="First" Value="5" Type="5" />
+                <Field Name="Second" Value="true" Type="2" />
+            </Collection>
+            <Collection Name="1">
+                <Field Name="First" Value="88" Type="5" />
+                <Field Name="Second" Value="false" Type="2" />
+            </Collection>
+        </Collection>
+        <Field Name="testField" Value="true" Type="2" />
+    </Collection>
+    <Collection Name="serializableUniquePtrList">
+        <Collection Name="0">
+            <Field Name="value" Value="213" Type="6" />
+            <Field Name="text" Value="text,\s2\&quot;\d" Type="1" />
+            <Collection Name="valueMap">
+                <Collection Name="Map pair">
+                    <Field Name="Key" Value="0" Type="5" />
+                    <Field Name="Value" Value="2" Type="6" />
+                </Collection>
+            </Collection>
+            <Collection Name="valueMultimap">
+                <Collection Name="Map pair">
+                    <Field Name="Key" Value="0" Type="8" />
+                    <Field Name="Value" Value="2" Type="6" />
+                </Collection>
+            </Collection>
+            <Collection Name="valueList">
+                <Field Name="0" Value="2" Type="5" />
+                <Field Name="1" Value="5" Type="5" />
+            </Collection>
+            <Collection Name="valueVector">
+                <Field Name="0" Value="2,4" Type="7" />
+                <Field Name="1" Value="5,7" Type="7" />
+                <Field Name="2" Value="nan" Type="7" />
+            </Collection>
+            <Collection Name="valueSet">
+                <Field Name="Value" Value="2,4" Type="7" />
+                <Field Name="Value" Value="5,7" Type="7" />
+            </Collection>
+            <Collection Name="valueMultiSet">
+                <Field Name="Value" Value="2" Type="5" />
+                <Field Name="Value" Value="5" Type="5" />
+            </Collection>
+            <Field Name="path" Value="&quot;C:\\Test&quot;" Type="1" />
+            <Field Name="optional" Value="false" Type="2" />
+            <Collection Name="optionalPair">
+                <Field Name="First" Value="453" Type="5" />
+                <Field Name="Second" Value="true" Type="2" />
+            </Collection>
+            <Collection Name="vectorOptional">
+                <Field Name="0" Value="false" Type="2" />
+                <Field Name="1" Value="true" Type="2" />
+            </Collection>
+            <Collection Name="pair">
+                <Field Name="First" Value="7" Type="5" />
+                <Field Name="Second" Value="false" Type="2" />
+            </Collection>
+            <Collection Name="listPair">
+                <Collection Name="0">
+                    <Field Name="First" Value="5" Type="5" />
+                    <Field Name="Second" Value="true" Type="2" />
+                </Collection>
+                <Collection Name="1">
+                    <Field Name="First" Value="88" Type="5" />
+                    <Field Name="Second" Value="false" Type="2" />
+                </Collection>
+            </Collection>
+            <Field Name="testField" Value="true" Type="2" />
+        </Collection>
+    </Collection>
+    <Collection Name="serializableOptional">
+        <Field Name="value" Value="213" Type="6" />
+        <Field Name="text" Value="text,\s2\&quot;\d" Type="1" />
+        <Collection Name="valueMap">
+            <Collection Name="Map pair">
+                <Field Name="Key" Value="0" Type="5" />
+                <Field Name="Value" Value="2" Type="6" />
+            </Collection>
+        </Collection>
+        <Collection Name="valueMultimap">
+            <Collection Name="Map pair">
+                <Field Name="Key" Value="0" Type="8" />
+                <Field Name="Value" Value="2" Type="6" />
+            </Collection>
+        </Collection>
+        <Collection Name="valueList">
+            <Field Name="0" Value="2" Type="5" />
+            <Field Name="1" Value="5" Type="5" />
+        </Collection>
+        <Collection Name="valueVector">
+            <Field Name="0" Value="2,4" Type="7" />
+            <Field Name="1" Value="5,7" Type="7" />
+            <Field Name="2" Value="nan" Type="7" />
+        </Collection>
+        <Collection Name="valueSet">
+            <Field Name="Value" Value="2,4" Type="7" />
+            <Field Name="Value" Value="5,7" Type="7" />
+        </Collection>
+        <Collection Name="valueMultiSet">
+            <Field Name="Value" Value="2" Type="5" />
+            <Field Name="Value" Value="5" Type="5" />
+        </Collection>
+        <Field Name="path" Value="&quot;C:\\Test&quot;" Type="1" />
+        <Field Name="optional" Value="false" Type="2" />
+        <Collection Name="optionalPair">
+            <Field Name="First" Value="453" Type="5" />
+            <Field Name="Second" Value="true" Type="2" />
+        </Collection>
+        <Collection Name="vectorOptional">
+            <Field Name="0" Value="false" Type="2" />
+            <Field Name="1" Value="true" Type="2" />
+        </Collection>
+        <Collection Name="pair">
+            <Field Name="First" Value="7" Type="5" />
+            <Field Name="Second" Value="false" Type="2" />
+        </Collection>
+        <Collection Name="listPair">
+            <Collection Name="0">
+                <Field Name="First" Value="5" Type="5" />
+                <Field Name="Second" Value="true" Type="2" />
+            </Collection>
+            <Collection Name="1">
+                <Field Name="First" Value="88" Type="5" />
+                <Field Name="Second" Value="false" Type="2" />
+            </Collection>
+        </Collection>
+        <Field Name="testField" Value="true" Type="2" />
+    </Collection>
+    <Collection Name="serializableStructsMap">
+        <Collection Name="Map pair">
+            <Field Name="Key" Value="1" Type="5" />
+            <Collection Name="Value">
+                <Field Name="value" Value="213" Type="6" />
+                <Field Name="text" Value="text,\s2\&quot;\d" Type="1" />
+                <Collection Name="valueMap">
+                    <Collection Name="Map pair">
+                        <Field Name="Key" Value="0" Type="5" />
+                        <Field Name="Value" Value="2" Type="6" />
+                    </Collection>
+                </Collection>
+                <Collection Name="valueMultimap">
+                    <Collection Name="Map pair">
+                        <Field Name="Key" Value="0" Type="8" />
+                        <Field Name="Value" Value="2" Type="6" />
+                    </Collection>
+                </Collection>
+                <Collection Name="valueList">
+                    <Field Name="0" Value="2" Type="5" />
+                    <Field Name="1" Value="5" Type="5" />
+                </Collection>
+                <Collection Name="valueVector">
+                    <Field Name="0" Value="2,4" Type="7" />
+                    <Field Name="1" Value="5,7" Type="7" />
+                    <Field Name="2" Value="nan" Type="7" />
+                </Collection>
+                <Collection Name="valueSet">
+                    <Field Name="Value" Value="2,4" Type="7" />
+                    <Field Name="Value" Value="5,7" Type="7" />
+                </Collection>
+                <Collection Name="valueMultiSet">
+                    <Field Name="Value" Value="2" Type="5" />
+                    <Field Name="Value" Value="5" Type="5" />
+                </Collection>
+                <Field Name="path" Value="&quot;C:\\Test&quot;" Type="1" />
+                <Field Name="optional" Value="false" Type="2" />
+                <Collection Name="optionalPair">
+                    <Field Name="First" Value="453" Type="5" />
+                    <Field Name="Second" Value="true" Type="2" />
+                </Collection>
+                <Collection Name="vectorOptional">
+                    <Field Name="0" Value="false" Type="2" />
+                    <Field Name="1" Value="true" Type="2" />
+                </Collection>
+                <Collection Name="pair">
+                    <Field Name="First" Value="7" Type="5" />
+                    <Field Name="Second" Value="false" Type="2" />
+                </Collection>
+                <Collection Name="listPair">
+                    <Collection Name="0">
+                        <Field Name="First" Value="5" Type="5" />
+                        <Field Name="Second" Value="true" Type="2" />
+                    </Collection>
+                    <Collection Name="1">
+                        <Field Name="First" Value="88" Type="5" />
+                        <Field Name="Second" Value="false" Type="2" />
+                    </Collection>
+                </Collection>
+                <Field Name="testField" Value="true" Type="2" />
+            </Collection>
+        </Collection>
+    </Collection>
+    <Collection Name="serializableStructsMapShared">
+        <Collection Name="Map pair">
+            <Collection Name="Key">
+                <Field Name="value" Value="213" Type="6" />
+                <Field Name="text" Value="text,\s2\&quot;\d" Type="1" />
+                <Collection Name="valueMap">
+                    <Collection Name="Map pair">
+                        <Field Name="Key" Value="0" Type="5" />
+                        <Field Name="Value" Value="2" Type="6" />
+                    </Collection>
+                </Collection>
+                <Collection Name="valueMultimap">
+                    <Collection Name="Map pair">
+                        <Field Name="Key" Value="0" Type="8" />
+                        <Field Name="Value" Value="2" Type="6" />
+                    </Collection>
+                </Collection>
+                <Collection Name="valueList">
+                    <Field Name="0" Value="2" Type="5" />
+                    <Field Name="1" Value="5" Type="5" />
+                </Collection>
+                <Collection Name="valueVector">
+                    <Field Name="0" Value="2,4" Type="7" />
+                    <Field Name="1" Value="5,7" Type="7" />
+                    <Field Name="2" Value="nan" Type="7" />
+                </Collection>
+                <Collection Name="valueSet">
+                    <Field Name="Value" Value="2,4" Type="7" />
+                    <Field Name="Value" Value="5,7" Type="7" />
+                </Collection>
+                <Collection Name="valueMultiSet">
+                    <Field Name="Value" Value="2" Type="5" />
+                    <Field Name="Value" Value="5" Type="5" />
+                </Collection>
+                <Field Name="path" Value="&quot;C:\\Test&quot;" Type="1" />
+                <Field Name="optional" Value="false" Type="2" />
+                <Collection Name="optionalPair">
+                    <Field Name="First" Value="453" Type="5" />
+                    <Field Name="Second" Value="true" Type="2" />
+                </Collection>
+                <Collection Name="vectorOptional">
+                    <Field Name="0" Value="false" Type="2" />
+                    <Field Name="1" Value="true" Type="2" />
+                </Collection>
+                <Collection Name="pair">
+                    <Field Name="First" Value="7" Type="5" />
+                    <Field Name="Second" Value="false" Type="2" />
+                </Collection>
+                <Collection Name="listPair">
+                    <Collection Name="0">
+                        <Field Name="First" Value="5" Type="5" />
+                        <Field Name="Second" Value="true" Type="2" />
+                    </Collection>
+                    <Collection Name="1">
+                        <Field Name="First" Value="88" Type="5" />
+                        <Field Name="Second" Value="false" Type="2" />
+                    </Collection>
+                </Collection>
+                <Field Name="testField" Value="true" Type="2" />
+            </Collection>
+            <Field Name="Value" Value="534" Type="5" />
+        </Collection>
+    </Collection>
+    <Collection Name="serializableStructsMultiMap">
+        <Collection Name="Map pair">
+            <Field Name="Key" Value="1" Type="5" />
+            <Collection Name="Value">
+                <Field Name="value" Value="213" Type="6" />
+                <Field Name="text" Value="text,\s2\&quot;\d" Type="1" />
+                <Collection Name="valueMap">
+                    <Collection Name="Map pair">
+                        <Field Name="Key" Value="0" Type="5" />
+                        <Field Name="Value" Value="2" Type="6" />
+                    </Collection>
+                </Collection>
+                <Collection Name="valueMultimap">
+                    <Collection Name="Map pair">
+                        <Field Name="Key" Value="0" Type="8" />
+                        <Field Name="Value" Value="2" Type="6" />
+                    </Collection>
+                </Collection>
+                <Collection Name="valueList">
+                    <Field Name="0" Value="2" Type="5" />
+                    <Field Name="1" Value="5" Type="5" />
+                </Collection>
+                <Collection Name="valueVector">
+                    <Field Name="0" Value="2,4" Type="7" />
+                    <Field Name="1" Value="5,7" Type="7" />
+                    <Field Name="2" Value="nan" Type="7" />
+                </Collection>
+                <Collection Name="valueSet">
+                    <Field Name="Value" Value="2,4" Type="7" />
+                    <Field Name="Value" Value="5,7" Type="7" />
+                </Collection>
+                <Collection Name="valueMultiSet">
+                    <Field Name="Value" Value="2" Type="5" />
+                    <Field Name="Value" Value="5" Type="5" />
+                </Collection>
+                <Field Name="path" Value="&quot;C:\\Test&quot;" Type="1" />
+                <Field Name="optional" Value="false" Type="2" />
+                <Collection Name="optionalPair">
+                    <Field Name="First" Value="453" Type="5" />
+                    <Field Name="Second" Value="true" Type="2" />
+                </Collection>
+                <Collection Name="vectorOptional">
+                    <Field Name="0" Value="false" Type="2" />
+                    <Field Name="1" Value="true" Type="2" />
+                </Collection>
+                <Collection Name="pair">
+                    <Field Name="First" Value="7" Type="5" />
+                    <Field Name="Second" Value="false" Type="2" />
+                </Collection>
+                <Collection Name="listPair">
+                    <Collection Name="0">
+                        <Field Name="First" Value="5" Type="5" />
+                        <Field Name="Second" Value="true" Type="2" />
+                    </Collection>
+                    <Collection Name="1">
+                        <Field Name="First" Value="88" Type="5" />
+                        <Field Name="Second" Value="false" Type="2" />
+                    </Collection>
+                </Collection>
+                <Field Name="testField" Value="true" Type="2" />
+            </Collection>
+        </Collection>
+    </Collection>
+    <Collection Name="serializableStructsMultiMapShared">
+        <Collection Name="Map pair">
+            <Collection Name="Key">
+                <Field Name="value" Value="213" Type="6" />
+                <Field Name="text" Value="text,\s2\&quot;\d" Type="1" />
+                <Collection Name="valueMap">
+                    <Collection Name="Map pair">
+                        <Field Name="Key" Value="0" Type="5" />
+                        <Field Name="Value" Value="2" Type="6" />
+                    </Collection>
+                </Collection>
+                <Collection Name="valueMultimap">
+                    <Collection Name="Map pair">
+                        <Field Name="Key" Value="0" Type="8" />
+                        <Field Name="Value" Value="2" Type="6" />
+                    </Collection>
+                </Collection>
+                <Collection Name="valueList">
+                    <Field Name="0" Value="2" Type="5" />
+                    <Field Name="1" Value="5" Type="5" />
+                </Collection>
+                <Collection Name="valueVector">
+                    <Field Name="0" Value="2,4" Type="7" />
+                    <Field Name="1" Value="5,7" Type="7" />
+                    <Field Name="2" Value="nan" Type="7" />
+                </Collection>
+                <Collection Name="valueSet">
+                    <Field Name="Value" Value="2,4" Type="7" />
+                    <Field Name="Value" Value="5,7" Type="7" />
+                </Collection>
+                <Collection Name="valueMultiSet">
+                    <Field Name="Value" Value="2" Type="5" />
+                    <Field Name="Value" Value="5" Type="5" />
+                </Collection>
+                <Field Name="path" Value="&quot;C:\\Test&quot;" Type="1" />
+                <Field Name="optional" Value="false" Type="2" />
+                <Collection Name="optionalPair">
+                    <Field Name="First" Value="453" Type="5" />
+                    <Field Name="Second" Value="true" Type="2" />
+                </Collection>
+                <Collection Name="vectorOptional">
+                    <Field Name="0" Value="false" Type="2" />
+                    <Field Name="1" Value="true" Type="2" />
+                </Collection>
+                <Collection Name="pair">
+                    <Field Name="First" Value="7" Type="5" />
+                    <Field Name="Second" Value="false" Type="2" />
+                </Collection>
+                <Collection Name="listPair">
+                    <Collection Name="0">
+                        <Field Name="First" Value="5" Type="5" />
+                        <Field Name="Second" Value="true" Type="2" />
+                    </Collection>
+                    <Collection Name="1">
+                        <Field Name="First" Value="88" Type="5" />
+                        <Field Name="Second" Value="false" Type="2" />
+                    </Collection>
+                </Collection>
+                <Field Name="testField" Value="true" Type="2" />
+            </Collection>
+            <Field Name="Value" Value="534" Type="8" />
+        </Collection>
+    </Collection>
+    <Collection Name="serializableStructsSet">
+        <Collection Name="Value">
+            <Field Name="value" Value="213" Type="6" />
+            <Field Name="text" Value="text,\s2\&quot;\d" Type="1" />
+            <Collection Name="valueMap">
+                <Collection Name="Map pair">
+                    <Field Name="Key" Value="0" Type="5" />
+                    <Field Name="Value" Value="2" Type="6" />
+                </Collection>
+            </Collection>
+            <Collection Name="valueMultimap">
+                <Collection Name="Map pair">
+                    <Field Name="Key" Value="0" Type="8" />
+                    <Field Name="Value" Value="2" Type="6" />
+                </Collection>
+            </Collection>
+            <Collection Name="valueList">
+                <Field Name="0" Value="2" Type="5" />
+                <Field Name="1" Value="5" Type="5" />
+            </Collection>
+            <Collection Name="valueVector">
+                <Field Name="0" Value="2,4" Type="7" />
+                <Field Name="1" Value="5,7" Type="7" />
+                <Field Name="2" Value="nan" Type="7" />
+            </Collection>
+            <Collection Name="valueSet">
+                <Field Name="Value" Value="2,4" Type="7" />
+                <Field Name="Value" Value="5,7" Type="7" />
+            </Collection>
+            <Collection Name="valueMultiSet">
+                <Field Name="Value" Value="2" Type="5" />
+                <Field Name="Value" Value="5" Type="5" />
+            </Collection>
+            <Field Name="path" Value="&quot;C:\\Test&quot;" Type="1" />
+            <Field Name="optional" Value="false" Type="2" />
+            <Collection Name="optionalPair">
+                <Field Name="First" Value="453" Type="5" />
+                <Field Name="Second" Value="true" Type="2" />
+            </Collection>
+            <Collection Name="vectorOptional">
+                <Field Name="0" Value="false" Type="2" />
+                <Field Name="1" Value="true" Type="2" />
+            </Collection>
+            <Collection Name="pair">
+                <Field Name="First" Value="7" Type="5" />
+                <Field Name="Second" Value="false" Type="2" />
+            </Collection>
+            <Collection Name="listPair">
+                <Collection Name="0">
+                    <Field Name="First" Value="5" Type="5" />
+                    <Field Name="Second" Value="true" Type="2" />
+                </Collection>
+                <Collection Name="1">
+                    <Field Name="First" Value="88" Type="5" />
+                    <Field Name="Second" Value="false" Type="2" />
+                </Collection>
+            </Collection>
+            <Field Name="testField" Value="true" Type="2" />
+        </Collection>
+    </Collection>
+    <Collection Name="serializableStructsMultiSet">
+        <Collection Name="Value">
+            <Field Name="value" Value="213" Type="6" />
+            <Field Name="text" Value="text,\s2\&quot;\d" Type="1" />
+            <Collection Name="valueMap">
+                <Collection Name="Map pair">
+                    <Field Name="Key" Value="0" Type="5" />
+                    <Field Name="Value" Value="2" Type="6" />
+                </Collection>
+            </Collection>
+            <Collection Name="valueMultimap">
+                <Collection Name="Map pair">
+                    <Field Name="Key" Value="0" Type="8" />
+                    <Field Name="Value" Value="2" Type="6" />
+                </Collection>
+            </Collection>
+            <Collection Name="valueList">
+                <Field Name="0" Value="2" Type="5" />
+                <Field Name="1" Value="5" Type="5" />
+            </Collection>
+            <Collection Name="valueVector">
+                <Field Name="0" Value="2,4" Type="7" />
+                <Field Name="1" Value="5,7" Type="7" />
+                <Field Name="2" Value="nan" Type="7" />
+            </Collection>
+            <Collection Name="valueSet">
+                <Field Name="Value" Value="2,4" Type="7" />
+                <Field Name="Value" Value="5,7" Type="7" />
+            </Collection>
+            <Collection Name="valueMultiSet">
+                <Field Name="Value" Value="2" Type="5" />
+                <Field Name="Value" Value="5" Type="5" />
+            </Collection>
+            <Field Name="path" Value="&quot;C:\\Test&quot;" Type="1" />
+            <Field Name="optional" Value="false" Type="2" />
+            <Collection Name="optionalPair">
+                <Field Name="First" Value="453" Type="5" />
+                <Field Name="Second" Value="true" Type="2" />
+            </Collection>
+            <Collection Name="vectorOptional">
+                <Field Name="0" Value="false" Type="2" />
+                <Field Name="1" Value="true" Type="2" />
+            </Collection>
+            <Collection Name="pair">
+                <Field Name="First" Value="7" Type="5" />
+                <Field Name="Second" Value="false" Type="2" />
+            </Collection>
+            <Collection Name="listPair">
+                <Collection Name="0">
+                    <Field Name="First" Value="5" Type="5" />
+                    <Field Name="Second" Value="true" Type="2" />
+                </Collection>
+                <Collection Name="1">
+                    <Field Name="First" Value="88" Type="5" />
+                    <Field Name="Second" Value="false" Type="2" />
+                </Collection>
+            </Collection>
+            <Field Name="testField" Value="true" Type="2" />
+        </Collection>
+    </Collection>
+    <Collection Name="strings">
+        <Field Name="0" Value="123" Type="1" />
+        <Field Name="1" Value="Test1" Type="1" />
+    </Collection>
+    <Collection Name="wstrings">
+        <Field Name="0" Value="123" Type="1" />
+        <Field Name="1" Value="Test2" Type="1" />
+    </Collection>
+    <Field Name="My flag name" Value="false" Type="2" />
+    <Collection Name="flags name">
+        <Collection Name="Map pair">
+            <Field Name="Key" Value="0" Type="5" />
+            <Field Name="Value" Value="1" Type="6" />
+        </Collection>
+        <Collection Name="Map pair">
+            <Field Name="Key" Value="1" Type="5" />
+            <Field Name="Value" Value="15245" Type="6" />
+        </Collection>
+    </Collection>
+</Collection>

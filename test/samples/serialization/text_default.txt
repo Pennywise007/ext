@@ -1,0 +1,92 @@
+"SerializableTypes": {
+    "BaseTypes": {
+        "value": 0,
+        "text": "",
+        "valueMap": {
+        },
+        "valueMultimap": {
+        },
+        "valueList": {
+        },
+        "valueVector": {
+        },
+        "valueSet": {
+        },
+        "valueMultiSet": {
+        },
+        "path": "\"\"",
+        "optional": null,
+        "optionalPair": null,
+        "vectorOptional": {
+        },
+        "pair": {
+            "First": 0,
+            "Second": false
+        },
+        "listPair": {
+        },
+        "testField": true
+    },
+    "Name": "test",
+    "sharedSerializableInterface": {
+        "flagTest": true
+    },
+    "uniqueSerializableInterface": {
+        "flagTest": true
+    },
+    "serializableObjectField": "test",
+    "baseTypesField": {
+        "value": 0,
+        "text": "",
+        "valueMap": {
+        },
+        "valueMultimap": {
+        },
+        "valueList": {
+        },
+        "valueVector": {
+        },
+        "valueSet": {
+        },
+        "valueMultiSet": {
+        },
+        "path": "\"\"",
+        "optional": null,
+        "optionalPair": null,
+        "vectorOptional": {
+        },
+        "pair": {
+            "First": 0,
+            "Second": false
+        },
+        "listPair": {
+        },
+        "testField": true
+    },
+    "serializableList": {
+    },
+    "serializableSharedPtr": null,
+    "serializableUniquePtr": null,
+    "serializableUniquePtrList": {
+    },
+    "serializableOptional": null,
+    "serializableStructsMap": {
+    },
+    "serializableStructsMapShared": {
+    },
+    "serializableStructsMultiMap": {
+    },
+    "serializableStructsMultiMapShared": {
+    },
+    "serializableStructsSet": {
+    },
+    "serializableStructsMultiSet": {
+    },
+    "strings": {
+    },
+    "wstrings": {
+    },
+    "My flag name": true,
+    "flags name": {
+    }
+}

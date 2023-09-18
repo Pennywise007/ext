@@ -13,6 +13,8 @@
 #include <ext/std/filesystem.h>
 #include <ext/std/string.h>
 
+#include <ext/utils/uuid.h>
+
 using namespace ext::serializable;
 using namespace ext::serializable::serializer;
 
@@ -20,7 +22,8 @@ namespace {
 constexpr char BaseTypeName[] = "BaseTypes";
 constexpr char SerializableTypesName[] = "SerializableTypes";
 
-const auto kTestXmlFilePath = std::filesystem::temp_directory_path() / L"test.xml";
+const auto kTestXmlFilePath = std::filesystem::temp_directory_path() / 
+    std::string_sprintf("test_%s.xml", ext::uuid().ToString().c_str());
 
 constexpr auto kSampleTextDefault = "serialization/text_default.txt";
 constexpr auto kSampleTextModified = "serialization/text_modification.txt";

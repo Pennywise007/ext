@@ -141,7 +141,7 @@ using push_back = typename push_back_impl<L, T...>::type;
 
 /*
 * apply function to types list
-* ssh::mpl::apply<std::is_constructible, list<Test, int>> => std::is_constructible<Test, int>
+* ext::mpl::apply<std::is_constructible, list<Test, int>> => std::is_constructible<Test, int>
 */
 template <template <typename...> class Function, typename List>
 struct apply_impl

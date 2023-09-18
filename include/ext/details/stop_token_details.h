@@ -11,12 +11,11 @@
 #include <thread>
 
 #include <ext/trace/tracer.h>
-#include <ext/utils/nano_atomic.h>
 
-#include <ext/utils/thread_details.h>
+#include <ext/details/atomic_details.h>
+#include <ext/details/thread_details.h>
 
-namespace ext {
-namespace detail {
+namespace ext::detail {
 
 class stop_callback_control_block
 {
@@ -261,5 +260,4 @@ private:
     std::thread::id m_signallingThread{};
 };
 
-} // namespace detail
-} // namespace ext
+} // namespace ext::detail

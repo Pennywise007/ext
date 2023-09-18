@@ -42,7 +42,9 @@ EXPECT_TRUE(myThread.interrupted());
 #include <ext/thread/event.h>
 #include <ext/thread/stop_token.h>
 
-#include <ext/utils/thread_details.h>
+#include <ext/details/thread_details.h>
+
+#include <ext/utils/invoke.h>
 
 #if !(defined(_WIN32) || defined(__CYGWIN__)) // not windows
 #include <pthread.h>
@@ -336,20 +338,16 @@ void thread::run(_Function&& function, _Args&&... arguments) EXT_NOEXCEPT
         m_stopSource.swap(temp);
     }
 
-    using _Tuple = std::tuple<std::decay_t<_Function>, std::decay_t<_Args>...>;
-    auto decay = std::make_unique<_Tuple>(
+    ext::ThreadInvoker<_Function, _Args...> invoker(
         std::forward<_Function>(function), std::forward<_Args>(arguments)...);
-
-    base::operator=(base([decay = std::move(decay)](ext::stop_token token)
+    base::operator=(base([invoker = std::move(invoker)](ext::stop_token token) mutable
         {
             const auto threadId = this_thread::get_id();
             
             // 'function' can ask for interruption point or stop token before the end of the 'run' function
             manager().OnStartingThread(threadId, std::move(token));
 
-            constexpr auto _invoker = ext::thread_details::GetInvoke<_Tuple>(
-                std::make_index_sequence<1 + sizeof...(_Args)>());
-            _invoker(decay);
+            invoker();
 
             manager().OnFinishingThread(threadId);
         }, get_token()));

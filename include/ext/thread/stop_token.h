@@ -34,7 +34,7 @@ using stop_callback = ::std::stop_callback<Callback>;
 #include <algorithm>
 
 #include <ext/core/defines.h>
-#include <ext/utils/stop_token_details.h>
+#include <ext/details/stop_token_details.h>
 
 namespace ext {
 

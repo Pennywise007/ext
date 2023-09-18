@@ -3,33 +3,33 @@
 #pragma once
 
 /*
-    ��������������� ������ � ������� ��� ������ � COM ���������
-    ���������� ���������� ��� �ComPtr � CComQIPtr - ComPtr
-    ���������� ��������������� ������� ��� �������� COM ��������
+    Utility classes and macros for working with COM objects
+    Implementation of extensions for СComPtr and CComQIPtr - ComPtr
+    Implementation of auxiliary classes for creating COM objects
 */
 
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlcomcli.h>
 
-#include <combaseapi.h> // ��� DECLARE_INTERFACE_IID_
-#include <stdio.h>      // ��� __VA_ARGS__
+#include <combaseapi.h> // DECLARE_INTERFACE_IID_
+#include <stdio.h>      // __VA_ARGS__
 
 /*
-�������������:
+Usage:
     ANNOUNCE_INTERFACE();
 
     ICustomInterfacePtr pInterface = nullptr;
 */
-// ���������� ���������� ��� ��� ��������
-// �������� typedef �� ComPtr �� ����������
-// TODO check _COM_SMARTPTR_TYPEDEF
+// Declaration of the interface without its description
+// Creates a typedef for ComPtr of the interface
+// TODO: check _COM_SMARTPTR_TYPEDEF
 #define ANNOUNCE_INTERFACE(iface)   \
 interface iface;                    \
 typedef ComPtr<iface> iface##Ptr;   \
 
 /*
-�������������:
+Usage:
     DECLARE_COM_INTERFACE_(ICustomInterface, "515CB11E-2B96-4685-9555-69B28A89B830")
     {
         virtual void MyFunc() = 0;
@@ -37,14 +37,14 @@ typedef ComPtr<iface> iface##Ptr;   \
 
     ICustomInterfacePtr pInterface = nullptr;
 */
-// ���������� COM ���������� � ��� ��������������
-// �������� typedef �� ComPtr �� ����������
+// Declaration of the COM interface and its identifier
+// Creates a typedef for ComPtr of the interface
 #define DECLARE_COM_INTERFACE(iface, uuid)      \
 ANNOUNCE_INTERFACE(iface)                       \
 DECLARE_INTERFACE_IID_(iface, IUnknown, uuid)
 
 /*
-�������������:
+Usage:
     DECLARE_COM_INTERFACE_(ICustomInterface, IUnknown, "515CB11E-2B96-4685-9555-69B28A89B830")
     {
         virtual void MyFunc() = 0;
@@ -52,14 +52,14 @@ DECLARE_INTERFACE_IID_(iface, IUnknown, uuid)
 
     ICustomInterfacePtr pInterface = nullptr;
 */
-// ���������� COM ����������, ������������ �� baseiface � ��� ��������������
-// �������� typedef �� ComPtr �� ����������
+// Declaration of a COM interface, inheriting from baseiface, and its identifier
+// Creates a typedef for ComPtr of the interface
 #define DECLARE_COM_INTERFACE_(iface, baseiface, uuid)  \
 ANNOUNCE_INTERFACE(iface)                               \
 DECLARE_INTERFACE_IID_(iface, baseiface, uuid)
 
 /*
-�������������:
+Usage:
     DECLARE_COM_INTERNAL_CLASS(CustomClass)
         , public ICustomInterface
     {
@@ -80,7 +80,7 @@ DECLARE_INTERFACE_IID_(iface, baseiface, uuid)
     CustomClass::Ptr pClass = CustomClass::make(10);
     ICustomInterfacePtr pInterface = CustomClass::make(10);
 */
-// ���������� ����������� COM ������, ��������� ����������� ��� ������ � COM ������
+// Declaration of an internal COM class, inheriting the necessary COM classes for functionality.
 #define DECLARE_COM_INTERNAL_CLASS(classname)       \
 class ATL_NO_VTABLE classname                       \
     : public CComObjectRootEx<CComMultiThreadModel> \
@@ -91,7 +91,7 @@ class ATL_NO_VTABLE classname                               \
     , public COMInternalClass<classname<__VA_ARGS__>>
 
 /*
-�������������:
+Usage:
     DECLARE_COM_INTERNAL_CLASS_(CustomClassWithBase, BaseClass)
         , public ICustomInterface
     {
@@ -113,7 +113,7 @@ class ATL_NO_VTABLE classname                               \
     CustomClassWithBase::Ptr pClass = CustomClassWithBase::make(10);
     ICustomInterfacePtr pInterface = CustomClassWithBase::make(10);
 */
-// ���������� ����������� COM ������, ������������ �� ������� COM ������, �� DECLARE_COM_BASE_CLASS
+// Declaration of an internal COM class, inheriting from another COM class, see DECLARE_COM_BASE_CLASS.
 #define DECLARE_COM_INTERNAL_CLASS_(classname, baseCOMClass)    \
 class ATL_NO_VTABLE classname                                   \
     : public COMInternalClass<classname>                        \
@@ -124,7 +124,7 @@ class ATL_NO_VTABLE classname                                               \
     , public baseCOMClass
 
 /*
-�������������:
+Usage:
     DECLARE_COM_BASE_CLASS(COMBase)
         , public ICustomInterface
     {
@@ -137,15 +137,15 @@ class ATL_NO_VTABLE classname                                               \
     };
 };
 */
-// ��������� ������� ����� � ������� ����� ���� COM_MAP � ���������� �������
-// �� ��������� ��� ������� ������, ��� ����� ����������� ������� ����������� COM ��������
+// Declares a base class that may include COM_MAP and class implementations.
+// An instance of this base class cannot be created; it can be inherited by other internal COM classes.
 #define DECLARE_COM_BASE_CLASS(classname)               \
 class ATL_NO_VTABLE classname                           \
     : public CComObjectRootEx<CComMultiThreadModel>
 
 ////////////////////////////////////////////////////////////////////////////////
-// ����������� ����� CComQIPtr, ����� �������������� �� ����� ������������ CComPtr ��������
-// ���� �� CComPtr, CComQIPtr, CComPtrBase
+// An extended class CComQIPtr, can be used with all standard CComPtr classes,
+// whether it's CComPtr, CComQIPtr, or CComPtrBase.
 // TODO see _com_ptr_t
 template <class T>
 class ComPtr :
@@ -187,7 +187,7 @@ public:
                 this->p = NULL;
         }
     }
-    // ����� ��� ������������ CComPtr()
+    // Required fot constructor CComPtr()
     template <typename U>
     operator CComPtr<U>() const noexcept
     {
@@ -195,7 +195,7 @@ public:
         this->QueryInterface(&temp);
         return temp;
     }
-    // �������� & �������� ������ �������� ���� ������� �����, � ��������� ������
+    // The operator '&' of the base class throws an error if the address is taken and the pointer is empty.
     T** address() noexcept
     {
         return &this->p;
@@ -207,7 +207,7 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// ����������� ������ CComObjectNoLock
+// Extended version of CComObjectNoLock
 // Base is the user's class that derives from CComObjectRoot and whatever
 // interfaces the user wants to support on the object
 template <class Base>
@@ -378,8 +378,7 @@ public:
 };
 
 /*
-    ��������� �� ���������� "����������" COM ������, � ������������ � ��� �����
-
+    Work in progress on the implementation of a 'real' COM class, including registration and everything else.
 */
 
 /*
@@ -457,7 +456,7 @@ public:
     }
 };
 
-// ����������� COM ������
+// Registration of the COM class
 #define REGISTER_COM_CLASS(classname)   \
     static RegisterClassMy<classname> s_classRegistrator##classname(GET_CLASS_UUID(classname));
 */

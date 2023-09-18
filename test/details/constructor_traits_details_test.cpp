@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include <ext/utils/constructor_traits.h>
+#include <ext/details/constructor_traits_details.h>
 
 struct DetailTestDefConstructor
 {

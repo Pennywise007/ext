@@ -91,14 +91,4 @@ private:
     uint32_t m_step{ 0 };
 };
 
-template <class _Tuple, size_t... _Indices>
-void Invoke(const std::unique_ptr<_Tuple>& _RawVals) EXT_NOEXCEPT /* terminates */ {
-    std::invoke(std::move(std::get<_Indices>(*_RawVals))...);
-}
-
-template <class _Tuple, size_t... _Indices>
-EXT_NODISCARD constexpr auto GetInvoke(std::index_sequence<_Indices...>) EXT_NOEXCEPT {
-    return &Invoke<_Tuple, _Indices...>;
-}
-
 } // namespace ext::thread_details

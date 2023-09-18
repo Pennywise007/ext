@@ -6,8 +6,8 @@
 
 #include <ext/thread/thread_pool.h>
 
-std::set<ext::task::TaskId, ext::task::TaskIdHelper> taskList;
-ext::thread_pool threadPool([&taskList, &listMutex](const ext::task::TaskId& taskId)
+std::set<ext::TaskId, ext::TaskIdHelper> taskList;
+ext::thread_pool threadPool([&taskList, &listMutex](const ext::TaskId& taskId)
 {
     taskList.erase(taskId);
 });
@@ -38,57 +38,25 @@ threadPool.wait_for_tasks();
 #include <ext/thread/event.h>
 #include <ext/thread/thread.h>
 
-#include <uuid/uuid.h>
+#include <ext/utils/uuid.h>
 
 namespace ext {
-namespace task {
-
-// task identifier
-struct TaskId
-{
-    explicit TaskId()
-    {
-#if defined(_WIN32) || defined(__CYGWIN__) // windows
-        EXT_EXPECT(SUCCEEDED(CoCreateGuid(&m_id))) << "Failed to create GUID";
-#elif defined(__GNUC__) // linux
-        uuid_generate(m_id);
-#endif
-    }
-
-    EXT_NODISCARD bool operator==(const TaskId& other) const EXT_NOEXCEPT { return memcmp(&m_id, &other.m_id, sizeof(m_id)) == 0; }
-    EXT_NODISCARD bool operator<(const TaskId& other) const EXT_NOEXCEPT { return memcmp(&m_id, &other.m_id, sizeof(m_id)) < 0; }
-
-    EXT_NODISCARD std::wstring ToString()
-    {
-#if defined(_WIN32) || defined(__CYGWIN__) // windows
-        return std::wstring(CComBSTR(taskId));
-#elif defined(__GNUC__) // linux
-        std::string res(sizeof(uuid_t), '\0');
-        uuid_unparse(m_id, res.data());
-        return std::widen(res);
-#endif
-    }
-
-#if defined(_WIN32) || defined(__CYGWIN__) // windows
-    GUID m_id;
-#elif defined(__GNUC__) // linux
-    uuid_t m_id;
-#endif
-};
-
-} // namespace task
 
 // thread pool for execution tasks
 class thread_pool : ext::NonCopyable
 {
 public:
+    using TaskId = ext::uuid;
+
     /**
      * \param onTaskDone callback on execution task by id
      * \param threadsCount working threads count
      */
-    explicit thread_pool(std::function<void(const task::TaskId&)>&& onTaskDone,
+    explicit thread_pool(std::function<void(const TaskId&)>&& onTaskDone,
                          std::uint_fast32_t threadsCount = std::thread::hardware_concurrency());
     thread_pool(std::uint_fast32_t threadsCount = std::thread::hardware_concurrency());
+
+    EXT_NODISCARD static thread_pool& GlobalInstance();
 
     // interrupt and join all existing threads
     ~thread_pool();
@@ -99,41 +67,38 @@ public:
     // detach and clear all working threads list, after calling this function class will be in inconsistent state
     void detach_all();
 
-    // task execution priority
-    enum class TaskPriority
-    {
-        eHigh,
-        eNormal
-    };
-
-    EXT_NODISCARD static thread_pool& GlobalInstance();
-
-    /**
-     * \brief add task function to queue
-     * \param task execution function
-     * \param priority  task execution priority
-     * \return created task identifier
-     */
-    task::TaskId add_task(std::function<void()>&& task, const TaskPriority priority = TaskPriority::eNormal);
-    void add_task_by_id(const task::TaskId& taskId, std::function<void()>&& task, const TaskPriority priority = TaskPriority::eNormal);
-
     /**
      * \brief Add task function to queue
-     * \tparam Result function result
-     * \tparam FunctionArgs list of function arguments
+     * \tparam Function to invoke
      * \tparam Args list of arguments passed to function
-     * \param task execution function
+     * \param function execution function
      * \param args list of arguments passed to function
-     * \param priority task execution priority
-     * \return taskId of created task and future with task result
+     * \return pair of a taskId(created task identifier) and a future(with task result)
      */
-    template <typename Result, typename... FunctionArgs, typename... Args>
-    EXT_NODISCARD std::pair<task::TaskId, std::future<Result>> add_task(Result(task)(FunctionArgs...),
-                                                                        const TaskPriority priority = TaskPriority::eNormal,
-                                                                        Args&&... args);
+    template <typename Function, typename... Args>
+    std::pair<TaskId,
+              std::future<
+                std::invoke_result_t<Function, Args...>
+              >>
+        add_task(Function&& function, Args&&... args);
+    
+    /**
+     * \brief Add task function to queue with high priority
+     * \tparam Function to invoke
+     * \tparam Args list of arguments passed to function
+     * \param function execution function
+     * \param args list of arguments passed to function
+     * \return pair of a taskId(created task identifier) and a future(with task result)
+     */
+    template <typename Function, typename... Args>
+    std::pair<TaskId,
+              std::future<
+                std::invoke_result_t<Function, Args...>
+              >>
+        add_high_priority_task(Function&& function, Args&&... args);
 
     // remove task from queue by id
-    void erase_task(const task::TaskId& taskId);
+    void erase_task(const TaskId& taskId);
 
     EXT_NODISCARD uint32_t running_tasks_count() const EXT_NOEXCEPT;
 
@@ -143,6 +108,27 @@ public:
 private:
     // main thread for workers
     void worker();
+
+    // task execution priority
+    enum class TaskPriority
+    {
+        eHigh,
+        eNormal
+    };
+
+    /**
+     * \brief Add function to queue with high priority
+     * \tparam Function to invoke
+     * \tparam Args list of arguments passed to function
+     * \param priority task execution priority
+     * \param function execution function
+     * \param args list of arguments passed to function
+     * \return pair of a taskId(created task identifier) and a future(with task result)
+     */    
+    template <typename Function, typename... Args>
+    EXT_NODISCARD std::pair<TaskId,
+              std::future<std::invoke_result_t<Function, Args...>>>
+        add_task_with_priority(TaskPriority priority, Function&& function, Args&&... args);
 
 private:
     // struct with task information
@@ -160,7 +146,7 @@ private:
     // count executing tasks at that moment threads
     std::atomic_uint m_countExecutingTasksThread = 0;
     // callback to callers about task done
-    const std::function<void(const task::TaskId&)> m_onTaskDone;
+    const std::function<void(const TaskId&)> m_onTaskDone;
 
     // list of worker threads
     std::list<ext::thread> m_threads;
@@ -170,13 +156,16 @@ private:
 // struct with task information
 struct thread_pool::TaskInfo : ext::NonCopyable
 {
-    explicit TaskInfo(task::TaskId id, std::function<void()>&& _task, const TaskPriority _priority) EXT_NOEXCEPT
+    explicit TaskInfo(TaskId id, const TaskPriority _priority, std::function<void()>&& _task) EXT_NOEXCEPT
         : task(std::move(_task)), priority(_priority), taskId(std::move(id))
     {}
 
+    TaskInfo(const TaskInfo&) = delete;
+    TaskInfo(TaskInfo&&) = delete;
+
     const std::function<void()> task;
     const TaskPriority priority;
-    const task::TaskId taskId;
+    const TaskId taskId;
 };
 
 inline thread_pool& thread_pool::GlobalInstance()
@@ -185,61 +174,82 @@ inline thread_pool& thread_pool::GlobalInstance()
     return globalThreadPool;
 }
 
-inline task::TaskId thread_pool::add_task(std::function<void()>&& task, const TaskPriority priority)
+template <typename Function, typename... Args>
+std::pair<thread_pool::TaskId, 
+          std::future<
+            std::invoke_result_t<Function, Args...>
+            >>
+    thread_pool::add_task(Function&& function, Args&&... args)
 {
-    const task::TaskId newTaskId;
-    add_task_by_id(newTaskId, std::move(task), priority);
-    return newTaskId;
+    return add_task_with_priority(TaskPriority::eNormal, std::forward<Function>(function), std::forward<Args>(args)...);
 }
 
-inline void thread_pool::add_task_by_id(const task::TaskId& taskId, std::function<void()>&& task, const TaskPriority priority)
+template <typename Function, typename... Args>
+std::pair<thread_pool::TaskId, 
+          std::future<
+            std::invoke_result_t<Function, Args...>
+            >>
+    thread_pool::add_high_priority_task(Function&& function, Args&&... args)
 {
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
+    return add_task_with_priority(TaskPriority::eHigh, std::forward<Function>(function), std::forward<Args>(args)...);
+}
 
-        const auto priorityIt = std::find_if(m_queueTasks.cbegin(), m_queueTasks.cend(),
-            [&priority](const TaskInfoPtr& task)
+template <typename Function, typename... Args>
+std::pair<thread_pool::TaskId, 
+          std::future<
+            std::invoke_result_t<Function, Args...>
+            >>
+    thread_pool::add_task_with_priority(TaskPriority priority, Function&& function, Args&&... args)
+{
+    using _Result = std::invoke_result_t<Function, Args...>;
+    using PackagedTaskPtr = std::unique_ptr<std::packaged_task<_Result()>>;
+
+    // packaging task with params
+    PackagedTaskPtr packagedTask = std::make_unique<std::packaged_task<_Result()>>(
+            ext::ThreadInvoker<Function, Args...>(
+                std::forward<Function>(function), std::forward<Args>(args)...)
+            );
+    std::future<_Result> resultFuture = packagedTask->get_future();
+
+    // adding task to a queue
+    TaskId taskId;
+    {
+        auto taskInfo = std::make_unique<TaskInfo>(taskId, priority,
+            [taskPointer = packagedTask.release()]()
             {
-                return task->priority > priority;
+                PackagedTaskPtr taskPtr(taskPointer);
+                taskPtr->operator()();
             });
 
-        m_queueTasks.emplace(priorityIt, std::make_unique<TaskInfo>(taskId, std::move(task), priority));
+        std::lock_guard<std::mutex> lock(m_mutex);
+        switch (priority)
+        {
+        case TaskPriority::eHigh:
+        {
+            const auto priorityIt = std::find_if(m_queueTasks.cbegin(), m_queueTasks.cend(),
+                [&priority](const TaskInfoPtr& task)
+                {
+                    return task->priority > priority;
+                });   
+            m_queueTasks.emplace(priorityIt, std::move(taskInfo));
+            break;
+        }
+        case TaskPriority::eNormal:
+            m_queueTasks.emplace_back(std::move(taskInfo));
+            break;
+        default:
+            EXT_UNREACHABLE();
+        }
     }
     m_notifier.notify_one();
 
     EXT_ASSERT(std::any_of(m_threads.begin(), m_threads.end(), std::mem_fn(&ext::thread::thread_works)))
         << "Threads interrupted or stopped";
-}
-
-template <typename Result, typename ... FunctionArgs, typename ... Args>
-std::pair<task::TaskId, std::future<Result>> thread_pool::add_task(Result(task)(FunctionArgs...),
-                                                                   const TaskPriority priority /*= TaskPriority::eNormal*/,
-                                                                   Args&&... args)
-{
-    std::shared_ptr<std::promise<Result>> promise(new std::promise<Result>);
-    std::future<Result> resultFuture = promise->get_future();
-    const auto taskId = add_task([task, args..., promise]()
-    {
-        try
-        {
-            promise->set_value(task(args...));
-        }
-        catch (...)
-        {
-            try
-            {
-                promise->set_exception(std::current_exception());
-            }
-            catch (...)
-            {
-            }
-        }
-    }, priority);
 
     return std::make_pair(std::move(taskId), std::move(resultFuture));
 }
 
-inline void thread_pool::erase_task(const task::TaskId& taskId)
+inline void thread_pool::erase_task(const TaskId& taskId)
 {
     {
         std::lock_guard<std::mutex> lock(m_mutex);
@@ -270,7 +280,7 @@ inline void thread_pool::interrupt_and_remove_all_tasks()
     std::for_each(m_threads.begin(), m_threads.end(), std::mem_fn(&ext::thread::restore_interrupted));
 }
 
-inline thread_pool::thread_pool(std::function<void(const task::TaskId&)>&& onTaskDone, std::uint_fast32_t threadsCount)
+inline thread_pool::thread_pool(std::function<void(const TaskId&)>&& onTaskDone, std::uint_fast32_t threadsCount)
     : m_onTaskDone(std::move(onTaskDone))
 {
     EXT_EXPECT(threadsCount > 0) << "Zero thread count";
@@ -315,6 +325,7 @@ inline void thread_pool::wait_for_tasks()
         }
 
         m_taskDoneEvent.Wait();
+        m_taskDoneEvent.Reset();
     }
 }
 

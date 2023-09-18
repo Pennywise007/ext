@@ -1,8 +1,8 @@
 load("@rules_cc//cc:defs.bzl", "cc_test")
 
 cc_test(
-    name = "com_test",
-    srcs = ["com_test.cpp"],
+    name = "constructor_traits_details_test",
+    srcs = ["constructor_traits_details_test.cpp"],
     deps = [
         "//test:test_main",
     ],

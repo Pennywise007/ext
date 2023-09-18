@@ -62,7 +62,8 @@ const std::shared_ptr<CreatedObjectExample> object = ext::CreateObject<CreatedOb
 
 #include <ext/std/memory.h>
 
-#include <ext/utils/constructor_traits.h>
+#include <ext/details/constructor_traits_details.h>
+
 #include <ext/utils/utils.h>
 
 #if defined(_WIN32) || defined(__CYGWIN__) // windows

@@ -53,8 +53,7 @@
 #else
 #   error Unsupported platform
 #endif
-namespace ext {
-namespace detail {
+namespace ext::detail {
 
 EXT_NOTHROW inline void atomic_thread_fence_acquire() EXT_NOEXCEPT
 {
@@ -149,8 +148,7 @@ EXT_NOTHROW inline bool atomic_uint32_compare_exchange_weak_acqrel_acquire(uint3
 #endif
 }
 
-} // namespace detail
-} // namespace ext
+} // namespace ext::detail
 
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
 #undef INTERLOCKED_OP_ACQUIRE

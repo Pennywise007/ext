@@ -48,3 +48,22 @@ TEST(event_test, check_timeout)
     ext::Event event;
     EXPECT_FALSE(event.Wait(std::chrono::milliseconds(10)));
 }
+
+TEST(event_test, check_reset)
+{
+    ext::Event event;
+    event.Set();
+    
+    EXPECT_TRUE(event.Wait());
+    EXPECT_TRUE(event.Raised());
+
+    EXPECT_TRUE(event.Wait());
+
+    event.Reset();
+    EXPECT_FALSE(event.Raised());
+
+    EXPECT_FALSE(event.Wait(std::chrono::milliseconds(10)));
+
+    event.Set();
+    EXPECT_TRUE(event.Wait());
+}

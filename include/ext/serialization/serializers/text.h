@@ -10,7 +10,7 @@
 
 #include <ext/std/string.h>
 
-namespace ext::serializable::serializer {
+namespace ext::serializer {
 
 /*
 * Serializer objects to Text, format:
@@ -313,4 +313,4 @@ inline void SerializerText::GetFieldValue(std::wstring_view& text, std::optional
     }
 }
 
-} // namespace ext::serializable::serializer
+} // namespace ext::serializer

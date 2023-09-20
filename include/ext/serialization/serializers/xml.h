@@ -14,7 +14,7 @@
 #include <ext/scope/on_exit.h>
 #include <ext/serialization/serializer.h>
 
-namespace ext::serializable::serializer {
+namespace ext::serializer {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Сериализатор объектов в XML

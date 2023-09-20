@@ -16,7 +16,7 @@
 #include <ext/utils/uuid.h>
 
 using namespace ext::serializable;
-using namespace ext::serializable::serializer;
+using namespace ext::serializer;
 
 namespace {
 constexpr char BaseTypeName[] = "BaseTypes";
@@ -293,8 +293,6 @@ struct Settings : ext::serializable::SerializableObject<Settings>
 
 TEST(serialization_test, serialization_custom)
 {
-    using namespace ext::serializable::serializer;
-
     std::wstring text;
 
     Settings initialSettings;

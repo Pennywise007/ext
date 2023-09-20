@@ -15,26 +15,26 @@
 #endif
 #include <ext/serialization/serializers/text.h>
 
-namespace ext::serializable::serializer {
+namespace ext::serializer {
 
 #ifdef USE_PUGI_XML
-inline std::unique_ptr<serializer::ISerializer> Factory::XMLSerializer(const std::filesystem::path& filePath)
+inline std::unique_ptr<ISerializer> Factory::XMLSerializer(const std::filesystem::path& filePath)
 {
     return std::make_unique<SerializerXML>(filePath);
 }
 
-inline std::unique_ptr<serializer::IDeserializer> Factory::XMLDeserializer(const std::filesystem::path& filePath)
+inline std::unique_ptr<IDeserializer> Factory::XMLDeserializer(const std::filesystem::path& filePath)
 {
     return std::make_unique<SerializerXML>(filePath);
 }
 #endif
 
-inline std::unique_ptr<serializer::ISerializer> Factory::TextSerializer(std::wstring& outputText)
+inline std::unique_ptr<ISerializer> Factory::TextSerializer(std::wstring& outputText)
 {
     return std::make_unique<SerializerText>(&outputText);
 }
 
-inline std::unique_ptr<serializer::IDeserializer> Factory::TextDeserializer(const std::wstring& inputText)
+inline std::unique_ptr<IDeserializer> Factory::TextDeserializer(const std::wstring& inputText)
 {
     return std::make_unique<SerializerText>(inputText);
 }
@@ -231,7 +231,7 @@ inline bool Visitor::UpdateObjectType()
     return true;
 }
 
-inline bool Executor::SerializeObject(const std::unique_ptr<serializer::ISerializer>& serializer, const ISerializable* object)
+inline bool Executor::SerializeObject(const std::unique_ptr<ISerializer>& serializer, const ISerializable* object)
 {
     EXT_REQUIRE(serializer && object) << "didn't pass what to serialize";
 
@@ -419,4 +419,4 @@ inline bool Executor::DeserializeObject(const std::unique_ptr<serializer::IDeser
     return true;
 }
 
-} // namespace ext::serializable::serializer
+} // namespace ext::serializer

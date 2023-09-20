@@ -37,13 +37,13 @@ struct TestStruct :  ext::serializable::SerializableObject<TestStruct>, Internal
     MyTestStruct()
     {
         REGISTER_SERIALIZABLE_FIELD(m_listOfParams); // or use DECLARE_SERIALIZABLE macro
-        using namespace ext::serializable::serializer;
+        using namespace ext::serializer;
         Executor::DeserializeObject(Factory::XMLDeserializer(L"C:\\Test.xml"), testStruct);
     }
 
     ~MyTestStruct()
     {
-        using namespace ext::serializable::serializer;
+        using namespace ext::serializer;
         Executor::SerializeObject(Factory::XMLSerializer(L"C:\\Test.xml"), testStruct);
     }
 };
@@ -106,7 +106,7 @@ struct TestStruct :  ext::serializable::SerializableObject<TestStruct>, Internal
 
 namespace ext::serializable {
 
-// Serialization tree, allow to iterate over serializable fields, @see also ext::serializable::serializer::Visitor
+// Serialization tree, allow to iterate over serializable fields, @see also ext::serializer::Visitor
 struct SerializableNode
 {
     std::string Name;
@@ -177,13 +177,13 @@ struct ISerializableOptional : ISerializable
     EXT_NODISCARD virtual std::shared_ptr<ISerializable> Get() const = 0;
 };
 
-namespace impl {
+namespace details {
 
 struct ISerializableFieldInfo
 {
     EXT_NODISCARD virtual std::shared_ptr<ISerializable> GetField(const ISerializable* object) const = 0;
 };
-} // namespace impl
+} // namespace details
 
 /*
 * Base class for class with serializable fields, register field by RegisterField function or DECLARE_SERIALIZABLE macros.
@@ -220,12 +220,12 @@ private:
 
 private:
     std::list<std::shared_ptr<ISerializable>> m_baseSerializableClasses;
-    std::list<std::shared_ptr<impl::ISerializableFieldInfo>> m_fields;
+    std::list<std::shared_ptr<details::ISerializableFieldInfo>> m_fields;
 
     const char* m_name = TypeName != nullptr ? TypeName : ext::type_name<Type>();
 };
 
 } // namespace ext::serializable
 
-#include <ext/serialization/serializable_impl.h>
+#include <ext/details/serialization/serializable_details.h>
 #include <ext/serialization/serializer.h>

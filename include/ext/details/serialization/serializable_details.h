@@ -22,7 +22,7 @@
 #include <ext/utils/utils.h>
 
 namespace ext::serializable {
-namespace impl {
+namespace details {
 
 // Check is type a std::map/multimap container
 template <class T>
@@ -436,24 +436,24 @@ template <class Type>
 std::shared_ptr<ISerializable> get_as_serializable(const std::string& name, Type* type)
 {
     if constexpr (std::is_same_v<std::optional<std::extract_value_type_v<Type>>, Type>)
-        return std::make_shared<impl::SerializableOptional<Type>>(name, type);
-    else if constexpr (impl::is_map_v<Type>)
-        return std::make_shared<impl::SerializableMap<Type>>(name, type);
-    else if constexpr (impl::is_set_v<Type>)
-        return std::make_shared<impl::SerializableSet<Type>>(name, type);
-    else if constexpr (impl::is_pair_v<Type>)
+        return std::make_shared<details::SerializableOptional<Type>>(name, type);
+    else if constexpr (details::is_map_v<Type>)
+        return std::make_shared<details::SerializableMap<Type>>(name, type);
+    else if constexpr (details::is_set_v<Type>)
+        return std::make_shared<details::SerializableSet<Type>>(name, type);
+    else if constexpr (details::is_pair_v<Type>)
     {
         auto collection = std::make_shared<SerializableCollectionImpl>(name);
         collection->AddField(get_as_serializable<decltype(Type::first)>("First", &type->first));
         collection->AddField(get_as_serializable<decltype(Type::second)>("Second", &type->second));
         return std::move(collection);
     }
-    else if constexpr (impl::is_array_v<Type>)
-        return std::make_shared<impl::SerializableArray<Type>>(name, type);
+    else if constexpr (details::is_array_v<Type>)
+        return std::make_shared<details::SerializableArray<Type>>(name, type);
     else if constexpr (is_serializable_v<Type>)
         return get_serializable(name, type);
     else
-        return std::make_shared<impl::SerializableField<Type>>(name, type);
+        return std::make_shared<details::SerializableField<Type>>(name, type);
 }
 
 template <class Type, typename Field>
@@ -481,13 +481,13 @@ protected:
     Field Type::* m_field;
 };
 
-} // namespace impl
+} // namespace details
 
 template<class Type, const char* TypeName, class ICollectionInterface>
 template <class Field>
 void SerializableObject<Type, TypeName, ICollectionInterface>::RegisterField(const char* name, Field Type::* field)
 {
-    m_fields.emplace_back(std::make_shared<impl::SerializableFieldInfo<Type, Field>>(name, field));
+    m_fields.emplace_back(std::make_shared<details::SerializableFieldInfo<Type, Field>>(name, field));
 }
 
 template<class Type, const char* TypeName, class ICollectionInterface>
@@ -502,7 +502,7 @@ void SerializableObject<Type, TypeName, ICollectionInterface>::RegisterSerializa
         using BaseType = std::remove_pointer_t<decltype(type)>;
 
         auto* base = static_cast<BaseType*>(currentClass);
-        m_baseSerializableClasses.emplace_back(std::make_shared<impl::SerializableProxy<BaseType>>(base));
+        m_baseSerializableClasses.emplace_back(std::make_shared<details::SerializableProxy<BaseType>>(base));
     });
 }
 

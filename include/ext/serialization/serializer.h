@@ -16,7 +16,15 @@
 #include <ext/core/check.h>
 #include <ext/serialization/iserializable.h>
 
-namespace ext::serializable::serializer {
+namespace ext::serializer {
+
+using ISerializable = ext::serializable::ISerializable;
+using ISerializableField = ext::serializable::ISerializableField;
+using ISerializableCollection = ext::serializable::ISerializableCollection;
+using ISerializableOptional = ext::serializable::ISerializableOptional;
+
+using SerializableNode = ext::serializable::SerializableNode;
+using SerializableValue = ext::serializable::SerializableValue;
 
 // Serialization object interface
 struct ISerializer
@@ -40,13 +48,13 @@ struct Factory
 // Predefine USE_PUGI_XML and add pugi XML lib to project if you want serialize to/from xml.
 #ifdef USE_PUGI_XML
     // Create serializer to/from XML file.
-    EXT_NODISCARD static std::unique_ptr<serializer::ISerializer> XMLSerializer(const std::filesystem::path& filePath);
-    EXT_NODISCARD static std::unique_ptr<serializer::IDeserializer> XMLDeserializer(const std::filesystem::path& filePath);
+    EXT_NODISCARD static std::unique_ptr<ISerializer> XMLSerializer(const std::filesystem::path& filePath);
+    EXT_NODISCARD static std::unique_ptr<IDeserializer> XMLDeserializer(const std::filesystem::path& filePath);
 #endif
 
     // Create serializer to/from text.
-    EXT_NODISCARD static std::unique_ptr<serializer::ISerializer> TextSerializer(std::wstring& outputText);
-    EXT_NODISCARD static std::unique_ptr<serializer::IDeserializer> TextDeserializer(const std::wstring& inputText) EXT_THROWS();
+    EXT_NODISCARD static std::unique_ptr<ISerializer> TextSerializer(std::wstring& outputText);
+    EXT_NODISCARD static std::unique_ptr<IDeserializer> TextDeserializer(const std::wstring& inputText) EXT_THROWS();
 };
 
 // Serialization executor class, serialize/deserialize object via ISerializer/IDeserializer interfaces
@@ -56,13 +64,13 @@ struct Executor
     /// <param name="serializer">Serialization interface, @see Factory.</param>
     /// <param name="object">Serializable object.</param>
     /// <returns>True if serialization successfully, may throw exception.</returns>
-    static bool SerializeObject(const std::unique_ptr<serializer::ISerializer>& serializer, const ISerializable* object) EXT_THROWS();
+    static bool SerializeObject(const std::unique_ptr<ISerializer>& serializer, const ISerializable* object) EXT_THROWS();
 
     /// <summary>Deserialize object.</summary>
     /// <param name="deserializer">Deserialization interface, @see Factory.</param>
     /// <param name="object">Serializable object.</param>
     /// <returns>True if deserialization successfully, may throw exception.</returns>
-    static bool DeserializeObject(const std::unique_ptr<serializer::IDeserializer>& deserializer, ISerializable* object) EXT_THROWS();
+    static bool DeserializeObject(const std::unique_ptr<IDeserializer>& deserializer, ISerializable* object) EXT_THROWS();
 };
 
 // Visitor class by fields and collections of the object being serialized
@@ -243,6 +251,6 @@ private:
     }
 };
 
-} // namespace ext::serializable::serializer
+} // namespace ext::serializer
 
-#include <ext/serialization/serializer_impl.h>
+#include <ext/details/serialization/serializer_details.h>

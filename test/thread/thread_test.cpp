@@ -142,39 +142,76 @@ TEST(thread_test, check_interruption_requested)
     {
         ext::thread myThread(thread_function, []()
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
             EXPECT_FALSE(ext::this_thread::interruption_requested());
         });
         join_thread_and_check(myThread, false);
     }
     {
-        ext::thread myThread(thread_function, []()
+        ext::Event interrupted;
+        ext::thread myThread(thread_function, [&]()
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            interrupted.Wait();
             EXPECT_TRUE(ext::this_thread::interruption_requested());
         });
         myThread.interrupt();
+        interrupted.Set();
         join_thread_and_check(myThread, false);
     }
+}
+
+TEST(thread_test, check_interruptible_sleep)
+{
+    ext::thread myThread(thread_function, []()
+    {
+        ext::this_thread::interruptible_sleep_for(std::chrono::milliseconds(1000));
+    });
+    myThread.interrupt();
+    join_thread_and_check(myThread, true);
+}
+
+TEST(thread_test, thead_swapping)
+{
+    ext::Event e;
+    ext::thread oldThread(thread_function, [&e]()
+    {
+        e.Set();
+        ext::this_thread::interruptible_sleep_for(std::chrono::seconds(5));
+    });
+
+    e.Wait();
+    const auto workingThreadId = oldThread.get_id();
+
+    ext::thread newThread(std::move(oldThread));
+    EXPECT_EQ(newThread.get_id(), workingThreadId);
+    EXPECT_FALSE(oldThread.joinable());
+    newThread.interrupt();
+    EXPECT_FALSE(oldThread.interrupted());
+    join_thread_and_check(newThread, true);
 }
 
 TEST(thread_test, check_interruption_point)
 {
     {
-        ext::thread myThread(thread_function, []()
+        ext::Event threadStarted;
+        ext::thread myThread(thread_function, [&]()
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            threadStarted.Set();
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
             ext::this_thread::interruption_point();
         });
+        threadStarted.Wait();
         myThread.interrupt();
         join_thread_and_check(myThread, true);
     }
     {
-        ext::thread myThread(thread_function, []()
+        ext::Event threadStarted;
+        ext::thread myThread(thread_function, [&]()
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            threadStarted.Set();
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
             ext::this_thread::interruption_point();
         });
+        threadStarted.Wait();
         join_thread_and_check(myThread, false);
     }
 }
@@ -198,15 +235,19 @@ TEST(thread_test, check_detaching)
     myThread.interrupt();
     myThread.detach();
     threadInterruptedAndDetached.Set();
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
 
     EXPECT_TRUE(interrupted);
 }
 
 TEST(thread_test, check_ordinary_sleep)
 {
-    ext::thread myThread(thread_function, []() { ext::this_thread::sleep_for(std::chrono::milliseconds(300)); });
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    ext::Event threadStarted;
+    ext::thread myThread(thread_function, [&]() {
+        threadStarted.Set();
+        ext::this_thread::sleep_for(std::chrono::milliseconds(20));
+    });
+    threadStarted.Wait();
     myThread.interrupt();
     join_thread_and_check(myThread, false);
 }
@@ -220,7 +261,7 @@ TEST(thread_test, check_interruption_sleeping)
                              ext::this_thread::interruptible_sleep_for(std::chrono::seconds(1));
                          });
     EXPECT_TRUE(threadStartedEvent.Wait());
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
     myThread.interrupt();
     join_thread_and_check(myThread, true);
 }
@@ -228,12 +269,12 @@ TEST(thread_test, check_interruption_sleeping)
 TEST(thread_test, check_run_and_interrupting_sleep)
 {
     ext::thread myThread(thread_function, []() { 
-        ext::this_thread::interruptible_sleep_for(std::chrono::milliseconds(100));
+        ext::this_thread::interruptible_sleep_for(std::chrono::milliseconds(10));
     });
     join_thread_and_check(myThread, false);
 
     myThread.run(thread_function, []() {
-        ext::this_thread::interruptible_sleep_for(std::chrono::milliseconds(100));
+        ext::this_thread::interruptible_sleep_for(std::chrono::milliseconds(10));
     });
     join_thread_and_check(myThread, false);
 }
@@ -243,15 +284,16 @@ TEST(thread_test, check_stop_token)
     ext::Event threadStartedEvent;
     ext::thread myThread(thread_function, [&threadStartedEvent]()
                          {
+                             threadStartedEvent.Set();
+
                              const auto token = ext::this_thread::get_stop_token();
                              while (!token.stop_requested())
                              {
-                                 threadStartedEvent.Set();
                                  std::this_thread::yield();
                              }
                          });
     EXPECT_TRUE(threadStartedEvent.Wait());
     myThread.interrupt();
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
     join_thread_and_check(myThread, false);
 }

@@ -37,9 +37,7 @@ public:
     ThreadInvoker(Function&& function, Args&&...args)
         : decay_(std::make_unique<_Tuple>(std::forward<Function>(function), std::forward<Args>(args)...))
     {}
-    ThreadInvoker(ThreadInvoker &&other) noexcept
-        : decay_(std::move(other.decay_))
-    {}
+    ThreadInvoker(ThreadInvoker &&other) noexcept = default;
     ThreadInvoker(const ThreadInvoker &other) = delete;
 
     std::invoke_result_t<Function, Args...> operator()()

@@ -87,17 +87,14 @@ class thread : std::thread
 public:
     // constructors from std::thread
     thread() EXT_NOEXCEPT = default;
-    explicit thread(base&& other) EXT_NOEXCEPT      { replace(std::move(other)); }
-    explicit thread(thread&& other) EXT_NOEXCEPT    { replace(std::move(other)); }
+    explicit thread(thread&& other) EXT_NOEXCEPT    { operator=(std::move(other)); }
 
     template<class _Function, class... _Args>
     explicit thread(_Function&& function, _Args&&... args)
-    {
-        run(std::forward<_Function>(function), std::forward<_Args>(args)...);
-    }
+        : thread(ext::stop_source{}, std::forward<_Function>(function), std::forward<_Args>(args)...)
+    {}
 
-    thread& operator=(base&& other) EXT_NOEXCEPT    { replace(std::move(other)); return *this; }
-    thread& operator=(thread&& other) EXT_NOEXCEPT  { replace(std::move(other)); return *this; }
+    thread& operator=(thread&& other) EXT_NOEXCEPT;
 
     // Run function for execution in current thread
     template<class _Function, class... _Args>
@@ -111,7 +108,7 @@ public:
     using base::hardware_concurrency;
     using base::joinable;
     using base::native_handle;
-
+    
 public:
     // Special exception about thread interruption
     class thread_interrupted {};
@@ -164,8 +161,13 @@ public:
     }
 
 private:
-    void replace(base&& other) EXT_NOEXCEPT;
-    void replace(thread&& other) EXT_NOEXCEPT;
+    // internal constructor which used to optimize stop source usage
+    template<class _Function, class... _Args>
+    explicit thread(ext::stop_source&& source, _Function&& function, _Args&&... arguments);
+
+    // wrapper of an execution function into an invoker. Allows to reduce a number of possible arguments copies
+    template<class _Function, class... _Args>
+    EXT_NODISCARD base create_thread(ext::stop_token&& token, _Function&& function, _Args&&... args);
 
 private:
     // restore thread after interrupting
@@ -241,7 +243,8 @@ public:
         EXT_ASSERT(id != kInvalidThreadId);
         
         std::unique_lock lock(m_workingThreadsMutex);
-        m_workingThreadsInterruptionEvents.try_emplace(id, std::move(token));
+        if (!m_workingThreadsInterruptionEvents.try_emplace(id, std::move(token)).second)
+            EXT_ASSERT(false) << "Double thread registration";
     }
 
     // Notification about finishing thread
@@ -254,16 +257,21 @@ public:
     }
 
     // Call this function for interrupting thread by thread id
-    void OnInterrupt(const std::thread::id& id) EXT_NOEXCEPT
+    void OnInterrupt(const ext::thread& thread) EXT_NOEXCEPT
     {
+        auto id = thread.get_id();
         EXT_ASSERT(id != kInvalidThreadId);
 
         std::unique_lock lock(m_workingThreadsMutex);
-        auto threadId = m_workingThreadsInterruptionEvents.find(id);
-        if (threadId != m_workingThreadsInterruptionEvents.end())
-            threadId->second.on_interrupt();
-        else
-            EXT_ASSERT(false) << "Thread not registered yet";
+        auto threadIt = m_workingThreadsInterruptionEvents.find(id);
+        if (threadIt == m_workingThreadsInterruptionEvents.end())
+        {
+            // the case when thread was created and immediately interrupted before calling a thread function
+            EXT_ASSERT(thread.joinable());
+            threadIt = m_workingThreadsInterruptionEvents.emplace(std::move(id), thread.get_token()).first;
+        }
+        
+        threadIt->second.on_interrupt();
     }
 
     // Call this function for restore interrupted thread by thread id
@@ -290,19 +298,16 @@ public:
         return false;
     }
 
-    // Call this function for try getting interruption event for thread by id
-    EXT_NODISCARD std::shared_ptr<ext::Event> TryGetInterruptionEvent(const std::thread::id& id) EXT_NOEXCEPT
+    // Getting interruption event for thread by id
+    EXT_NODISCARD std::shared_ptr<ext::Event> GetInterruptionEvent(const std::thread::id& id) EXT_NOEXCEPT
     {
         EXT_ASSERT(id != kInvalidThreadId);
-        {
-            std::shared_lock lock(m_workingThreadsMutex);
-            if (const auto it = m_workingThreadsInterruptionEvents.find(id); it != m_workingThreadsInterruptionEvents.end())
-                return it->second.interruptionEvent;
-        }
-
-        auto res = std::make_shared<ext::Event>();
-        res->Set();
-        return res;
+        std::shared_lock lock(m_workingThreadsMutex);
+        if (const auto it = m_workingThreadsInterruptionEvents.find(id); it != m_workingThreadsInterruptionEvents.end())
+            return it->second.interruptionEvent;
+        else
+            EXT_ASSERT(false) << "Trying to get an interruption event from a non ext::thread";
+        return nullptr;
     }
 
     EXT_NODISCARD ext::stop_token GetStopToken(const std::thread::id& id) EXT_NOEXCEPT
@@ -326,6 +331,25 @@ EXT_NODISCARD inline ext::thread::ThreadsManager& thread::manager()
 }
 
 template<class _Function, class... _Args>
+EXT_NODISCARD thread::base thread::create_thread(ext::stop_token&& token, _Function&& function, _Args&&... arguments)
+{
+    return base([invoker = ext::ThreadInvoker<_Function, _Args...>(std::forward<_Function>(function),
+                                                                    std::forward<_Args>(arguments)...)]
+        (ext::stop_token&& token) mutable
+        {
+            manager().OnStartingThread(this_thread::get_id(), std::move(token));
+            invoker();
+            manager().OnFinishingThread(this_thread::get_id());
+        }, std::move(token));
+}
+
+template<class _Function, class... _Args>
+thread::thread(ext::stop_source&& source, _Function&& function, _Args&&... arguments)
+    : base(create_thread(source.get_token(), std::forward<_Function>(function), std::forward<_Args>(arguments)...))
+    , m_stopSource(std::move(source))
+{}
+
+template<class _Function, class... _Args>
 void thread::run(_Function&& function, _Args&&... arguments) EXT_NOEXCEPT
 {
     // @see replace(std::thread&&)
@@ -338,47 +362,18 @@ void thread::run(_Function&& function, _Args&&... arguments) EXT_NOEXCEPT
         m_stopSource.swap(temp);
     }
 
-    ext::ThreadInvoker<_Function, _Args...> invoker(
-        std::forward<_Function>(function), std::forward<_Args>(arguments)...);
-    base::operator=(base([invoker = std::move(invoker)](ext::stop_token token) mutable
-        {
-            const auto threadId = this_thread::get_id();
-            
-            // 'function' can ask for interruption point or stop token before the end of the 'run' function
-            manager().OnStartingThread(threadId, std::move(token));
-
-            invoker();
-
-            manager().OnFinishingThread(threadId);
-        }, get_token()));
-
-    if (joinable())
-        manager().OnStartingThread(get_id(), get_token());
+    base::operator=(create_thread(get_token(), std::forward<_Function>(function), std::forward<_Args>(arguments)...));
 }
 
-inline void thread::replace(base&& other) EXT_NOEXCEPT
+inline thread& thread::operator=(thread&& other) EXT_NOEXCEPT
 {
-    if (joinable())
-        detach();
-
-    if (interrupted())
-    {
-        ext::stop_source temp;
-        m_stopSource.swap(temp);
-    }
-    base::operator=(std::move(other));
-
-    if (joinable())
-        manager().OnStartingThread(get_id(), get_token());
-}
-
-inline void thread::replace(thread&& other) EXT_NOEXCEPT
-{
+    // @see replace(std::thread&&)
     if (joinable())
         detach();
 
     m_stopSource = std::move(other.m_stopSource);
-    base::operator=(std::move(other));
+    base::operator=(std::move(static_cast<base&>(other)));
+    return *this;
 }
 
 template <class Clock, class Duration>
@@ -409,7 +404,7 @@ inline void thread::OnRestoreInterrupted() const
 
 inline void thread::OnInterrupt() const
 {
-    manager().OnInterrupt(get_id());
+    manager().OnInterrupt(*this);
 }
 
 namespace this_thread {
@@ -440,9 +435,9 @@ void interruptible_sleep_until(const std::chrono::time_point<_Clock, _Duration>&
     static_assert(std::chrono::is_clock_v<_Clock>, "Clock type required");
 #endif // _HAS_CXX20
 
-    if (const auto interruptionEvent = ::ext::thread::manager().TryGetInterruptionEvent(ext::this_thread::get_id()))
+    if (const auto interruptionEvent = ::ext::thread::manager().GetInterruptionEvent(ext::this_thread::get_id()))
     {
-        auto _Now = _Clock::now();
+        const auto _Now = _Clock::now();
         if (timePoint <= _Now)
             return;
 

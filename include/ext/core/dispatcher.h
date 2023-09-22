@@ -141,8 +141,6 @@ private:
 
     std::map<EventId, EventRecipients> m_eventRecipients;
     mutable std::shared_mutex m_recipientsMutex;
-
-    mutable thread_pool m_threadPool = { 1 };
 };
 
 // Scope subscription manager
@@ -266,7 +264,8 @@ void Dispatcher::SendEvent(Function IEvent::* function, Args&&... eventArgs) con
 template <typename IEvent, typename Function, typename... Args>
 std::future<void> Dispatcher::SendEventAsync(Function IEvent::* function, Args&&... eventArgs) const EXT_NOEXCEPT
 {
-    return m_threadPool.add_task([function, ...args = std::forward<Args>(eventArgs)]() mutable
+    static thread_pool thread_pool(1);
+    return thread_pool.add_task([function, ...args = std::forward<Args>(eventArgs)]() mutable
         {
             get_service<Dispatcher>().SendEvent<IEvent, Function, Args...>(
                 function, std::forward<Args>(args)...);

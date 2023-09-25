@@ -77,6 +77,7 @@ TEST(thread_pool_test, parallel_execution)
         firstExecuting = false;
     });
     threadPool.add_task([&]() {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
         EXPECT_TRUE(firstExecuting);
         secondExecuted = true;
     });

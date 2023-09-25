@@ -100,12 +100,12 @@ private:
         if (!CanTrace(type))
             return;
 
-        auto trimTextRight = [&text]()
+        constexpr auto trimTextRight = [](std::string& text)
         {
-            const auto it = std::find_if(text.rbegin(), text.rend(), [](wchar_t ch) { return !std::iswspace(ch); });
+            const auto it = std::find_if(text.rbegin(), text.rend(), [](char ch) { return !std::isspace(ch); });
             text.erase(it.base(), text.end());
         };
-        trimTextRight();
+        trimTextRight(text);
 
         std::ostringstream outputStringPrefix;
 

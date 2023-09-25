@@ -7,10 +7,10 @@ TEST(event_test, check_rising)
     ext::Event event;
     std::thread myThread([&event]()
     {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         event.Set();
     });
-    EXPECT_TRUE(event.Wait(std::chrono::seconds(2)));
+    EXPECT_TRUE(event.Wait(std::chrono::milliseconds(200)));
 
     std::thread myThread2([&event]()
     {

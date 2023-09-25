@@ -136,6 +136,7 @@ TEST(thread_test, check_interruption_requested)
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
         });
+        EXPECT_FALSE(myThread.interrupted());
         myThread.interrupt();
         join_thread_and_check(myThread, false);
     }
@@ -144,6 +145,7 @@ TEST(thread_test, check_interruption_requested)
         {
             EXPECT_FALSE(ext::this_thread::interruption_requested());
         });
+        EXPECT_FALSE(myThread.interrupted());
         join_thread_and_check(myThread, false);
     }
     {
@@ -153,6 +155,7 @@ TEST(thread_test, check_interruption_requested)
             interrupted.Wait();
             EXPECT_TRUE(ext::this_thread::interruption_requested());
         });
+        EXPECT_FALSE(myThread.interrupted());
         myThread.interrupt();
         interrupted.Set();
         join_thread_and_check(myThread, false);

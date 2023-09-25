@@ -45,6 +45,7 @@ EXPECT_TRUE(myThread.interrupted());
 #include <ext/details/thread_details.h>
 
 #include <ext/utils/invoke.h>
+#include <ext/scope/defer.h>
 
 #if !(defined(_WIN32) || defined(__CYGWIN__)) // not windows
 #include <pthread.h>
@@ -210,7 +211,11 @@ class thread::ThreadsManager
     {
         explicit WorkingThreadInfo(ext::stop_token&& token) EXT_NOEXCEPT
             : stopToken(std::move(token))
-        {}
+        {
+            // We might interrupt thread before calling a thread function
+            if (stopToken.stop_requested())
+                interruptionEvent->Set(true);
+        }
 
         EXT_NODISCARD bool interrupted() const EXT_NOEXCEPT
         {
@@ -243,8 +248,7 @@ public:
         EXT_ASSERT(id != kInvalidThreadId);
         
         std::unique_lock lock(m_workingThreadsMutex);
-        if (!m_workingThreadsInterruptionEvents.try_emplace(id, std::move(token)).second)
-            EXT_ASSERT(false) << "Double thread registration";
+        EXT_DUMP_IF(!m_workingThreadsInterruptionEvents.try_emplace(id, std::move(token)).second) << "Double thread registration";
     }
 
     // Notification about finishing thread
@@ -263,15 +267,10 @@ public:
         EXT_ASSERT(id != kInvalidThreadId);
 
         std::unique_lock lock(m_workingThreadsMutex);
-        auto threadIt = m_workingThreadsInterruptionEvents.find(id);
-        if (threadIt == m_workingThreadsInterruptionEvents.end())
-        {
-            // the case when thread was created and immediately interrupted before calling a thread function
-            EXT_ASSERT(thread.joinable());
-            threadIt = m_workingThreadsInterruptionEvents.emplace(std::move(id), thread.get_token()).first;
-        }
-        
-        threadIt->second.on_interrupt();
+        const auto threadIt = m_workingThreadsInterruptionEvents.find(id);
+        // the thread might be interrupted before calling a thread function
+        if (threadIt != m_workingThreadsInterruptionEvents.end())
+            threadIt->second.on_interrupt();
     }
 
     // Call this function for restore interrupted thread by thread id
@@ -334,12 +333,13 @@ template<class _Function, class... _Args>
 EXT_NODISCARD thread::base thread::create_thread(ext::stop_token&& token, _Function&& function, _Args&&... arguments)
 {
     return base([invoker = ext::ThreadInvoker<_Function, _Args...>(std::forward<_Function>(function),
-                                                                    std::forward<_Args>(arguments)...)]
+                                                                   std::forward<_Args>(arguments)...)]
         (ext::stop_token&& token) mutable
         {
             manager().OnStartingThread(this_thread::get_id(), std::move(token));
+            EXT_DEFER(manager().OnFinishingThread(this_thread::get_id()));
+            
             invoker();
-            manager().OnFinishingThread(this_thread::get_id());
         }, std::move(token));
 }
 

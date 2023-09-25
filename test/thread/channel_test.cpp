@@ -48,7 +48,7 @@ TEST(channel_test, check_channel_closing)
 
     channel.add(10);
     channel.add(10);
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     EXPECT_TRUE(working);
 
     channel.add(10);
@@ -76,7 +76,7 @@ TEST(channel_test, check_multithreading)
         });
 
     channel.add(1);
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     channel.add(2);
     channel.add(3);

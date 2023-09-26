@@ -1,7 +1,7 @@
 #ifdef _MSC_VER
 #include "gtest/gtest.h"
 
-#include <ext/core/COM.h>
+#include <ext/utils/COM.h>
 
 DECLARE_COM_INTERFACE(ITest, "A740AEFD-B160-447C-8771-43E29D8310DD")
 {

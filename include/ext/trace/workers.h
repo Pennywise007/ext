@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <filesystem>
 #include <fstream>
@@ -74,7 +74,7 @@ struct FileTracer : ITraceWorker
             m_outputFile << text << std::endl;
             m_outputFile.flush();
 
-            EXT_DUMP_IF(!m_outputFile.good()) << EXT_TRACE_FUNCTION;
+            EXT_DUMP_IF(!m_outputFile.good());
         }
         else
             DEBUG_BREAK_OR_CREATE_DUMP(); // file must be opened on creation class

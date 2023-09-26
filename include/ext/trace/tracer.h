@@ -95,7 +95,7 @@ private:
     void Trace(const ::ext::ITracer::Type type, std::string text) noexcept override
     try
     {
-        EXT_DUMP_IF(text.empty()) << EXT_TRACE_FUNCTION << "empty trace text";
+        EXT_DUMP_IF(text.empty()) << "empty trace text";
 
         if (!CanTrace(type))
             return;
@@ -110,8 +110,7 @@ private:
         std::ostringstream outputStringPrefix;
 
         struct timespec currentTime;
-        clock_gettime(CLOCK_REALTIME, &currentTime);
-
+        timespec_get(&currentTime, TIME_UTC);
         outputStringPrefix << std::string_sprintf("%02d:%02d:%02d.%03d",
                                                   (currentTime.tv_sec % 86400) / 3600,
                                                   (currentTime.tv_sec % 3600) / 60,

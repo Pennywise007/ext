@@ -119,7 +119,7 @@ EXT_NODISCARD inline bool MethodInvoker::IsMainThread()
 
 inline void MethodInvoker::CreateMainThreadWindow()
 {
-    EXT_DUMP_IF(m_windowThreadId != ::GetCurrentThreadId()) << EXT_TRACE_FUNCTION << "Creation of MethodInvoker must be called from main thread!";
+    EXT_DUMP_IF(m_windowThreadId != ::GetCurrentThreadId()) << "Creation of MethodInvoker must be called from main thread!";
 
     HINSTANCE instance = AfxGetInstanceHandle();
     const char* className(ext::type_name<decltype(*this)>());
@@ -191,7 +191,7 @@ inline DWORD MethodInvoker::GetMainThreadId()
         }
     }
     else
-        EXT_DUMP_IF(true) << EXT_TRACE_FUNCTION << "Failed";
+        EXT_DUMP_IF(true) << "Failed";
 
     return result;
 }

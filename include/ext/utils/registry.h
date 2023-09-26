@@ -17,7 +17,7 @@ struct Key
     }
     ~Key()
     {
-        EXT_DUMP_IF(::RegCloseKey(m_key) != ERROR_SUCCESS) << EXT_TRACE_FUNCTION "Failed to close key";
+        EXT_DUMP_IF(::RegCloseKey(m_key) != ERROR_SUCCESS) << "Failed to close key";
     }
 
     EXT_NODISCARD bool GetRegistryValue(const wchar_t* valueName, DWORD& value) const EXT_NOEXCEPT

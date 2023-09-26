@@ -221,10 +221,10 @@ void Dispatcher::Unsubscribe(IEvent* recipient, bool checkSubscription) EXT_NOEX
                 m_eventRecipients.erase(eventIt);
         }
         else
-            EXT_DUMP_IF(checkSubscription) << EXT_TRACE_FUNCTION << "Recipient already unsubscribed";
+            EXT_DUMP_IF(checkSubscription) << "Recipient already unsubscribed";
     }
     else
-        EXT_DUMP_IF(checkSubscription) << EXT_TRACE_FUNCTION << "No one subscribed to event";
+        EXT_DUMP_IF(checkSubscription) << "No one subscribed to event";
 }
 
 template<typename IEvent>
@@ -265,11 +265,14 @@ template <typename IEvent, typename Function, typename... Args>
 std::future<void> Dispatcher::SendEventAsync(Function IEvent::* function, Args&&... eventArgs) const EXT_NOEXCEPT
 {
     static thread_pool thread_pool(1);
-    return thread_pool.add_task([function, ...args = std::forward<Args>(eventArgs)]() mutable
-        {
-            get_service<Dispatcher>().SendEvent<IEvent, Function, Args...>(
-                function, std::forward<Args>(args)...);
-        }).second;
+    return thread_pool.add_task([invoker = ext::ThreadInvoker(
+            &Dispatcher::SendEvent<IEvent, Function, Args...>,
+            std::ref(get_service<Dispatcher>()),
+            function,
+            std::forward<Args>(eventArgs)...)]
+            () mutable {
+                invoker();
+            }).second;
 }
 
 template <typename IEvent>

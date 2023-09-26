@@ -195,7 +195,7 @@ TEST(dispatcher_test, arguments_copying_counter_rvalue)
     EXPECT_CALL(mock, EventWithMoveObject(_)).Times(2).WillRepeatedly(Invoke([](Counter&& counter)
     {
         EXPECT_EQ(counter.copies_, 0);
-        EXPECT_EQ(counter.moves_, counter.value_ == kSyncCounter ? 0 : 2);
+        EXPECT_EQ(counter.moves_, counter.value_ == kSyncCounter ? 0 : 1);
     }));
 
     Counter counterSync(kSyncCounter), counterAsync(kAsyncCounter);
@@ -214,7 +214,7 @@ struct Recipient : RecipientMock
         else if (counter.value_ == kAsyncCounter)
         {
             EXPECT_EQ(counter.copies_, 2);
-            EXPECT_EQ(counter.moves_, 1);
+            EXPECT_EQ(counter.moves_, 0);
         }
         else
             FAIL() << "Unexpected value " << counter.value_;

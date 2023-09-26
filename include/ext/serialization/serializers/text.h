@@ -102,7 +102,7 @@ inline std::wstring SerializerText::GenerateIndent(const size_t& indentLevel)
 
 inline void SerializerText::WriteCollectionStart(const std::string& name, const size_t& collectionLevel)
 {
-    *m_outputText += GenerateIndent(collectionLevel) + std::string_swprintf(LR"("%s": {)", name.c_str()) + L'\n';
+    *m_outputText += GenerateIndent(collectionLevel) + L"\"" + std::widen(name) + L"\": {" + L'\n';
 }
 
 inline void SerializerText::WriteCollectionEnd(const std::string& /*name*/, const size_t& collectionLevel, bool nextFieldExist)
@@ -112,7 +112,7 @@ inline void SerializerText::WriteCollectionEnd(const std::string& /*name*/, cons
 
 inline void SerializerText::WriteField(const std::string& name, const SerializableValue& value, const size_t& fieldLevel, bool nextFieldExist)
 {
-    *m_outputText += GenerateIndent(fieldLevel) + std::string_swprintf(LR"("%s": )", name.c_str());
+    *m_outputText += GenerateIndent(fieldLevel) + L"\"" + std::widen(name) + L"\": ";
 
     switch (value.Type)
     {

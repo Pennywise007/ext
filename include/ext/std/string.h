@@ -14,7 +14,6 @@
 
 namespace std {
 
-
 template <typename CharType>
 void string_trim_all(std::basic_string<CharType, std::char_traits<CharType>, std::allocator<CharType>>& text)
 {
@@ -35,9 +34,7 @@ void string_trim_all(std::basic_string<CharType, std::char_traits<CharType>, std
 
 EXT_NODISCARD inline std::wstring widen(const char* str)
 {
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-    return converter.from_bytes(str);
-    /*const auto length = strlen(str);
+    const auto length = strlen(str);
 
     std::wstring result;
     result.resize(length);
@@ -48,14 +45,12 @@ EXT_NODISCARD inline std::wstring widen(const char* str)
     {
         return facet.widen(ch);
     });
-    return result;*/
+    return result;
 }
 
 EXT_NODISCARD inline std::wstring widen(const std::string& str)
 {
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-    return converter.from_bytes(str);
-    /*std::wstring result;
+    std::wstring result;
     result.reserve(str.size());
     // do not forget about std::locale::global(std::locale("")); for some characters
     const auto& facet = use_facet<std::ctype<wchar_t>>(std::wostringstream().getloc());
@@ -63,14 +58,12 @@ EXT_NODISCARD inline std::wstring widen(const std::string& str)
     {
         result.append(1, facet.widen(ch));
     }
-    return result;*/
+    return result;
 }
 
 EXT_NODISCARD inline std::string narrow(const wchar_t* str)
 {
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-    return converter.to_bytes(str);
-   /* const auto length = wcslen(str);
+    const auto length = wcslen(str);
 
     std::string result;
     result.resize(length);
@@ -79,24 +72,22 @@ EXT_NODISCARD inline std::string narrow(const wchar_t* str)
     const auto& facet = use_facet<std::ctype<wchar_t>>(std::ostringstream().getloc());
     std::transform(str, str + length, result.begin(), [&facet](const wchar_t ch)
     {
-        return facet.narrow(ch);
+        return facet.narrow(ch, '\0');
     });
-    return result;*/
+    return result;
 }
 
 EXT_NODISCARD inline std::string narrow(const std::wstring& str)
 {
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-    return converter.to_bytes(str);
-    /*std::string result;
+    std::string result;
     result.reserve(str.size());
     // do not forget about std::locale::global(std::locale("")); for some characters
     const auto& facet = use_facet<std::ctype<wchar_t>>(std::ostringstream().getloc());
     for (wchar_t ch : str)
     {
-        result.append(1, facet.narrow(ch));
+        result.append(1, facet.narrow(ch, '\0'));
     }
-    return result;*/
+    return result;
 }
 
 #if defined(__cplusplus) && __cplusplus >= 202004L

@@ -14,12 +14,10 @@
 #define EXT_NOTHROW         __declspec(nothrow)
 #define EXT_NOINLINE        __declspec(noinline)
 #define EXT_FORCEINLINE     __forceinline
-#define EXT_UNREACHABLE     __assume(0)
 #elif defined(__GNUC__) // linux
 #define EXT_NOTHROW         __attribute__((nothrow))
 #define EXT_NOINLINE        __attribute__((noinline))
 #define EXT_FORCEINLINE     __attribute__((always_inline))
-#define EXT_UNREACHABLE     __builtin_unreachable()
 #endif
 
 

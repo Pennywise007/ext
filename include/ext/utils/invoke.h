@@ -35,10 +35,10 @@ public:
     using _Tuple = std::tuple<std::decay_t<Function>, std::decay_t<Args>...>;
 
     ThreadInvoker(Function&& function, Args&&...args)
-        : decay_(std::make_unique<_Tuple>(std::forward<Function>(function), std::forward<Args>(args)...))
+        : decay_(std::make_shared<_Tuple>(std::forward<Function>(function), std::forward<Args>(args)...))
     {}
     ThreadInvoker(ThreadInvoker &&other) noexcept = default;
-    ThreadInvoker(const ThreadInvoker &other) = delete;
+    ThreadInvoker(const ThreadInvoker &other) noexcept = default;
 
     std::invoke_result_t<Function, Args...> operator()()
     {
@@ -53,7 +53,10 @@ private:
     }
 
 private:
-    std::unique_ptr<_Tuple> decay_;
+    std::shared_ptr<_Tuple> decay_;
 };
+
+template<typename Function, typename... Args>
+ThreadInvoker(Function&&, Args&&...) -> ThreadInvoker<Function, Args...>;
 
 } // namespace ext

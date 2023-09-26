@@ -6,7 +6,7 @@
 TEST(string_test, format)
 {
     EXPECT_STREQ(std::string_sprintf("test %d - %s", 10, "wow").c_str(), "test 10 - wow");
-    EXPECT_STREQ(std::string_swprintf(L"test %d - %S", 10, L"wow").c_str(), L"test 10 - wow");
+    EXPECT_STREQ(std::string_swprintf(L"test %d - %s", 10, L"wow").c_str(), L"test 10 - wow");
 }
 
 TEST(string_test, trim_all)

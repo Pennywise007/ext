@@ -85,7 +85,7 @@ inline void SerializerXML::WriteCollectionEnd(const std::string& name, const siz
     EXT_ASSERT(_wcsicmp(m_currentSerializationNode->name(), kNodeCollection) == 0);
     std::wstring currentName;
     EXT_ASSERT(GetAttributeValue(*m_currentSerializationNode, kAttributeName, currentName));
-    EXT_ASSERT(currentName == name);
+    EXT_ASSERT(currentName == std::widen(name));
     EXT_UNUSED(name);
 
     m_currentSerializationNode = m_currentSerializationNode->parent();

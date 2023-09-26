@@ -1,9 +1,16 @@
 #pragma once
 
 #include <string>
+
+#if defined(_WIN32) || defined(__CYGWIN__) // windows
+#include <atlbase.h>
+#include <combaseapi.h>
+#elif defined(__GNUC__) // linux
 #include <uuid/uuid.h>
+#endif
 
 #include <ext/core/defines.h>
+#include <ext/std/string.h>
 
 namespace ext {
 
@@ -24,7 +31,7 @@ struct uuid
     EXT_NODISCARD std::string ToString() const
     {
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
-        return std::string(CComBSTR(taskId));
+        return std::narrow(CComBSTR(m_id));
 #elif defined(__GNUC__) // linux
         std::string uuidStr(50, '\0');
         uuid_unparse(m_id, uuidStr.data());

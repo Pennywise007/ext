@@ -9,12 +9,12 @@
 #include <string>
 
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
+
 #define EXT_FUNCTION __FUNCTION__
 
-// Macro for tracing current function, basically used in trace prefix
-#define EXT_TRACE_FUNCTION "[" EXT_FUNCTION "(line " __LINE__ ")]: "
 #elif defined(__GNUC__) // linux
-inline std::string method_name (const std::string &fsig)
+
+inline std::string method_name(const std::string &fsig)
 {
   size_t colons = fsig.find ("::");
   size_t sbeg = fsig.substr (0, colons).rfind (" ") + 1;
@@ -24,10 +24,10 @@ inline std::string method_name (const std::string &fsig)
 
 #define EXT_FUNCTION method_name(__PRETTY_FUNCTION__)
 
-// Macro for tracing current function, basically used in trace prefix
-#define EXT_TRACE_FUNCTION ("[" + EXT_FUNCTION + "(line "+ std::to_string(__LINE__) + ")]: ").c_str()
-
 #endif
+
+// Macro for tracing current function, basically used in trace prefix
+#define EXT_TRACE_FUNCTION (std::string("[") + EXT_FUNCTION + "(line " + std::to_string(__LINE__) + ")]: ").c_str()
 
 // Default trace macros, using: EXT_TRACE_TYPE(::ext::ITracer::TraceType::eNormal) << EXT_TRACE_FUNCTION << "my text";
 #define EXT_TRACE_TYPE(TraceType) \

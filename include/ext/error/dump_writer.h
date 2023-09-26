@@ -3,9 +3,10 @@
 #include <atomic>
 
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
+#include <Windows.h>
+#include <debugapi.h>
 #include <Dbghelp.h>
 #include <shlwapi.h>
-#include <Windows.h>
 #elif __GNUC__ // linux
 #include <sys/stat.h>
 #include <string.h>

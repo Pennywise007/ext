@@ -74,7 +74,7 @@ struct dependency_injection_fixture : testing::Test
 
 TEST_F(dependency_injection_fixture, creating_without_registration)
 {
-    ASSERT_THROW(ext::CreateObject<CreatedObject>(m_serviceCollection.BuildServiceProvider()), ext::di::not_registered);
+    ASSERT_THROW(auto const _ = ext::CreateObject<CreatedObject>(m_serviceCollection.BuildServiceProvider()), ext::di::not_registered);
 }
 
 TEST_F(dependency_injection_fixture, creating_with_registration)
@@ -119,7 +119,7 @@ TEST_F(dependency_injection_fixture, check_singleton)
     EXPECT_EQ(interface1, ext::GetInterface<Interface1>(m_serviceCollection.BuildServiceProvider()));
     EXPECT_EQ(interface1, ext::GetInterface<Interface1>(serviceProvider->CreateScope()));
 
-    ASSERT_THROW(ext::GetInterface<Interface2>(serviceProvider), ext::di::not_registered);
+    ASSERT_THROW(auto const _ = ext::GetInterface<Interface2>(serviceProvider), ext::di::not_registered);
 
     {
         m_serviceCollection.RegisterScoped<Interface12Impl, Interface1, Interface2>();
@@ -211,7 +211,7 @@ TEST_F(dependency_injection_fixture, check_scoped_with_unregistration)
 
     EXPECT_NE(nullptr, interface1InScope1);
     EXPECT_EQ(interface1InScope1, interface2InScope1);
-    EXPECT_THROW(ext::GetInterface<Interface1>(serviceProviderScope1), ext::dependency_injection::not_registered);
+    EXPECT_THROW(auto const _ = ext::GetInterface<Interface1>(serviceProviderScope1), ext::dependency_injection::not_registered);
 
     {
         const auto newServiceProvider = m_serviceCollection.BuildServiceProvider();
@@ -280,8 +280,8 @@ TEST_F(dependency_injection_fixture, check_transient)
     EXPECT_NE(interface1InScope1, interface1InScope2);
     EXPECT_NE(objectInScope1, objectInScope2);
 
-    ASSERT_THROW(ext::GetInterface<Interface2>(serviceProviderScope1), ext::di::not_registered);
-    ASSERT_THROW(ext::GetInterface<Interface2>(serviceProviderScope2), ext::di::not_registered);
+    ASSERT_THROW(auto const _ = ext::GetInterface<Interface2>(serviceProviderScope1), ext::di::not_registered);
+    ASSERT_THROW(auto const _ = ext::GetInterface<Interface2>(serviceProviderScope2), ext::di::not_registered);
 }
 
 TEST_F(dependency_injection_fixture, check_transient_multiple_interface_registration)

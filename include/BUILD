@@ -7,8 +7,10 @@ cc_library(
         "ext/*.h",
     ]),
     includes = ["."],
-    linkopts = [
-        "-luuid", # for uuid_t
-    ],
+    linkopts = select({
+        "@platforms//os:windows": [],
+        # for uuid_t
+        "//conditions:default": [ "-luuid", ],
+    }),
     visibility = ["//visibility:public"],
 )

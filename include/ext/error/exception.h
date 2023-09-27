@@ -201,10 +201,12 @@ inline auto /*std::string*/ManageExceptionText(const CharType* prefixText = null
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
         catch (const _com_error& e)
         {
-            if constexpr (std::is_same_v<CharType, char>)
-                exceptionStream << std::narrow(e.ErrorMessage());
-            else
+            if constexpr (std::is_same_v<CharType, TCHAR>)
                 exceptionStream << e.ErrorMessage();
+            else if constexpr (std::is_same_v<CharType, wchar_t>)
+                exceptionStream << std::widen(e.ErrorMessage());
+            else
+                exceptionStream << std::narrow(e.ErrorMessage());
         }
 #endif
         catch (...)

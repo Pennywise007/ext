@@ -4,6 +4,9 @@
             "label": "build",
             "type": "shell",
             "command": "bazel build --cxxopt='-std=c++17' --compilation_mode=dbg //...",
+            "windows": {
+                "command":  "bazel build --cxxopt='/std:c++17' --compilation_mode=dbg //..."
+            },
             "group": {
                 "kind": "build",
                 "isDefault": true

@@ -4,15 +4,19 @@
         {
             "name": "(gdb) Launch",
             "preLaunchTask": "build",
-            "type": "cppdbg",
+            "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bazel-bin/${relativeFileDirname}/${fileBasenameNoExtension}",
             "args": [],
-            "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
+            "windows": {
+                "program": "${workspaceFolder}/bazel-bin/${relativeFileDirname}/${fileBasenameNoExtension}.exe",
+                // Fixing breakpoints hit location, for windows you need to set environment variable __BAZEL_HASH__ with bazel hash
+                // For some details check https://github.com/vadimcn/codelldb/discussions/517
+                "sourceFileMap": {
+                    "${env:USERPROFILE}\\_bazel_${env:USERNAME}\\${env:__BAZEL_HASH__}\\execroot\\__main__": "${workspaceFolder}",
+                },
+            },
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
@@ -24,7 +28,7 @@
                     "text": "-gdb-set disassembly-flavor intel",
                     "ignoreFailures": true
                 }
-            ]
+            ],
         }
     ]
 }

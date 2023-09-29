@@ -8,6 +8,7 @@
 #include "thread/tick.h"
 #endif
 
+#include "core/defines.h"
 #include "core/dispatcher.h"
 #include "core/singleton.h"
 #include "error/dump_writer.h"
@@ -46,11 +47,11 @@ inline void Init()
 #endif
 
     // initializing some core services so that they are the last to be destroyed
-    ext::get_tracer();
-    ext::thread::manager();
-    ext::get_service<ext::events::Dispatcher>();
+    EXT_IGNORE_RESULT(ext::get_tracer());
+    EXT_IGNORE_RESULT(ext::thread::manager());
+    EXT_IGNORE_RESULT(ext::get_service<ext::events::Dispatcher>());
 #ifdef __AFX_H__
-    ext::get_service<ext::tick::TickService>();
+    EXT_IGNORE_RESULT(ext::get_service<ext::tick::TickService>());
 #endif
 }
 

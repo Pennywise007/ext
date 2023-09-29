@@ -1,3 +1,4 @@
 
 # use the c++17 standard
 test --cxxopt='-std=c++17'
+test --cxxopt='/std:c++17'

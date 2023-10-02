@@ -63,11 +63,11 @@ namespace this_thread {
 using namespace std::this_thread;
 
 // Getting current ext::thread stop_token
-EXT_NODISCARD inline ext::stop_token get_stop_token() EXT_NOEXCEPT;
+[[nodiscard]] inline ext::stop_token get_stop_token() noexcept;
 // Interruption point for ext::thread function, if thread interrupted - throws a ext::thread::thread_interrupted
 inline void interruption_point() EXT_THROWS(ext::thread::thread_interrupted());
 // Check if current ext:thread has been interrupted
-EXT_NODISCARD inline bool interruption_requested() EXT_NOEXCEPT;
+[[nodiscard]] inline bool interruption_requested() noexcept;
 // Sleep until time period, if the thread is interrupted, throws an exception
 template <class _Clock, class _Duration>
 void interruptible_sleep_until(const std::chrono::time_point<_Clock, _Duration>& absoluteTime) EXT_THROWS(ext::thread::thread_interrupted());
@@ -87,21 +87,21 @@ class thread : std::thread
 
 public:
     // constructors from std::thread
-    thread() EXT_NOEXCEPT = default;
-    explicit thread(thread&& other) EXT_NOEXCEPT    { operator=(std::move(other)); }
+    thread() noexcept = default;
+    explicit thread(thread&& other) noexcept    { operator=(std::move(other)); }
 
     template<class _Function, class... _Args>
     explicit thread(_Function&& function, _Args&&... args)
         : thread(ext::stop_source{}, std::forward<_Function>(function), std::forward<_Args>(args)...)
     {}
 
-    thread& operator=(thread&& other) EXT_NOEXCEPT;
+    thread& operator=(thread&& other) noexcept;
 
     // Run function for execution in current thread
     template<class _Function, class... _Args>
-    void run(_Function&& function, _Args&&... args) EXT_NOEXCEPT;
+    void run(_Function&& function, _Args&&... args) noexcept;
 
-    EXT_NODISCARD inline ext::stop_token get_token() const EXT_NOEXCEPT { return m_stopSource.get_token(); }
+    [[nodiscard]] inline ext::stop_token get_token() const noexcept { return m_stopSource.get_token(); }
 
     using base::detach;
     using base::join;
@@ -124,7 +124,7 @@ public:
     }
 
     // check if thread has been interrupted
-    EXT_NODISCARD inline bool interrupted() const EXT_NOEXCEPT
+    [[nodiscard]] inline bool interrupted() const noexcept
     {
         return m_stopSource.stop_requested();
     }
@@ -133,7 +133,7 @@ public:
     void interrupt_and_join() EXT_THROWS() { interrupt(); if (joinable()) join(); }
 
     // check if thread function is executing
-    EXT_NODISCARD bool thread_works() const EXT_NOEXCEPT
+    [[nodiscard]] bool thread_works() const noexcept
     {
         if (joinable())
         {
@@ -168,7 +168,7 @@ private:
 
     // wrapper of an execution function into an invoker. Allows to reduce a number of possible arguments copies
     template<class _Function, class... _Args>
-    EXT_NODISCARD base create_thread(ext::stop_token&& token, _Function&& function, _Args&&... args);
+    [[nodiscard]] base create_thread(ext::stop_token&& token, _Function&& function, _Args&&... args);
 
 private:
     // restore thread after interrupting
@@ -186,13 +186,13 @@ private:
 private:
     // global storage of information about interrupted ext::threads
     class ThreadsManager;
-    EXT_NODISCARD inline static ThreadsManager& manager();
+    [[nodiscard]] inline static ThreadsManager& manager();
 
     // for access to restore_interrupted
     friend class thread_pool;
 
-    friend ext::stop_token this_thread::get_stop_token() EXT_NOEXCEPT;
-    friend bool this_thread::interruption_requested() EXT_NOEXCEPT;
+    friend ext::stop_token this_thread::get_stop_token() noexcept;
+    friend bool this_thread::interruption_requested() noexcept;
 
     template <class _Clock, class _Duration>
     friend void this_thread::interruptible_sleep_until(const std::chrono::time_point<_Clock, _Duration>& absoluteTime) EXT_THROWS(ext::thread::thread_interrupted());
@@ -209,7 +209,7 @@ class thread::ThreadsManager
 
     struct WorkingThreadInfo
     {
-        explicit WorkingThreadInfo(ext::stop_token&& token) EXT_NOEXCEPT
+        explicit WorkingThreadInfo(ext::stop_token&& token) noexcept
             : stopToken(std::move(token))
         {
             // We might interrupt thread before calling a thread function
@@ -217,7 +217,7 @@ class thread::ThreadsManager
                 interruptionEvent->Set(true);
         }
 
-        EXT_NODISCARD bool interrupted() const EXT_NOEXCEPT
+        [[nodiscard]] bool interrupted() const noexcept
         {
             return stopToken.stop_requested();
         }
@@ -240,10 +240,10 @@ class thread::ThreadsManager
     mutable std::shared_mutex m_workingThreadsMutex;
 
 public:
-    ThreadsManager() EXT_NOEXCEPT = default;
+    ThreadsManager() noexcept = default;
 
     // Notification about thread starting
-    void OnStartingThread(const std::thread::id& id, ext::stop_token&& token) EXT_NOEXCEPT
+    void OnStartingThread(const std::thread::id& id, ext::stop_token&& token) noexcept
     {
         EXT_ASSERT(id != kInvalidThreadId);
         
@@ -252,7 +252,7 @@ public:
     }
 
     // Notification about finishing thread
-    void OnFinishingThread(const std::thread::id& id) EXT_NOEXCEPT
+    void OnFinishingThread(const std::thread::id& id) noexcept
     {
         EXT_ASSERT(id != kInvalidThreadId);
 
@@ -261,7 +261,7 @@ public:
     }
 
     // Call this function for interrupting thread by thread id
-    void OnInterrupt(const ext::thread& thread) EXT_NOEXCEPT
+    void OnInterrupt(const ext::thread& thread) noexcept
     {
         auto id = thread.get_id();
         EXT_ASSERT(id != kInvalidThreadId);
@@ -274,7 +274,7 @@ public:
     }
 
     // Call this function for restore interrupted thread by thread id
-    void OnRestoreInterrupted(const ext::thread& thread) EXT_NOEXCEPT
+    void OnRestoreInterrupted(const ext::thread& thread) noexcept
     {
         const auto id = thread.get_id();
         EXT_ASSERT(id != kInvalidThreadId);
@@ -285,7 +285,7 @@ public:
     }
 
     // Call this function for check if thread interrupted by thread id
-    EXT_NODISCARD bool IsInterrupted(const std::thread::id& id) const EXT_NOEXCEPT
+    [[nodiscard]] bool IsInterrupted(const std::thread::id& id) const noexcept
     {
         EXT_ASSERT(id != kInvalidThreadId);
 
@@ -298,7 +298,7 @@ public:
     }
 
     // Getting interruption event for thread by id
-    EXT_NODISCARD std::shared_ptr<ext::Event> GetInterruptionEvent(const std::thread::id& id) EXT_NOEXCEPT
+    [[nodiscard]] std::shared_ptr<ext::Event> GetInterruptionEvent(const std::thread::id& id) noexcept
     {
         EXT_ASSERT(id != kInvalidThreadId);
         std::shared_lock lock(m_workingThreadsMutex);
@@ -309,7 +309,7 @@ public:
         return nullptr;
     }
 
-    EXT_NODISCARD ext::stop_token GetStopToken(const std::thread::id& id) EXT_NOEXCEPT
+    [[nodiscard]] ext::stop_token GetStopToken(const std::thread::id& id) noexcept
     {
         EXT_ASSERT(id != kInvalidThreadId);
         {
@@ -324,13 +324,13 @@ public:
     }
 };
 
-EXT_NODISCARD inline ext::thread::ThreadsManager& thread::manager()
+[[nodiscard]] inline ext::thread::ThreadsManager& thread::manager()
 {
     return ext::get_service<ThreadsManager>();
 }
 
 template<class _Function, class... _Args>
-EXT_NODISCARD thread::base thread::create_thread(ext::stop_token&& token, _Function&& function, _Args&&... arguments)
+[[nodiscard]] thread::base thread::create_thread(ext::stop_token&& token, _Function&& function, _Args&&... arguments)
 {
     return base([invoker = ext::ThreadInvoker<_Function, _Args...>(std::forward<_Function>(function),
                                                                    std::forward<_Args>(arguments)...)]
@@ -350,7 +350,7 @@ thread::thread(ext::stop_source&& source, _Function&& function, _Args&&... argum
 {}
 
 template<class _Function, class... _Args>
-void thread::run(_Function&& function, _Args&&... arguments) EXT_NOEXCEPT
+void thread::run(_Function&& function, _Args&&... arguments) noexcept
 {
     // @see replace(std::thread&&)
     if (joinable())
@@ -365,7 +365,7 @@ void thread::run(_Function&& function, _Args&&... arguments) EXT_NOEXCEPT
     base::operator=(create_thread(get_token(), std::forward<_Function>(function), std::forward<_Args>(arguments)...));
 }
 
-inline thread& thread::operator=(thread&& other) EXT_NOEXCEPT
+inline thread& thread::operator=(thread&& other) noexcept
 {
     // @see replace(std::thread&&)
     if (joinable())
@@ -410,7 +410,7 @@ inline void thread::OnInterrupt() const
 namespace this_thread {
 
 // Check if current ext:thread has been interrupted
-EXT_NODISCARD inline ext::stop_token get_stop_token() EXT_NOEXCEPT
+[[nodiscard]] inline ext::stop_token get_stop_token() noexcept
 {
     return ::ext::thread::manager().GetStopToken(ext::this_thread::get_id());
 }
@@ -423,7 +423,7 @@ void interruption_point() EXT_THROWS(ext::thread::thread_interrupted())
 }
 
 // Check if current ext:thread has been interrupted
-EXT_NODISCARD inline bool interruption_requested() EXT_NOEXCEPT
+[[nodiscard]] inline bool interruption_requested() noexcept
 {
     return ::ext::thread::manager().IsInterrupted(ext::this_thread::get_id());
 }

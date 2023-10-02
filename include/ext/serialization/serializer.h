@@ -31,7 +31,7 @@ struct ISerializer
 {
     virtual ~ISerializer() = default;
     // Serialize tree
-    EXT_NODISCARD virtual bool Serialize(const std::shared_ptr<SerializableNode>& serializationTreeRoot) EXT_THROWS() = 0;
+    [[nodiscard]] virtual bool Serialize(const std::shared_ptr<SerializableNode>& serializationTreeRoot) EXT_THROWS() = 0;
 };
 
 // Deserialization object interface
@@ -39,7 +39,7 @@ struct IDeserializer
 {
     virtual ~IDeserializer() = default;
     // Deserialize tree data
-    EXT_NODISCARD virtual bool Deserialize(std::shared_ptr<SerializableNode>& deserializationTreeRoot) EXT_THROWS() = 0;
+    [[nodiscard]] virtual bool Deserialize(std::shared_ptr<SerializableNode>& deserializationTreeRoot) EXT_THROWS() = 0;
 };
 
 // Serializer interfaces factory
@@ -48,13 +48,13 @@ struct Factory
 // Predefine USE_PUGI_XML and add pugi XML lib to project if you want serialize to/from xml.
 #ifdef USE_PUGI_XML
     // Create serializer to/from XML file.
-    EXT_NODISCARD static std::unique_ptr<ISerializer> XMLSerializer(const std::filesystem::path& filePath);
-    EXT_NODISCARD static std::unique_ptr<IDeserializer> XMLDeserializer(const std::filesystem::path& filePath);
+    [[nodiscard]] static std::unique_ptr<ISerializer> XMLSerializer(const std::filesystem::path& filePath);
+    [[nodiscard]] static std::unique_ptr<IDeserializer> XMLDeserializer(const std::filesystem::path& filePath);
 #endif
 
     // Create serializer to/from text.
-    EXT_NODISCARD static std::unique_ptr<ISerializer> TextSerializer(std::wstring& outputText);
-    EXT_NODISCARD static std::unique_ptr<IDeserializer> TextDeserializer(const std::wstring& inputText) EXT_THROWS();
+    [[nodiscard]] static std::unique_ptr<ISerializer> TextSerializer(std::wstring& outputText);
+    [[nodiscard]] static std::unique_ptr<IDeserializer> TextDeserializer(const std::wstring& inputText) EXT_THROWS();
 };
 
 // Serialization executor class, serialize/deserialize object via ISerializer/IDeserializer interfaces
@@ -90,16 +90,16 @@ public:
         eOptional               // Optional field
     };
     // Get type of current visitor serializable object
-    EXT_NODISCARD ObjectType GetCurrentObjectType() const EXT_NOEXCEPT { return m_currentObjectType; }
+    [[nodiscard]] ObjectType GetCurrentObjectType() const noexcept { return m_currentObjectType; }
     // Get current serializable object
-    EXT_NODISCARD const ISerializable* GetCurrentObject() const EXT_NOEXCEPT { return m_currentSerializableObject; }
+    [[nodiscard]] const ISerializable* GetCurrentObject() const noexcept { return m_currentSerializableObject; }
     // Get the number of identical names in the collection for the current object
     // in case several objects with the same name have been serialized
-    EXT_NODISCARD size_t GetIndexAmongIdenticalNames(bool bCollectionStart);
+    [[nodiscard]] size_t GetIndexAmongIdenticalNames(bool bCollectionStart);
     // Move to next serializable object
-    EXT_NODISCARD bool GoToNextObject();
+    [[nodiscard]] bool GoToNextObject();
     // Skip the entire collection
-    void SkipCollectionContent() EXT_NOEXCEPT { m_currentObjectType = ObjectType::eCollectionEnd; }
+    void SkipCollectionContent() noexcept { m_currentObjectType = ObjectType::eCollectionEnd; }
     // Reread the size of the current collection
     void UpdateCurrentCollectionSize();
 
@@ -107,7 +107,7 @@ private:
     // Update the current object type
     bool UpdateObjectType();
     // Check the object for the possibility of serialization
-    EXT_NODISCARD static bool CheckObject(const ISerializable* object) { return object && object->GetName(); }
+    [[nodiscard]] static bool CheckObject(const ISerializable* object) { return object && object->GetName(); }
 
 private:
     ObjectType m_currentObjectType = ObjectType::eCollectionStart;
@@ -130,7 +130,7 @@ private:
         operator const ISerializableCollection*() const { return dynamic_cast<const ISerializableCollection*>(serializableObjectPointer); }
         operator const ISerializableOptional*() const { return dynamic_cast<const ISerializableOptional*>(serializableObjectPointer); }
 
-        EXT_NODISCARD const char* GetName() const EXT_NOEXCEPT { return serializableObjectPointer->GetName(); }
+        [[nodiscard]] const char* GetName() const noexcept { return serializableObjectPointer->GetName(); }
 
     } m_currentSerializableObject;
 

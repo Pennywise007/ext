@@ -19,7 +19,7 @@ struct CheckFailedException : ::ext::exception
         , m_expression(expression)
     {}
 
-    EXT_NODISCARD std::string external_text() const override { return "expression: '" + m_expression + "'"; }
+    [[nodiscard]] std::string external_text() const override { return "expression: '" + m_expression + "'"; }
 
     template <class T>
     CheckFailedException& operator<<(const T& data) { ::ext::exception::operator<<(data); return *this; }

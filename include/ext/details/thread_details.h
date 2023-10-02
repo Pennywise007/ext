@@ -9,7 +9,7 @@ namespace std {
 
 // remove in v142 toolset VS 2019
 template <class _Rep, class _Period>
-EXT_NODISCARD auto _To_absolute_time_custom(const chrono::duration<_Rep, _Period>& _Rel_time) noexcept {
+[[nodiscard]] auto _To_absolute_time_custom(const chrono::duration<_Rep, _Period>& _Rel_time) noexcept {
     constexpr auto _Zero                 = chrono::duration<_Rep, _Period>::zero();
     const auto _Now                      = chrono::steady_clock::now();
     decltype(_Now + _Rel_time) _Abs_time = _Now; // return common type
@@ -29,7 +29,7 @@ namespace ext::thread_details {
 
 struct exponential_wait
 {
-    void operator()() EXT_NOEXCEPT
+    void operator()() noexcept
     {
         constexpr uint32_t fast_limit = 4;
         constexpr uint32_t slow_limit = 8;
@@ -42,10 +42,10 @@ struct exponential_wait
         ++m_step;
     }
 
-    uint32_t get_step() const EXT_NOEXCEPT { return m_step; }
+    uint32_t get_step() const noexcept { return m_step; }
 
 public:
-    static void FastWait(uint32_t mul) EXT_NOEXCEPT
+    static void FastWait(uint32_t mul) noexcept
     {
         for (uint32_t i = 0; i < mul; ++i)
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
@@ -78,11 +78,11 @@ public:
 #error Not implemented
 #endif
     }
-    static void SlowWait() EXT_NOEXCEPT
+    static void SlowWait() noexcept
     {
         std::this_thread::yield();
     }
-    static void MaxWait() EXT_NOEXCEPT
+    static void MaxWait() noexcept
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }

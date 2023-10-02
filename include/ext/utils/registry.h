@@ -20,13 +20,13 @@ struct Key
         EXT_DUMP_IF(::RegCloseKey(m_key) != ERROR_SUCCESS) << "Failed to close key";
     }
 
-    EXT_NODISCARD bool GetRegistryValue(const wchar_t* valueName, DWORD& value) const EXT_NOEXCEPT
+    [[nodiscard]] bool GetRegistryValue(const wchar_t* valueName, DWORD& value) const noexcept
     {
         DWORD dwBufferSize(sizeof(DWORD));
         return ::RegQueryValueExW(m_key, valueName, 0, NULL, reinterpret_cast<LPBYTE>(&value), &dwBufferSize) == ERROR_SUCCESS;
     }
 
-    EXT_NODISCARD bool GetRegistryValue(const wchar_t* valueName, bool& value) const EXT_NOEXCEPT
+    [[nodiscard]] bool GetRegistryValue(const wchar_t* valueName, bool& value) const noexcept
     {
         DWORD valueDword;
         if (GetRegistryValue(valueName, valueDword))
@@ -37,7 +37,7 @@ struct Key
         return false;
     }
 
-    EXT_NODISCARD bool GetRegistryValue(const wchar_t* valueName, std::wstring& value) const EXT_NOEXCEPT
+    [[nodiscard]] bool GetRegistryValue(const wchar_t* valueName, std::wstring& value) const noexcept
     {
         WCHAR szBuffer[MAX_PATH * 2];
         DWORD dwBufferSize = sizeof(szBuffer);

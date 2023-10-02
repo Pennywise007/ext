@@ -95,11 +95,11 @@ template <typename ISerializableType, typename Type>
 struct SerializableBase : ISerializableType
 {
     SerializableBase(const std::string& name, Type* typePointer) : m_name(name), m_typePointer(typePointer) {}
-    EXT_NODISCARD Type* GetType() const { return m_typePointer; }
+    [[nodiscard]] Type* GetType() const { return m_typePointer; }
 
 // ISerializable
 protected:
-    EXT_NODISCARD virtual const char* GetName() const EXT_NOEXCEPT override { return m_name.c_str(); }
+    [[nodiscard]] virtual const char* GetName() const noexcept override { return m_name.c_str(); }
 
 private:
     const std::string m_name;
@@ -111,9 +111,9 @@ struct SerializableValueHolder : ISerializableField
 {
     SerializableValueHolder(const std::string& name, SerializableValue&& _value) : m_name(name), value(std::move(_value)) {}
 // ISerializable
-    EXT_NODISCARD const char* GetName() const EXT_NOEXCEPT override { return m_name.c_str(); }
+    [[nodiscard]] const char* GetName() const noexcept override { return m_name.c_str(); }
 // ISerializableField
-    EXT_NODISCARD SerializableValue SerializeValue() const override { return value; }
+    [[nodiscard]] SerializableValue SerializeValue() const override { return value; }
     void DeserializeValue(const SerializableValue& /*value*/) override { }
 
     const std::string m_name;
@@ -132,7 +132,7 @@ struct SerializableProxy<Type, std::enable_if_t<is_based_on<ISerializableField, 
 
 protected:
 // ISerializable
-    EXT_NODISCARD const char* GetName() const EXT_NOEXCEPT override
+    [[nodiscard]] const char* GetName() const noexcept override
     {
         if (m_name.has_value()) return m_name->c_str();
         EXT_DUMP_IF(!m_field);
@@ -140,7 +140,7 @@ protected:
     }
     void PrepareToDeserialize(std::shared_ptr<SerializableNode>& deserializableTree) EXT_THROWS() override { EXT_EXPECT(m_field); m_field->PrepareToDeserialize(deserializableTree); }
 // ISerializableField
-    EXT_NODISCARD SerializableValue SerializeValue() const override { EXT_EXPECT(m_field); return m_field->SerializeValue(); }
+    [[nodiscard]] SerializableValue SerializeValue() const override { EXT_EXPECT(m_field); return m_field->SerializeValue(); }
     void DeserializeValue(const SerializableValue& value) override { EXT_EXPECT(m_field); m_field->DeserializeValue(value); }
 
     const std::optional<std::string> m_name;
@@ -156,7 +156,7 @@ struct SerializableProxy<Type, std::enable_if_t<is_based_on<ISerializableCollect
 
 protected:
 // ISerializable
-    EXT_NODISCARD const char* GetName() const EXT_NOEXCEPT override
+    [[nodiscard]] const char* GetName() const noexcept override
     {
         if (m_name.has_value()) return m_name->c_str();
         EXT_DUMP_IF(!m_collection);
@@ -164,8 +164,8 @@ protected:
     }
     void PrepareToDeserialize(std::shared_ptr<SerializableNode>& deserializableTree) EXT_THROWS() override { EXT_EXPECT(m_collection); m_collection->PrepareToDeserialize(deserializableTree); }
 // ISerializableCollection
-    EXT_NODISCARD size_t Size() const EXT_NOEXCEPT override { EXT_DUMP_IF(!m_collection); return m_collection ? m_collection->Size() : 0; }
-    EXT_NODISCARD std::shared_ptr<ISerializable> Get(const size_t& index) const override { EXT_EXPECT(m_collection); return m_collection->Get(index); }
+    [[nodiscard]] size_t Size() const noexcept override { EXT_DUMP_IF(!m_collection); return m_collection ? m_collection->Size() : 0; }
+    [[nodiscard]] std::shared_ptr<ISerializable> Get(const size_t& index) const override { EXT_EXPECT(m_collection); return m_collection->Get(index); }
 
     const std::optional<std::string> m_name;
     ISerializableCollection* m_collection;
@@ -193,7 +193,7 @@ protected:
             Base::GetType()->emplace(create_default_value<std::extract_value_type_v<Type>>());
     }
 // ISerializableOptional
-    EXT_NODISCARD std::shared_ptr<ISerializable> Get() const override
+    [[nodiscard]] std::shared_ptr<ISerializable> Get() const override
     {
         if (!Base::GetType()->has_value())
             return std::make_shared<SerializableValueHolder>(Base::GetName(), SerializableValue::CreateNull());
@@ -242,7 +242,7 @@ protected:
         }
     }
 // ISerializableOptional
-    EXT_NODISCARD std::shared_ptr<ISerializable> Get() const override
+    [[nodiscard]] std::shared_ptr<ISerializable> Get() const override
     {
         std::extract_value_type_v<Type>* pointer = nullptr;
         if constexpr (std::is_same_v<std::unique_ptr<std::extract_value_type_v<Type>>, Type> ||
@@ -270,10 +270,10 @@ struct SerializableCollectionImpl : ISerializableCollection
     void AddField(std::shared_ptr<ISerializable>&& serializable) { m_fields.emplace_back(std::move(serializable)); }
 public:
 // ISerializable
-    EXT_NODISCARD const char* GetName() const EXT_NOEXCEPT override { return m_name.c_str(); }
+    [[nodiscard]] const char* GetName() const noexcept override { return m_name.c_str(); }
 // ISerializableCollection
-    EXT_NODISCARD size_t Size() const EXT_NOEXCEPT override { return m_fields.size(); }
-    EXT_NODISCARD std::shared_ptr<ISerializable> Get(const size_t& index) const override
+    [[nodiscard]] size_t Size() const noexcept override { return m_fields.size(); }
+    [[nodiscard]] std::shared_ptr<ISerializable> Get(const size_t& index) const override
     {
         if (index >= m_fields.size()) { EXT_DUMP_IF(true); return nullptr; }
         return *std::next(m_fields.begin(), index);
@@ -333,8 +333,8 @@ protected:
     }
 
 // ISerializableCollection
-    EXT_NODISCARD size_t Size() const EXT_NOEXCEPT override { return Base::GetType()->size(); }
-    EXT_NODISCARD std::shared_ptr<ISerializable> Get(const size_t& index) const override
+    [[nodiscard]] size_t Size() const noexcept override { return Base::GetType()->size(); }
+    [[nodiscard]] std::shared_ptr<ISerializable> Get(const size_t& index) const override
     {
         MapType* container = Base::GetType();
         if (index >= container->size()) { EXT_DUMP_IF(true); return nullptr; }
@@ -377,8 +377,8 @@ protected:
         }
     }
 // ISerializableCollection
-    EXT_NODISCARD size_t Size() const EXT_NOEXCEPT override { return Base::GetType()->size(); }
-    EXT_NODISCARD std::shared_ptr<ISerializable> Get(const size_t& index) const override
+    [[nodiscard]] size_t Size() const noexcept override { return Base::GetType()->size(); }
+    [[nodiscard]] std::shared_ptr<ISerializable> Get(const size_t& index) const override
     {
         SetType* container = Base::GetType();
         if (index >= container->size()) { EXT_DUMP_IF(true); return nullptr; }
@@ -410,8 +410,8 @@ protected:
             array->emplace_back(create_default_value<typename ArrayType::value_type>());
     }
 // ISerializableCollection
-    EXT_NODISCARD size_t Size() const EXT_NOEXCEPT override { return Base::GetType()->size(); }
-    EXT_NODISCARD std::shared_ptr<ISerializable> Get(const size_t& index) const override
+    [[nodiscard]] size_t Size() const noexcept override { return Base::GetType()->size(); }
+    [[nodiscard]] std::shared_ptr<ISerializable> Get(const size_t& index) const override
     {
         ArrayType* array = Base::GetType();
         if (index >= array->size()) { EXT_DUMP_IF(true); return nullptr; }
@@ -428,7 +428,7 @@ struct SerializableField : SerializableBase<ISerializableField, FieldType>
 
 protected:
 // ISerializableField
-    EXT_NODISCARD SerializableValue SerializeValue() const override { return serialize_value<FieldType>(*Base::GetType()); }
+    [[nodiscard]] SerializableValue SerializeValue() const override { return serialize_value<FieldType>(*Base::GetType()); }
     void DeserializeValue(const SerializableValue& value) override { *Base::GetType() = deserialize_value<FieldType>(value); }
 };
 
@@ -463,7 +463,7 @@ struct SerializableFieldInfo : ISerializableFieldInfo
 
 protected:
 // ISerializableFieldInfo
-    EXT_NODISCARD std::shared_ptr<ISerializable> GetField(const ISerializable* object) const override
+    [[nodiscard]] std::shared_ptr<ISerializable> GetField(const ISerializable* object) const override
     {
         Type* typePointer = const_cast<Type*>(reinterpret_cast<const Type*>(object));
         EXT_ASSERT(typePointer) << "Cant get type " << ext::type_name<Type>() << " from object, maybe virtual table is missing, remove ATL_NO_VTABLE." 

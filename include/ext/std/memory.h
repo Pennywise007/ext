@@ -59,22 +59,22 @@ struct lazy_shared_ptr : ext::lazy_type<std::shared_ptr<Type>>
         : ext::lazy_type<std::shared_ptr<Type>>(std::move(getterFunction))
     {}
 
-    EXT_NODISCARD const Type* get() const EXT_THROWS(...)
+    [[nodiscard]] const Type* get() const EXT_THROWS(...)
     {
         return ext::lazy_type<std::shared_ptr<Type>>::value().get();
     }
 
-    EXT_NODISCARD Type* get() EXT_THROWS(...)
+    [[nodiscard]] Type* get() EXT_THROWS(...)
     {
         return ext::lazy_type<std::shared_ptr<Type>>::value().get();
     }
 
-    EXT_NODISCARD Type* operator->() EXT_THROWS(...)
+    [[nodiscard]] Type* operator->() EXT_THROWS(...)
     {
         return get();
     }
 
-    EXT_NODISCARD const Type* operator->() const EXT_THROWS(...)
+    [[nodiscard]] const Type* operator->() const EXT_THROWS(...)
     {
         return get();
     }
@@ -87,22 +87,22 @@ struct lazy_weak_ptr : ext::lazy_type<std::weak_ptr<Type>>
         : ext::lazy_type<std::weak_ptr<Type>>(std::move(getterFunction))
     {}
 
-    EXT_NODISCARD const Type* get() const EXT_THROWS(...)
+    [[nodiscard]] const Type* get() const EXT_THROWS(...)
     {
         return ext::lazy_type<std::weak_ptr<Type>>::value().lock().get();
     }
 
-    EXT_NODISCARD Type* get() EXT_THROWS(...)
+    [[nodiscard]] Type* get() EXT_THROWS(...)
     {
         return ext::lazy_type<std::weak_ptr<Type>>::value().lock().get();
     }
 
-    EXT_NODISCARD Type* operator->() EXT_THROWS(...)
+    [[nodiscard]] Type* operator->() EXT_THROWS(...)
     {
         return get();
     }
 
-    EXT_NODISCARD const Type* operator->() const EXT_THROWS(...)
+    [[nodiscard]] const Type* operator->() const EXT_THROWS(...)
     {
         return get();
     }

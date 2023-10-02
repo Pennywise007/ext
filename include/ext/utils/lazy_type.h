@@ -10,12 +10,12 @@ namespace ext {
 template <typename Type, typename GetObjectFunction = std::function<Type()>>
 struct lazy_type
 {
-    lazy_type(GetObjectFunction&& getterFunction) EXT_NOEXCEPT
+    lazy_type(GetObjectFunction&& getterFunction) noexcept
         : m_getterFunction(std::move(getterFunction))
     {
         EXT_REQUIRE(!!m_getterFunction);
     }
-    lazy_type(lazy_type<Type, GetObjectFunction>&& other) EXT_NOEXCEPT
+    lazy_type(lazy_type<Type, GetObjectFunction>&& other) noexcept
         : m_object(std::move(other.m_object))
         , m_getterFunction(std::move(other.m_getterFunction))
     {}
@@ -25,7 +25,7 @@ struct lazy_type
     {}
     virtual ~lazy_type() = default;
 
-    EXT_NODISCARD const Type& value() const EXT_THROWS(...)
+    [[nodiscard]] const Type& value() const EXT_THROWS(...)
     {
         if (!m_object.has_value())
         {
@@ -37,7 +37,7 @@ struct lazy_type
         return m_object.value();
     }
 
-    EXT_NODISCARD Type& value() EXT_THROWS(...)
+    [[nodiscard]] Type& value() EXT_THROWS(...)
     {
         if (!m_object.has_value())
         {
@@ -49,35 +49,35 @@ struct lazy_type
         return m_object.value();
     }
 
-    EXT_NODISCARD operator const Type&() const EXT_THROWS(...)
+    [[nodiscard]] operator const Type&() const EXT_THROWS(...)
     {
         return value();
     }
 
-    EXT_NODISCARD operator Type&() EXT_THROWS(...)
+    [[nodiscard]] operator Type&() EXT_THROWS(...)
     {
         return value();
     }
 
-    lazy_type<Type, GetObjectFunction>& operator=(const Type& other) EXT_NOEXCEPT
+    lazy_type<Type, GetObjectFunction>& operator=(const Type& other) noexcept
     {
         m_object = other;
         return *this;
     }
 
-    lazy_type<Type, GetObjectFunction>& operator=(Type&& other) EXT_NOEXCEPT
+    lazy_type<Type, GetObjectFunction>& operator=(Type&& other) noexcept
     {
         m_object = std::move(other);
         return *this;
     }
 
-    lazy_type<Type, GetObjectFunction>& operator=(lazy_type<Type, GetObjectFunction>&& other) EXT_NOEXCEPT
+    lazy_type<Type, GetObjectFunction>& operator=(lazy_type<Type, GetObjectFunction>&& other) noexcept
     {
         m_object = std::move(other.m_object);
         m_getterFunction = std::move(other.m_getterFunction);
         return *this;
     }
-    lazy_type<Type, GetObjectFunction>& operator=(const lazy_type<Type, GetObjectFunction>& other) EXT_NOEXCEPT
+    lazy_type<Type, GetObjectFunction>& operator=(const lazy_type<Type, GetObjectFunction>& other) noexcept
     {
         m_object = other.m_object;
         m_getterFunction = other.m_getterFunction;

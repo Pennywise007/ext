@@ -55,7 +55,7 @@
 #endif
 namespace ext::detail {
 
-EXT_NOTHROW inline void atomic_thread_fence_acquire() EXT_NOEXCEPT
+EXT_NOTHROW inline void atomic_thread_fence_acquire() noexcept
 {
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
     #if defined(_M_ARM) || defined(_M_ARM64)
@@ -72,7 +72,7 @@ EXT_NOTHROW inline void atomic_thread_fence_acquire() EXT_NOEXCEPT
 #endif
 }
 
-EXT_NOTHROW inline uint32_t atomic_uint32_load_relaxed(const uint32_t *ptr) EXT_NOEXCEPT
+EXT_NOTHROW inline uint32_t atomic_uint32_load_relaxed(const uint32_t *ptr) noexcept
 {
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
     #if defined(_M_ARM) || defined(_M_ARM64)
@@ -89,14 +89,14 @@ EXT_NOTHROW inline uint32_t atomic_uint32_load_relaxed(const uint32_t *ptr) EXT_
 #endif
 }
 
-EXT_NOTHROW inline uint32_t atomic_uint32_load_acquire(const uint32_t *ptr) EXT_NOEXCEPT
+EXT_NOTHROW inline uint32_t atomic_uint32_load_acquire(const uint32_t *ptr) noexcept
 {
     auto val = atomic_uint32_load_relaxed(ptr);
     atomic_thread_fence_acquire();
     return val;
 }
 
-EXT_NOTHROW inline uint32_t atomic_uint32_sub_fetch_release(uint32_t *ptr, uint32_t val) EXT_NOEXCEPT
+EXT_NOTHROW inline uint32_t atomic_uint32_sub_fetch_release(uint32_t *ptr, uint32_t val) noexcept
 {
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
     return static_cast<uint32_t>(
@@ -108,7 +108,7 @@ EXT_NOTHROW inline uint32_t atomic_uint32_sub_fetch_release(uint32_t *ptr, uint3
 #endif
 }
 
-EXT_NOTHROW inline bool atomic_uint32_compare_exchange_weak_acquire_relaxed(uint32_t *ptr, uint32_t *cmp, uint32_t with) EXT_NOEXCEPT
+EXT_NOTHROW inline bool atomic_uint32_compare_exchange_weak_acquire_relaxed(uint32_t *ptr, uint32_t *cmp, uint32_t with) noexcept
 {
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
     uint32_t old = INTERLOCKED_OP_ACQUIRE(CompareExchange)(
@@ -128,7 +128,7 @@ EXT_NOTHROW inline bool atomic_uint32_compare_exchange_weak_acquire_relaxed(uint
 #endif
 }
 
-EXT_NOTHROW inline bool atomic_uint32_compare_exchange_weak_acqrel_acquire(uint32_t *ptr, uint32_t *cmp, uint32_t with) EXT_NOEXCEPT
+EXT_NOTHROW inline bool atomic_uint32_compare_exchange_weak_acqrel_acquire(uint32_t *ptr, uint32_t *cmp, uint32_t with) noexcept
 {
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
     uint32_t old = INTERLOCKED_OP_SEQ_CST(CompareExchange)(

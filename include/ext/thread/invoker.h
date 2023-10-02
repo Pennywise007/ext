@@ -36,7 +36,7 @@ public:
     // async execution of the function in main thread
     void CallAsync(CallFunction&& func) EXT_THROWS();
     // checking that we are in the main thread
-    EXT_NODISCARD static bool IsMainThread();
+    [[nodiscard]] static bool IsMainThread();
 
 private:
     // create hidden window, must be called from main thread
@@ -112,7 +112,7 @@ inline void MethodInvoker::CallAsync(CallFunction&& func) EXT_THROWS()
     EXT_DUMP_IF(CWnd::PostMessage(kCallFunctionMessage, 0, reinterpret_cast<LPARAM>(callFunc.release())) != TRUE);
 }
 
-EXT_NODISCARD inline bool MethodInvoker::IsMainThread()
+[[nodiscard]] inline bool MethodInvoker::IsMainThread()
 {
     return get_service<MethodInvoker>().m_windowThreadId == ::GetCurrentThreadId();
 }

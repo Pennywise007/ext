@@ -25,10 +25,10 @@ struct uuid
 #endif
     }
 
-    EXT_NODISCARD bool operator==(const uuid& other) const EXT_NOEXCEPT { return memcmp(&m_id, &other.m_id, sizeof(m_id)) == 0; }
-    EXT_NODISCARD bool operator<(const uuid& other) const EXT_NOEXCEPT { return memcmp(&m_id, &other.m_id, sizeof(m_id)) < 0; }
+    [[nodiscard]] bool operator==(const uuid& other) const noexcept { return memcmp(&m_id, &other.m_id, sizeof(m_id)) == 0; }
+    [[nodiscard]] bool operator<(const uuid& other) const noexcept { return memcmp(&m_id, &other.m_id, sizeof(m_id)) < 0; }
 
-    EXT_NODISCARD std::string ToString() const
+    [[nodiscard]] std::string ToString() const
     {
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
         return std::narrow(CComBSTR(m_id));

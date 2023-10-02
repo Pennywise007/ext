@@ -17,9 +17,9 @@ struct Event
 {
     /// <param name="manualReset">True if event will be reset manually by Reset function,
     /// False to allow system automatically resets the event state to nonsignaled after a single waiting thread has been released </param>
-    explicit Event() EXT_NOEXCEPT = default;
+    explicit Event() noexcept = default;
 
-    void Set(bool notifyAll = false) EXT_NOEXCEPT
+    void Set(bool notifyAll = false) noexcept
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         m_signaled = true;
@@ -30,7 +30,7 @@ struct Event
     }
 
     // Reset event state, set the event state to non signaled
-    void Reset() EXT_NOEXCEPT
+    void Reset() noexcept
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         m_signaled = false;
@@ -60,7 +60,7 @@ struct Event
     /// <summary> Wait until the set of the event object for the specified duration </summary>
     /// <param name="timeout">Waiting timeout, infinite if not installed</param>
     /// <returns> true if signal raised, false if timeout expired</returns>
-    EXT_NODISCARD bool Raised() EXT_NOEXCEPT
+    [[nodiscard]] bool Raised() noexcept
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         return m_signaled;

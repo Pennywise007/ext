@@ -45,19 +45,19 @@ namespace ext {
 class source_location
 {
 public:
-    constexpr source_location() EXT_NOEXCEPT = default;
+    constexpr source_location() noexcept = default;
 
-    constexpr source_location(const char* file, int line) EXT_NOEXCEPT
+    constexpr source_location(const char* file, int line) noexcept
         : m_fileName(file)
         , m_fileLine(line)
     {}
 
-    std::string to_string() const EXT_NOEXCEPT
+    std::string to_string() const noexcept
     {
         return std::string_sprintf("\'%s\'(%d)", m_fileName, m_fileLine);
     }
 
-    constexpr bool exist() const EXT_NOEXCEPT
+    constexpr bool exist() const noexcept
     {
         return m_fileName != nullptr;
     }
@@ -92,7 +92,7 @@ struct exception : std::exception
         EXT_TRACE_ERR() << to_string().c_str();
     }
 
-    EXT_NODISCARD std::string to_string() const
+    [[nodiscard]] std::string to_string() const
     {
         auto externalText = external_text();
         if (!externalText.empty())
@@ -105,8 +105,8 @@ struct exception : std::exception
         return text;
     }
 
-    EXT_NODISCARD virtual std::string external_text() const { return {}; }
-    virtual const char* what() const EXT_NOEXCEPT override { return m_description.c_str(); }
+    [[nodiscard]] virtual std::string external_text() const { return {}; }
+    virtual const char* what() const noexcept override { return m_description.c_str(); }
 
     template <class T>
     auto& operator<<(const T& data)

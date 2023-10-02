@@ -14,7 +14,7 @@
 
 namespace std::filesystem {
 
-EXT_NODISCARD inline std::filesystem::path get_full_exe_path() EXT_NOEXCEPT
+[[nodiscard]] inline std::filesystem::path get_full_exe_path() noexcept
 {
     constexpr auto kMaxPath = 4096;
     char exePath[kMaxPath] = {0};  
@@ -31,12 +31,12 @@ EXT_NODISCARD inline std::filesystem::path get_full_exe_path() EXT_NOEXCEPT
     return std::filesystem::path(exePath);
 }
 
-EXT_NODISCARD inline std::filesystem::path get_exe_directory() EXT_NOEXCEPT
+[[nodiscard]] inline std::filesystem::path get_exe_directory() noexcept
 {
     return get_full_exe_path().remove_filename();
 }
 
-EXT_NODISCARD inline std::filesystem::path get_exe_name() EXT_NOEXCEPT
+[[nodiscard]] inline std::filesystem::path get_exe_name() noexcept
 {
     return get_full_exe_path().filename();
 }

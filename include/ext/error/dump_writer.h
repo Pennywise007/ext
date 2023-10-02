@@ -46,7 +46,7 @@ void main()
 
 #define EXT_DUMP_CREATE() EXT_TRACE_ERR() << "Dump creation called, no dump file in linux";
 
-EXT_NODISCARD inline bool IsDebuggerPresent() {
+[[nodiscard]] inline bool IsDebuggerPresent() {
     char buf[4096];
 
     const int status_fd = open("/proc/self/status", O_RDONLY);
@@ -162,7 +162,7 @@ inline LONG CALLBACK unhandled_handler(EXCEPTION_POINTERS* e)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-inline void create_dump(const char *msg = nullptr) EXT_NOEXCEPT
+inline void create_dump(const char *msg = nullptr) noexcept
 {
     EXT_DUMP_DECLARE_HANDLER();
     __try

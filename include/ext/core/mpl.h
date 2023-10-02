@@ -99,14 +99,14 @@ struct list : std::tuple<T...>
     }
 
     // Get count of elements
-    EXT_NODISCARD constexpr static auto Count()
+    [[nodiscard]] constexpr static auto Count()
     {
         return std::tuple_size_v<std::tuple<T*...>>;
     }
 
     // Get element from list
     template <std::size_t index>
-    EXT_NODISCARD constexpr decltype(auto) Get()
+    [[nodiscard]] constexpr decltype(auto) Get()
     {
         return std::get<index>(*this);
     }
@@ -118,7 +118,7 @@ struct list : std::tuple<T...>
 
     // Get element from list
     template <std::size_t index>
-    EXT_NODISCARD constexpr decltype(auto) GetItem()
+    [[nodiscard]] constexpr decltype(auto) GetItem()
     {
         return std::get<index>(*this);
     }

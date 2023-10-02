@@ -25,14 +25,14 @@ public:
 
 protected:
 // ISerializer
-    EXT_NODISCARD bool Serialize(const std::shared_ptr<SerializableNode>& serializationTreeRoot) EXT_THROWS() override;
+    [[nodiscard]] bool Serialize(const std::shared_ptr<SerializableNode>& serializationTreeRoot) EXT_THROWS() override;
 // INodeSerializer
     void WriteCollectionStart(const std::string& name, const size_t& collectionLevel) override;
     void WriteCollectionEnd(const std::string& name, const size_t& collectionLevel, bool nextFieldExist) override;
     void WriteField(const std::string& name, const SerializableValue& value, const size_t& fieldLevel, bool nextFieldExist) override;
 
 // IDeserializer
-    EXT_NODISCARD bool Deserialize(std::shared_ptr<SerializableNode>& deserializationTreeRoot) EXT_THROWS() override;
+    [[nodiscard]] bool Deserialize(std::shared_ptr<SerializableNode>& deserializationTreeRoot) EXT_THROWS() override;
 
 public:
     // Установить значение в ноду

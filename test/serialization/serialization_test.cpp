@@ -115,8 +115,8 @@ struct BaseTypes : SerializableObject<BaseTypes, BaseTypeName>
 
 struct SerializableField : ISerializableField
 {
-    EXT_NODISCARD const char* GetName() const EXT_NOEXCEPT override { return "Name"; }
-    EXT_NODISCARD SerializableValue SerializeValue() const override { return L"test"; }
+    [[nodiscard]] const char* GetName() const noexcept override { return "Name"; }
+    [[nodiscard]] SerializableValue SerializeValue() const override { return L"test"; }
     void DeserializeValue(const SerializableValue& value) override { EXT_EXPECT(value == L"test"); }
 };
 

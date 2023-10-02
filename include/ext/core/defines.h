@@ -5,8 +5,6 @@
 #define EXT_IGNORE_RESULT(...) static_cast<void>(__VA_ARGS__)
 
 // Functions declaration
-#define EXT_NODISCARD       [[nodiscard]]
-#define EXT_NOEXCEPT        noexcept
 #define EXT_THROWS(...)     noexcept(false)
 
 #define EXT_CALL            __cdecl
@@ -19,7 +17,6 @@
 #define EXT_NOINLINE        __attribute__((noinline))
 #define EXT_FORCEINLINE     __attribute__((always_inline))
 #endif
-
 
 // EXT_PP_CAT(x, y) => xy
 #define EXT_PP_EXPAND(x)    x

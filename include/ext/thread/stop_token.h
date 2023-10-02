@@ -47,19 +47,19 @@ class stop_callback;
 class stop_token
 {
 public:
-    stop_token() EXT_NOEXCEPT = default;
-    stop_token(stop_token &&) EXT_NOEXCEPT = default;
-    stop_token(const stop_token &) EXT_NOEXCEPT = default;
-    stop_token &operator=(stop_token &&) EXT_NOEXCEPT = default;
-    stop_token &operator=(const stop_token &) EXT_NOEXCEPT = default;
+    stop_token() noexcept = default;
+    stop_token(stop_token &&) noexcept = default;
+    stop_token(const stop_token &) noexcept = default;
+    stop_token &operator=(stop_token &&) noexcept = default;
+    stop_token &operator=(const stop_token &) noexcept = default;
 
 private:
-    explicit stop_token(const std::shared_ptr<ext::detail::stop_state>& state) EXT_NOEXCEPT
+    explicit stop_token(const std::shared_ptr<ext::detail::stop_state>& state) noexcept
         : m_state(state)
     {}
 
 public:
-    void swap(stop_token &other) EXT_NOEXCEPT
+    void swap(stop_token &other) noexcept
     {
         std::swap(m_state, other.m_state);
     }
@@ -73,7 +73,7 @@ public:
     ///     @retval true if the `stop_token` object has associated stop-state and it received a stop request.
     ///     @retval false otherwise.
     /// </returns>
-    EXT_NODISCARD bool stop_requested() const EXT_NOEXCEPT
+    [[nodiscard]] bool stop_requested() const noexcept
     {
         return m_state && m_state->stop_requested();
     }
@@ -89,17 +89,17 @@ public:
     ///     @retval true if the `stop_token` object has associated stop-state and a stop request has already been made.
     ///     @retval false otherwise.
     /// </returns>
-    EXT_NODISCARD bool stop_possible() const EXT_NOEXCEPT
+    [[nodiscard]] bool stop_possible() const noexcept
     {
         return m_state && m_state->stop_requestable();
     }
 
 public:
-    EXT_NODISCARD friend bool operator==(const stop_token &a, const stop_token &b) EXT_NOEXCEPT
+    [[nodiscard]] friend bool operator==(const stop_token &a, const stop_token &b) noexcept
     {
         return a.m_state.get() == b.m_state.get();
     }
-    EXT_NODISCARD friend bool operator!=(const stop_token &a, const stop_token &b) EXT_NOEXCEPT { return !operator==(a, b); }
+    [[nodiscard]] friend bool operator!=(const stop_token &a, const stop_token &b) noexcept { return !operator==(a, b); }
 
 private:
     friend class stop_source;
@@ -115,11 +115,11 @@ private:
 class stop_source
 {
 public:
-    stop_source() EXT_NOEXCEPT {} // compiller doesn`t like = default
-    stop_source(stop_source&&) EXT_NOEXCEPT = default;
-    stop_source(const stop_source&) EXT_NOEXCEPT = default;
-    stop_source& operator=(stop_source&&) EXT_NOEXCEPT = default;
-    stop_source& operator=(const stop_source&) EXT_NOEXCEPT = default;
+    stop_source() noexcept {} // compiller doesn`t like = default
+    stop_source(stop_source&&) noexcept = default;
+    stop_source(const stop_source&) noexcept = default;
+    stop_source& operator=(stop_source&&) noexcept = default;
+    stop_source& operator=(const stop_source&) noexcept = default;
 
 public:
     /// <summary>
@@ -139,7 +139,7 @@ public:
     ///     @retval true if the `stop_source` object has stop-state and this invocation made a stop request.
     ///     @retval false otherwise.
     /// </returns>
-    bool request_stop() EXT_NOEXCEPT
+    bool request_stop() noexcept
     {
         if (m_state)
             return m_state->request_stop();
@@ -150,7 +150,7 @@ public:
     ///     Returns a `stop_token` object associated with the `stop_source`'s stop-state, if the `stop_source` has stop-state;
     ///     otherwise returns a default-constructed (empty) stop_token.
     /// </summary>
-    EXT_NODISCARD stop_token get_token() const EXT_NOEXCEPT
+    [[nodiscard]] stop_token get_token() const noexcept
     {
         return stop_token(m_state);
     }
@@ -160,7 +160,7 @@ public:
     ///     @retval true if the `stop_source` object has stop-state and it received a stop request.
     ///     @retval false otherwise.
     /// </returns>
-    EXT_NODISCARD bool stop_requested() const EXT_NOEXCEPT
+    [[nodiscard]] bool stop_requested() const noexcept
     {
         return m_state && m_state->stop_requested();
     }
@@ -170,28 +170,28 @@ public:
     ///     @retval true if the `stop_source` object has stop-state.
     ///     @retval false otherwise.
     /// </returns>
-    EXT_NODISCARD bool stop_possible() const EXT_NOEXCEPT
+    [[nodiscard]] bool stop_possible() const noexcept
     {
         return !!m_state;
     }
 
-    EXT_NODISCARD explicit operator bool() const EXT_NOEXCEPT
+    [[nodiscard]] explicit operator bool() const noexcept
     {
         return stop_possible();
     }
 
-    void swap(stop_source& other) EXT_NOEXCEPT
+    void swap(stop_source& other) noexcept
     {
         std::swap(m_state, other.m_state);
     }
 
 public:
-    EXT_NODISCARD friend bool operator==(const stop_source &a, const stop_source &b) EXT_NOEXCEPT
+    [[nodiscard]] friend bool operator==(const stop_source &a, const stop_source &b) noexcept
     {
         return a.m_state.get() == b.m_state.get();
     }
 
-    EXT_NODISCARD friend bool operator!=(const stop_source &a, const stop_source &b) EXT_NOEXCEPT
+    [[nodiscard]] friend bool operator!=(const stop_source &a, const stop_source &b) noexcept
     {
         return a.m_state.get() != b.m_state.get();
     }
@@ -214,7 +214,7 @@ public:
     static_assert(std::is_void_v<decltype(std::declval<Callback>()())>, "Callback should return `void`");
 
     template <typename StopToken>
-    constexpr explicit stop_callback(StopToken&& token, Callback&& callback) EXT_NOEXCEPT
+    constexpr explicit stop_callback(StopToken&& token, Callback&& callback) noexcept
         : m_controlBlock{ std::make_shared<detail::stop_callback_control_block>([callback]() { callback(); }) }
         , m_state{ std::forward<StopToken>(token).m_state }
     {
@@ -222,7 +222,7 @@ public:
             m_state = nullptr;
     }
 
-    ~stop_callback() EXT_NOEXCEPT
+    ~stop_callback() noexcept
     {
         if (m_state)
             m_state->remove_callback(m_controlBlock);

@@ -200,7 +200,7 @@ private:
 } // namespace trace
 
 // global function for getting tracer
-EXT_NODISCARD inline ::ext::ITracer* get_tracer()
+[[nodiscard]] inline ::ext::ITracer* get_tracer()
 {
     return static_cast<::ext::ITracer*>(&get_service<::ext::trace::Tracer>());
 }

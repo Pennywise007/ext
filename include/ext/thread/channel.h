@@ -55,28 +55,28 @@ private:
         friend class Channel;
     public:
         ChannelIterator(const ChannelIterator& other) = delete;
-        constexpr explicit ChannelIterator(ChannelIterator&& other) EXT_NOEXCEPT
+        constexpr explicit ChannelIterator(ChannelIterator&& other) noexcept
             : m_channel(other.m_channel)
             , m_value(std::move(other.m_value))
         {
             other.m_value = std::nullopt;
         }
 
-        constexpr EXT_NODISCARD bool operator==(const ChannelIterator& other) const {
+        constexpr [[nodiscard]] bool operator==(const ChannelIterator& other) const {
             return m_channel == other.m_channel && !m_value.has_value() && !other.m_value.has_value();
         }
 
-        constexpr EXT_NODISCARD bool operator!=(const ChannelIterator& other) const {
+        constexpr [[nodiscard]] bool operator!=(const ChannelIterator& other) const {
             return !operator==(other);
         }
 
-        constexpr EXT_NODISCARD const value_type& operator*() const { return m_value.value(); }
+        constexpr [[nodiscard]] const value_type& operator*() const { return m_value.value(); }
 
-        constexpr EXT_NODISCARD value_type& operator*() { return m_value.value(); }
+        constexpr [[nodiscard]] value_type& operator*() { return m_value.value(); }
 
-        constexpr EXT_NODISCARD value_type* operator->() { return &m_value.value(); }
+        constexpr [[nodiscard]] value_type* operator->() { return &m_value.value(); }
 
-        constexpr EXT_NODISCARD const value_type* operator->() const { return &m_value.value(); }
+        constexpr [[nodiscard]] const value_type* operator->() const { return &m_value.value(); }
 
         ChannelIterator& operator++() EXT_THROWS(std::bad_function_call) {
             if (!m_value.has_value()) {
@@ -114,7 +114,7 @@ public:
         m_queue_not_empty.notify_one();
     }
     
-    EXT_NODISCARD std::optional<T> get() EXT_NOEXCEPT
+    [[nodiscard]] std::optional<T> get() noexcept
     {
         std::unique_lock<std::mutex> lock(m_queue_mutex);
         m_queue_not_empty.wait(lock, [this] { return !m_queue.empty() || m_closed; });
@@ -129,8 +129,8 @@ public:
         return result;
     }
 
-    EXT_NODISCARD iterator begin() { return ChannelIterator(this, get()); }
-    EXT_NODISCARD iterator end() { return ChannelIterator(this, std::nullopt); }
+    [[nodiscard]] iterator begin() { return ChannelIterator(this, get()); }
+    [[nodiscard]] iterator end() { return ChannelIterator(this, std::nullopt); }
 };
 
 } // namespace dadrian

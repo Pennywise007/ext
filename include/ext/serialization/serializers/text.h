@@ -41,21 +41,21 @@ public:
 
 protected:
 // ISerializer
-    EXT_NODISCARD bool Serialize(const std::shared_ptr<SerializableNode>& serializationTreeRoot) EXT_THROWS() override;
+    [[nodiscard]] bool Serialize(const std::shared_ptr<SerializableNode>& serializationTreeRoot) EXT_THROWS() override;
 // INodeSerializer
     void WriteCollectionStart(const std::string& name, const size_t& collectionLevel) override;
     void WriteCollectionEnd(const std::string& name, const size_t& collectionLevel, bool nextFieldExist) override;
     void WriteField(const std::string& name, const SerializableValue& value, const size_t& fieldLevel, bool nextFieldExist) override;
 
 // IDeserializer
-    EXT_NODISCARD bool Deserialize(std::shared_ptr<SerializableNode>& deserializationTreeRoot) EXT_THROWS() override;
+    [[nodiscard]] bool Deserialize(std::shared_ptr<SerializableNode>& deserializationTreeRoot) EXT_THROWS() override;
 
 private:
     static std::wstring GenerateIndent(const size_t& indentLevel);
     static bool TrimLeft(std::wstring_view& string);
     static bool TrimRight(std::wstring_view& string);
     // Find open and close braces position by current level
-    EXT_NODISCARD static bool FindBracesPositions(const std::wstring_view& string, std::pair<size_t, size_t>& bracesPositions);
+    [[nodiscard]] static bool FindBracesPositions(const std::wstring_view& string, std::pair<size_t, size_t>& bracesPositions);
     static std::string GetFieldName(std::wstring_view& text);
     static void GetFieldValue(std::wstring_view& text, std::optional<SerializableValue>& value);
     // Fill node info for current braces level
@@ -80,7 +80,7 @@ inline SerializerText::SerializerText(const std::wstring& inputText) EXT_THROWS(
     EXT_ASSERT(text.empty());
 }
 
-EXT_NODISCARD inline bool SerializerText::Serialize(const std::shared_ptr<SerializableNode>& serializationTreeRoot) EXT_THROWS()
+[[nodiscard]] inline bool SerializerText::Serialize(const std::shared_ptr<SerializableNode>& serializationTreeRoot) EXT_THROWS()
 {
     EXT_REQUIRE(serializationTreeRoot && m_outputText) << "Root node uninitialized!";
     m_outputText->clear();
@@ -88,7 +88,7 @@ EXT_NODISCARD inline bool SerializerText::Serialize(const std::shared_ptr<Serial
     return true;
 }
 
-EXT_NODISCARD inline bool SerializerText::Deserialize(std::shared_ptr<SerializableNode>& deserializationTreeRoot) EXT_THROWS()
+[[nodiscard]] inline bool SerializerText::Deserialize(std::shared_ptr<SerializableNode>& deserializationTreeRoot) EXT_THROWS()
 {
     EXT_REQUIRE(m_rootNode) << "Root node uninitialized!";
     deserializationTreeRoot = m_rootNode;
@@ -161,7 +161,7 @@ inline bool SerializerText::TrimRight(std::wstring_view& string)
     return !string.empty();
 }
 
-EXT_NODISCARD inline bool SerializerText::FindBracesPositions(const std::wstring_view& string, std::pair<size_t, size_t>& bracesPositions)
+[[nodiscard]] inline bool SerializerText::FindBracesPositions(const std::wstring_view& string, std::pair<size_t, size_t>& bracesPositions)
 {
     bool startBraceFound = false;
 

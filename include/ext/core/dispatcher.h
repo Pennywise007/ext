@@ -73,7 +73,7 @@ void send_event(Function IEvent::* function, Args&&... eventArgs) EXT_THROWS(...
         ext::send_event_async(&IEvent::Event, 10);
 */
 template <typename IEvent, typename Function, typename... Args>
-std::future<void> send_event_async(Function IEvent::* function, Args&&... eventArgs) EXT_NOEXCEPT
+std::future<void> send_event_async(Function IEvent::* function, Args&&... eventArgs) noexcept
 {
     return get_service<events::Dispatcher>().SendEventAsync(function, std::forward<Args>(eventArgs)...);
 }
@@ -113,12 +113,12 @@ class Dispatcher
 public:
     // Subscribing / unsubscribing the synchronous event receiver
     template <typename IEvent>
-    void Subscribe(IEvent* recipient) EXT_NOEXCEPT;
+    void Subscribe(IEvent* recipient) noexcept;
     template <typename IEvent>
-    void Unsubscribe(IEvent* recipient, bool checkSubscription = true) EXT_NOEXCEPT;
+    void Unsubscribe(IEvent* recipient, bool checkSubscription = true) noexcept;
     // check if recipient subscribed
     template <typename IEvent>
-    bool IsSubscribed(IEvent* recipient) const EXT_NOEXCEPT;
+    bool IsSubscribed(IEvent* recipient) const noexcept;
     // Update priority for event subscriber - on raising event this subscriber will receive information first
     template <typename IEvent>
     void SetFirstPriority(IEvent* recipient) EXT_THROWS(ext::check::CheckFailedException);
@@ -130,7 +130,7 @@ public:
     void SendEvent(Function IEvent::* function, Args&&... eventArgs) const EXT_THROWS(...);
     // @see send_event_async. Sending event and don`t wait for handling, continue execution, args should be copy constructible
     template <typename IEvent, typename Function, typename... Args>
-    std::future<void> SendEventAsync(Function IEvent::* function, Args&&... eventArgs) const EXT_NOEXCEPT;
+    std::future<void> SendEventAsync(Function IEvent::* function, Args&&... eventArgs) const noexcept;
     // @see call_for_every_recipient. Call callback for every recipient who subscribed on event
     template <typename IEvent>
     void ForEveryRecipient(const std::function<void(IEvent* recipient)>& callback) const EXT_THROWS(...);
@@ -147,31 +147,31 @@ private:
 template <typename... IEvents>
 struct ScopeSubscription : ext::NonCopyable, IEvents...
 {
-    explicit ScopeSubscription(bool autoSubscription = true) EXT_NOEXCEPT
+    explicit ScopeSubscription(bool autoSubscription = true) noexcept
     {
         if (autoSubscription)
             SubscribeAll();
     }
-    virtual ~ScopeSubscription() EXT_NOEXCEPT { UnsubscribeAll(false); }
+    virtual ~ScopeSubscription() noexcept { UnsubscribeAll(false); }
 
 protected:
-    void SubscribeAll() const EXT_NOEXCEPT
+    void SubscribeAll() const noexcept
     {
         (..., ScopeSubscription::Subscribe<IEvents>());
     }
-    void UnsubscribeAll(bool checkSubscription = true) const EXT_NOEXCEPT
+    void UnsubscribeAll(bool checkSubscription = true) const noexcept
     {
         (..., ScopeSubscription::Unsubscribe<IEvents>(checkSubscription));
     }
 
     template <typename IEvent>
-    void Subscribe() const EXT_NOEXCEPT
+    void Subscribe() const noexcept
     {
         static_assert(ext::mpl::contain_type_v<IEvent, IEvents...>, "Subscribing to an event not included in the event list");
         get_service<Dispatcher>().Subscribe(GetEventPointer<IEvent>());
     }
     template <typename IEvent>
-    void Unsubscribe(bool checkSubscription = true) const EXT_NOEXCEPT
+    void Unsubscribe(bool checkSubscription = true) const noexcept
     {
         static_assert(ext::mpl::contain_type_v<IEvent, IEvents...>, "Unsubscribing to an event not included in the event list");
         get_service<Dispatcher>().Unsubscribe(GetEventPointer<IEvent>(), checkSubscription);
@@ -186,14 +186,14 @@ protected:
 
 private:
     template <typename IEvent>
-    IEvent* GetEventPointer() const EXT_NOEXCEPT
+    IEvent* GetEventPointer() const noexcept
     {
         return const_cast<IEvent*>(static_cast<const IEvent*>(this));
     }
 };
 
 template <typename IEvent>
-void Dispatcher::Subscribe(IEvent* recipient) EXT_NOEXCEPT
+void Dispatcher::Subscribe(IEvent* recipient) noexcept
 {
     static_assert(std::is_base_of_v<IBaseEvent, IEvent>, "Event must be inherited from IBaseEvent!");
 
@@ -205,7 +205,7 @@ void Dispatcher::Subscribe(IEvent* recipient) EXT_NOEXCEPT
 }
 
 template <typename IEvent>
-void Dispatcher::Unsubscribe(IEvent* recipient, bool checkSubscription) EXT_NOEXCEPT
+void Dispatcher::Unsubscribe(IEvent* recipient, bool checkSubscription) noexcept
 {
     static_assert(std::is_base_of_v<IBaseEvent, IEvent>, "Event must be inherited from IBaseEvent!");
 
@@ -228,7 +228,7 @@ void Dispatcher::Unsubscribe(IEvent* recipient, bool checkSubscription) EXT_NOEX
 }
 
 template<typename IEvent>
-inline bool Dispatcher::IsSubscribed(IEvent* recipient) const EXT_NOEXCEPT
+inline bool Dispatcher::IsSubscribed(IEvent* recipient) const noexcept
 {
     static_assert(std::is_base_of_v<IBaseEvent, IEvent>, "Event must be inherited from IBaseEvent!");
 
@@ -262,7 +262,7 @@ void Dispatcher::SendEvent(Function IEvent::* function, Args&&... eventArgs) con
 }
 
 template <typename IEvent, typename Function, typename... Args>
-std::future<void> Dispatcher::SendEventAsync(Function IEvent::* function, Args&&... eventArgs) const EXT_NOEXCEPT
+std::future<void> Dispatcher::SendEventAsync(Function IEvent::* function, Args&&... eventArgs) const noexcept
 {
     static thread_pool thread_pool(1);
     return thread_pool.add_task([invoker = ext::ThreadInvoker(

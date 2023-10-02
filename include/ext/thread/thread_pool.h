@@ -56,7 +56,7 @@ public:
                          std::uint_fast32_t threadsCount = std::thread::hardware_concurrency());
     thread_pool(std::uint_fast32_t threadsCount = std::thread::hardware_concurrency());
 
-    EXT_NODISCARD static thread_pool& GlobalInstance();
+    [[nodiscard]] static thread_pool& GlobalInstance();
 
     // interrupt and join all existing threads
     ~thread_pool();
@@ -100,7 +100,7 @@ public:
     // remove task from queue by id
     void erase_task(const TaskId& taskId);
 
-    EXT_NODISCARD uint32_t running_tasks_count() const EXT_NOEXCEPT;
+    [[nodiscard]] uint32_t running_tasks_count() const noexcept;
 
     // interrupt and remove all tasks from queue, after this action thread pool is in inconsistent state
     void interrupt_and_remove_all_tasks();
@@ -126,7 +126,7 @@ private:
      * \return pair of a taskId(created task identifier) and a future(with task result)
      */    
     template <typename Function, typename... Args>
-    EXT_NODISCARD std::pair<TaskId,
+    [[nodiscard]] std::pair<TaskId,
               std::future<std::invoke_result_t<Function, Args...>>>
         add_task_with_priority(TaskPriority priority, Function&& function, Args&&... args);
 
@@ -156,7 +156,7 @@ private:
 // struct with task information
 struct thread_pool::TaskInfo : ext::NonCopyable
 {
-    explicit TaskInfo(TaskId id, const TaskPriority _priority, std::function<void()>&& _task) EXT_NOEXCEPT
+    explicit TaskInfo(TaskId id, const TaskPriority _priority, std::function<void()>&& _task) noexcept
         : task(std::move(_task)), priority(_priority), taskId(std::move(id))
     {}
 
@@ -261,7 +261,7 @@ inline void thread_pool::erase_task(const TaskId& taskId)
     m_taskDoneEvent.Set();
 }
 
-EXT_NODISCARD inline uint32_t thread_pool::running_tasks_count() const EXT_NOEXCEPT
+[[nodiscard]] inline uint32_t thread_pool::running_tasks_count() const noexcept
 {
     return m_countExecutingTasksThread;
 }

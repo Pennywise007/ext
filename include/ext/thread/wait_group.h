@@ -32,17 +32,17 @@ private:
 public:
     WaitGroup() = default;
 
-    void add(size_t delta = 0) EXT_NOEXCEPT {
+    void add(size_t delta = 0) noexcept {
         m_counter += delta;
     }
 
-    void done() EXT_NOEXCEPT {
+    void done() noexcept {
         if (m_counter.fetch_sub(1) == 1) {
             m_cv.notify_all();
         }
     }
 
-    void wait() const EXT_NOEXCEPT {
+    void wait() const noexcept {
         std::unique_lock<std::mutex> lock(m_mutex);
         m_cv.wait(lock, [&]() { return m_counter == 0; });
     }

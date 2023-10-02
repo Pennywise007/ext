@@ -52,7 +52,7 @@ struct CheckResultFailedException : ::ext::exception
         , m_result(result)
     {}
 
-    EXT_NODISCARD std::string external_text() const override
+    [[nodiscard]] std::string external_text() const override
     {
         std::ostringstream externalText;
         externalText << "result: " << (int)m_result << "(" << m_result << ")";
@@ -121,5 +121,5 @@ EXT_EXPECT_SUCCEEDED(ext::result) << "Check failed";
 #define EXT_EXPECT_SUCCEEDED(expr)      \
     EXT_EXPECT_RESULT(expr, EXT_SUCCEEDED(_result), ::ext::result::CheckResultFailedException(EXT_SRC_LOCATION, _result))
 
-inline constexpr EXT_NODISCARD bool EXT_FAILED(const ext::ResultCodes res) noexcept    { return (res < 0); }
-inline constexpr EXT_NODISCARD bool EXT_SUCCEEDED(const ext::ResultCodes res) noexcept { return (res >= 0); }
+inline constexpr [[nodiscard]] bool EXT_FAILED(const ext::ResultCodes res) noexcept    { return (res < 0); }
+inline constexpr [[nodiscard]] bool EXT_SUCCEEDED(const ext::ResultCodes res) noexcept { return (res >= 0); }

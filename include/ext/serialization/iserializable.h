@@ -16,8 +16,8 @@ struct InternalStruct : ext::serializable::SerializableObject<InternalStruct, "P
 
 struct CustomField : ISerializableField
 {
-    EXT_NODISCARD virtual const char* GetName() const EXT_NOEXCEPT { return "CustomFieldName"; }
-    EXT_NODISCARD virtual SerializableValue SerializeValue() const { return L"test"; }
+    [[nodiscard]] virtual const char* GetName() const noexcept { return "CustomFieldName"; }
+    [[nodiscard]] virtual SerializableValue SerializeValue() const { return L"test"; }
     virtual void DeserializeValue(const SerializableValue& value) { EXT_EXPECT(value == L"test"); }
 };
 
@@ -115,10 +115,10 @@ struct SerializableNode
     std::optional<SerializableValue> Value;
     std::list<std::shared_ptr<SerializableNode>> ChildNodes;
 
-    SerializableNode(std::string name, std::shared_ptr<SerializableNode> parentNode = nullptr) EXT_NOEXCEPT
+    SerializableNode(std::string name, std::shared_ptr<SerializableNode> parentNode = nullptr) noexcept
         : Name(std::move(name)), Parent(parentNode)
     {}
-    EXT_NODISCARD std::shared_ptr<SerializableNode> GetChild(const std::string& name, const size_t& indexAmongTheSameNames = 0) const EXT_NOEXCEPT
+    [[nodiscard]] std::shared_ptr<SerializableNode> GetChild(const std::string& name, const size_t& indexAmongTheSameNames = 0) const noexcept
     {
         auto searchIt = ChildNodes.begin(), end = ChildNodes.end();
         for (size_t i = 0; i <= indexAmongTheSameNames && searchIt != end; ++i)
@@ -135,7 +135,7 @@ struct ISerializable
 {
     virtual ~ISerializable() = default;
     // Get name of serializable object
-    EXT_NODISCARD virtual const char* GetName() const EXT_NOEXCEPT = 0;
+    [[nodiscard]] virtual const char* GetName() const noexcept = 0;
     // Called before deserializing object, allow to change deserializable tree and avoid unexpected data, allow to add upgrade for old stored settings
     // Also used to allocate collections elements
     virtual void PrepareToDeserialize(std::shared_ptr<SerializableNode>& /*serializableTree*/) EXT_THROWS() {}
@@ -146,7 +146,7 @@ struct ISerializable
 struct ISerializableField : ISerializable
 {
     // Serialize field value to string
-    EXT_NODISCARD virtual SerializableValue SerializeValue() const = 0;
+    [[nodiscard]] virtual SerializableValue SerializeValue() const = 0;
     // Deserialize field value from string
     virtual void DeserializeValue(const SerializableValue& value) = 0;
 };
@@ -155,9 +155,9 @@ struct ISerializableField : ISerializable
 struct ISerializableCollection : ISerializable
 {
     // Collection size
-    EXT_NODISCARD virtual size_t Size() const EXT_NOEXCEPT = 0;
+    [[nodiscard]] virtual size_t Size() const noexcept = 0;
     // Get collection element by index
-    EXT_NODISCARD virtual std::shared_ptr<ISerializable> Get(const size_t& index) const = 0;
+    [[nodiscard]] virtual std::shared_ptr<ISerializable> Get(const size_t& index) const = 0;
 
     // Called before collection serialization
     virtual void OnSerializationStart() {}
@@ -174,14 +174,14 @@ struct ISerializableCollection : ISerializable
 struct ISerializableOptional : ISerializable
 {
     // if optional has value return serializable element, return SerializableValue with SerializableValue::ValueType::eNull otherwise
-    EXT_NODISCARD virtual std::shared_ptr<ISerializable> Get() const = 0;
+    [[nodiscard]] virtual std::shared_ptr<ISerializable> Get() const = 0;
 };
 
 namespace details {
 
 struct ISerializableFieldInfo
 {
-    EXT_NODISCARD virtual std::shared_ptr<ISerializable> GetField(const ISerializable* object) const = 0;
+    [[nodiscard]] virtual std::shared_ptr<ISerializable> GetField(const ISerializable* object) const = 0;
 };
 } // namespace details
 
@@ -206,10 +206,10 @@ public:
 
 private:
 // ISerializable
-    EXT_NODISCARD const char* GetName() const EXT_NOEXCEPT override { return m_name; }
+    [[nodiscard]] const char* GetName() const noexcept override { return m_name; }
 // ISerializableCollection
-    EXT_NODISCARD size_t Size() const EXT_NOEXCEPT override { return m_baseSerializableClasses.size() + m_fields.size(); }
-    EXT_NODISCARD std::shared_ptr<ISerializable> Get(const size_t& index) const override
+    [[nodiscard]] size_t Size() const noexcept override { return m_baseSerializableClasses.size() + m_fields.size(); }
+    [[nodiscard]] std::shared_ptr<ISerializable> Get(const size_t& index) const override
     {
         if (index < m_baseSerializableClasses.size())
             return *std::next(m_baseSerializableClasses.begin(), index);

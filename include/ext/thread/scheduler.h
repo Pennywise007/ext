@@ -38,11 +38,11 @@ constexpr TaskId kInvalidId = -1;
 class Scheduler : ext::NonCopyable
 {
 public:
-    explicit Scheduler() EXT_NOEXCEPT;
+    explicit Scheduler() noexcept;
     virtual ~Scheduler();
 
     // Getting global instance of scheduller
-    EXT_NODISCARD static Scheduler& GlobalInstance() EXT_NOEXCEPT;
+    [[nodiscard]] static Scheduler& GlobalInstance() noexcept;
 
     // Setting task call period by task id, next call will be now() + callingPeriod
     TaskId SubscribeTaskByPeriod(std::function<void()>&& task,
@@ -55,7 +55,7 @@ public:
                                TaskId taskId = kInvalidId);
 
     // Checking is task exist
-    EXT_NODISCARD bool IsTaskExists(TaskId taskId) EXT_NOEXCEPT;
+    [[nodiscard]] bool IsTaskExists(TaskId taskId) noexcept;
 
     // Removing task by id
     void RemoveTask(TaskId taskId);
@@ -83,13 +83,13 @@ struct Scheduler::TaskInfo
     std::chrono::system_clock::time_point nextCallTime;
     std::optional<std::chrono::high_resolution_clock::duration> callingPeriod;
 
-    explicit TaskInfo(std::function<void()>&& function, std::chrono::high_resolution_clock::duration&& period) EXT_NOEXCEPT
+    explicit TaskInfo(std::function<void()>&& function, std::chrono::high_resolution_clock::duration&& period) noexcept
         : task(function)
         , nextCallTime(std::chrono::system_clock::now() + std::chrono::duration_cast<std::chrono::system_clock::duration>(period))
         , callingPeriod(std::move(period))
     {}
 
-    explicit TaskInfo(std::function<void()>&& function, std::chrono::system_clock::time_point&& callTime) EXT_NOEXCEPT
+    explicit TaskInfo(std::function<void()>&& function, std::chrono::system_clock::time_point&& callTime) noexcept
         : task(function)
         , nextCallTime(std::move(callTime))
     {
@@ -97,7 +97,7 @@ struct Scheduler::TaskInfo
     }
 };
 
-inline Scheduler::Scheduler() EXT_NOEXCEPT : m_thread(&Scheduler::MainThread, this)
+inline Scheduler::Scheduler() noexcept : m_thread(&Scheduler::MainThread, this)
 {}
 
 inline Scheduler::~Scheduler()
@@ -108,7 +108,7 @@ inline Scheduler::~Scheduler()
     m_thread.join();
 }
 
-inline Scheduler& Scheduler::GlobalInstance() EXT_NOEXCEPT
+inline Scheduler& Scheduler::GlobalInstance() noexcept
 {
     static Scheduler globalScheduler;
     return globalScheduler;
@@ -146,7 +146,7 @@ inline TaskId Scheduler::SubscribeTaskAtTime(std::function<void()>&& task,
     return taskId;
 }
 
-inline bool Scheduler::IsTaskExists(TaskId taskId) EXT_NOEXCEPT
+inline bool Scheduler::IsTaskExists(TaskId taskId) noexcept
 {
     std::lock_guard<std::mutex> lock(m_mutexTasks);
     return m_tasks.find(taskId) != m_tasks.end();

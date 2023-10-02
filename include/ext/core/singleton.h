@@ -82,7 +82,7 @@ private:
 
 // get singleton function
 template<class T>
-EXT_NODISCARD static T& get_service()
+[[nodiscard]] static T& get_service()
 {
     return Singleton<T>::Instance();
 }

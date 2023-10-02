@@ -75,7 +75,7 @@ struct ObjectHolder : ::ext::NonCopyable
     /// <param name="objectInvalidValue">If set, we will only destroy the object if it does not match this value</param>
     ObjectHolder(FreeFunction&& freeObjectFunction,
                  std::optional<ObjectType>&& objectInitialValue,
-                 std::optional<ObjectType>&& objectInvalidValue) EXT_NOEXCEPT
+                 std::optional<ObjectType>&& objectInvalidValue) noexcept
         : m_freeObjectFunction(std::move(freeObjectFunction))
         , m_object(std::move(objectInitialValue))
         , m_objectInvalidValue(std::move(objectInvalidValue))
@@ -84,12 +84,12 @@ struct ObjectHolder : ::ext::NonCopyable
     /// <param name="freeObjectFunction">Destroy object function</param>
     /// <param name="objectInvalidValue">If set, we will only destroy the object if it does not match this value</param>
     ObjectHolder(FreeFunction&& freeObjectFunction,
-                 std::optional<ObjectType>&& objectInvalidValue = std::nullopt) EXT_NOEXCEPT
+                 std::optional<ObjectType>&& objectInvalidValue = std::nullopt) noexcept
         : m_freeObjectFunction(std::move(freeObjectFunction))
         , m_objectInvalidValue(std::move(objectInvalidValue))
     {}
     // Move constuctor
-    ObjectHolder(ObjectHolder&& otherObjectHolder) EXT_NOEXCEPT
+    ObjectHolder(ObjectHolder&& otherObjectHolder) noexcept
         : m_freeObjectFunction(std::move(otherObjectHolder.m_freeObjectFunction))
         , m_object(std::move(otherObjectHolder.m_object))
         , m_objectInvalidValue(std::move(otherObjectHolder.m_objectInvalidValue))
@@ -100,34 +100,34 @@ struct ObjectHolder : ::ext::NonCopyable
 
     ~ObjectHolder() { DestroyObject(); }
 
-    constexpr ObjectHolder& operator=(ObjectType&& object) EXT_NOEXCEPT
+    constexpr ObjectHolder& operator=(ObjectType&& object) noexcept
     {
         DestroyObject();
         m_object = std::move(object);
         return *this;
     }
 
-    constexpr ObjectHolder& operator=(const ObjectType& object) EXT_NOEXCEPT
+    constexpr ObjectHolder& operator=(const ObjectType& object) noexcept
     {
         DestroyObject();
         m_object = object;
         return *this;
     }
 
-    EXT_NODISCARD constexpr operator ObjectType&() { return m_object.value(); }
-    EXT_NODISCARD constexpr operator const ObjectType&() const { return m_object.value(); }
+    [[nodiscard]] constexpr operator ObjectType&() { return m_object.value(); }
+    [[nodiscard]] constexpr operator const ObjectType&() const { return m_object.value(); }
 
-    EXT_NODISCARD constexpr const ObjectType& value() const { return m_object.value(); }
-    EXT_NODISCARD constexpr bool has_value() const EXT_NOEXCEPT
+    [[nodiscard]] constexpr const ObjectType& value() const { return m_object.value(); }
+    [[nodiscard]] constexpr bool has_value() const noexcept
     {
         return m_object.has_value() && (!m_objectInvalidValue.has_value() || m_object.value() != m_objectInvalidValue.value());
     }
 
-    EXT_NODISCARD constexpr bool operator!() const EXT_NOEXCEPT { return !has_value(); }
-    EXT_NODISCARD constexpr operator bool() const EXT_NOEXCEPT { return has_value(); }
+    [[nodiscard]] constexpr bool operator!() const noexcept { return !has_value(); }
+    [[nodiscard]] constexpr operator bool() const noexcept { return has_value(); }
 
 public:
-    constexpr void DestroyObject() EXT_NOEXCEPT
+    constexpr void DestroyObject() noexcept
     {
         if (m_freeObjectFunction != nullptr && has_value())
             m_freeObjectFunction(m_object.value());

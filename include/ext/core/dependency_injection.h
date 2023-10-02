@@ -91,7 +91,7 @@ struct any_interface_provider;
 
 // Internal function for create object with using an object monitor
 template <typename Object>
-EXT_NODISCARD std::shared_ptr<Object> CreateObject(std::shared_ptr<ServiceProvider> serviceProvider,
+[[nodiscard]] std::shared_ptr<Object> CreateObject(std::shared_ptr<ServiceProvider> serviceProvider,
                                                    const std::shared_ptr<ObjectsMonitor>& monitor) THROWS_DI_EXCEPTIONS;
 
 } // namespace dependency_injection;
@@ -113,43 +113,43 @@ struct ServiceProvider : ext::enable_shared_from_this<ServiceProvider>, ext::Non
     // If interface not registered in service provider throws di::not_registered exception
     // If interface implementation can`t be created because of construction exception - throws it
     template <typename Interface>
-    EXT_NODISCARD std::shared_ptr<Interface> GetInterface() const THROWS_DI_EXCEPTIONS;
+    [[nodiscard]] std::shared_ptr<Interface> GetInterface() const THROWS_DI_EXCEPTIONS;
 
     // Getting interface from registered interface collection, returns last registered implementation of interface
     // Returns shared ptr on object if everything ok
     // Returns nullptr if any error/exception occurred
     template <typename Interface>
-    EXT_NODISCARD std::shared_ptr<Interface> TryGetInterface() const EXT_NOEXCEPT;
+    [[nodiscard]] std::shared_ptr<Interface> TryGetInterface() const noexcept;
 
     // Getting all interface implimentations from registered collection
     // If any interface implementation can`t be created because of construction exception - throws it
     template <typename Interface>
-    EXT_NODISCARD std::list<std::shared_ptr<Interface>> GetInterfaces() const EXT_THROWS();
+    [[nodiscard]] std::list<std::shared_ptr<Interface>> GetInterfaces() const EXT_THROWS();
 
     // Getting lazy objects on registered interface implimentations
     // Allows to check how many objects registered for interface without creation of all objects.
     template <typename Interface>
-    EXT_NODISCARD std::list<ext::lazy_shared_ptr<Interface>> GetLazyInterfaces() const EXT_THROWS();
+    [[nodiscard]] std::list<ext::lazy_shared_ptr<Interface>> GetLazyInterfaces() const EXT_THROWS();
 
     // Checking if interface registered in provider
     template <typename Interface>
-    EXT_NODISCARD bool IsRegistered() const EXT_NOEXCEPT;
+    [[nodiscard]] bool IsRegistered() const noexcept;
 
     // Creating new provider scope, all objects registered as @ServiceCollection::RegisterScoped will be recreated
-    EXT_NODISCARD Ptr CreateScope() EXT_NOEXCEPT;
+    [[nodiscard]] Ptr CreateScope() noexcept;
 
     // Remove all created scoped\singleton objects from all created and exist ServiceProviders
     // Allows to destoy singletones and scoped objects if service provider is the last owner
-    void Reset() EXT_NOEXCEPT;
+    void Reset() noexcept;
 
 private:
     template <typename Interface>
-    EXT_NODISCARD std::shared_ptr<Interface> GetInterface(const std::shared_ptr<di::ObjectsMonitor>& monitor) const THROWS_DI_EXCEPTIONS;
+    [[nodiscard]] std::shared_ptr<Interface> GetInterface(const std::shared_ptr<di::ObjectsMonitor>& monitor) const THROWS_DI_EXCEPTIONS;
 
     struct IObject;
 
     template <typename Interface>
-    EXT_NODISCARD std::shared_ptr<Interface> GetInterface(const std::shared_ptr<IObject>& object,
+    [[nodiscard]] std::shared_ptr<Interface> GetInterface(const std::shared_ptr<IObject>& object,
                                                           const std::shared_ptr<di::ObjectsMonitor>& monitor) const EXT_THROWS(...);
 private:
     // allow construction from ServiceCollection
@@ -172,15 +172,15 @@ private:
     std::list<std::weak_ptr<ServiceProvider>> m_createdScopes;
 
 private:
-    explicit ServiceProvider(InterfaceMap&& objectsMap) EXT_NOEXCEPT;
+    explicit ServiceProvider(InterfaceMap&& objectsMap) noexcept;
 
     // Common function for creating new service provider scope
-    EXT_NODISCARD static Ptr CreateScope(const InterfaceMap& registeredObjects,
+    [[nodiscard]] static Ptr CreateScope(const InterfaceMap& registeredObjects,
                                          std::mutex& createdScopesMutex,
-                                         std::list<std::weak_ptr<ServiceProvider>>& createdScopes) EXT_NOEXCEPT;
+                                         std::list<std::weak_ptr<ServiceProvider>>& createdScopes) noexcept;
     // update all object wrappers, in new scope
     static void UpdateObjectWrappersInNewScope(const ServiceProvider::InterfaceMap& parentScope,
-                                               ServiceProvider::InterfaceMap& newScope) EXT_NOEXCEPT;
+                                               ServiceProvider::InterfaceMap& newScope) noexcept;
 };
 
 // Service collection singleton, allow to register interfaces and their implementations
@@ -188,8 +188,8 @@ private:
 class ServiceCollection : ext::NonCopyable
 {
 public:
-    ServiceCollection() EXT_NOEXCEPT = default;
-    ~ServiceCollection() EXT_NOEXCEPT;
+    ServiceCollection() noexcept = default;
+    ~ServiceCollection() noexcept;
 
     // Registering a class and the interfaces it implements
     // Function ServiceProvider::GetInterface will create a new object every time it called
@@ -208,25 +208,25 @@ public:
 
     // Checking is interface registered inside collection
     template <typename Interface>
-    EXT_NODISCARD bool IsRegistered() const EXT_NOEXCEPT;
+    [[nodiscard]] bool IsRegistered() const noexcept;
 
     // Unregistering interface from collection
     template <typename Interface>
-    bool Unregister() EXT_NOEXCEPT;
+    bool Unregister() noexcept;
 
     // Unregistering object with interfaces implementation from collection
     template <typename Class, typename... Interfaces>
-    void UnregisterObject() EXT_NOEXCEPT;
+    void UnregisterObject() noexcept;
     
     // Remove all information
-    void UnregisterAll() EXT_NOEXCEPT;
+    void UnregisterAll() noexcept;
 
     // Creating new ServiceProvider with all registered objects information
-    EXT_NODISCARD ServiceProvider::Ptr BuildServiceProvider();
+    [[nodiscard]] ServiceProvider::Ptr BuildServiceProvider();
 
     // Remove all created scoped\singleton objects from all created and exist ServiceProviders
     // Allows singletons and scoped objects to be destroyed if the service provider is the last owner
-    void ResetObjects() EXT_NOEXCEPT;
+    void ResetObjects() noexcept;
 
 private:
     // Internal registration class in InterfaceMap
@@ -256,29 +256,29 @@ private:
 // If any required interface not registered inside ServiceProvider - throws di::not_registered
 // If object can`t be created because of constructor exceptions - throws it
 template <typename Object>
-EXT_NODISCARD std::shared_ptr<Object> CreateObject(ServiceProvider::Ptr serviceProvider) THROWS_DI_EXCEPTIONS;
+[[nodiscard]] std::shared_ptr<Object> CreateObject(ServiceProvider::Ptr serviceProvider) THROWS_DI_EXCEPTIONS;
 
 // Getting interface implementation from ServiceProvider
 // If any required interface not registered inside ServiceProvider - throws di::not_registered
 // If object can`t be created because of constructor exceptions - throws it
 template <typename Interface>
-EXT_NODISCARD std::shared_ptr<Interface> GetInterface(const ServiceProvider::Ptr& serviceProvider) THROWS_DI_EXCEPTIONS;
+[[nodiscard]] std::shared_ptr<Interface> GetInterface(const ServiceProvider::Ptr& serviceProvider) THROWS_DI_EXCEPTIONS;
 
 // Help interface to simplify getting interfaces inside classes, holds ServiceProvider pointer and allow to easy GetInterface
 struct ServiceProviderHolder
 {
-    explicit ServiceProviderHolder(ServiceProvider::Ptr serviceProvider) EXT_NOEXCEPT
+    explicit ServiceProviderHolder(ServiceProvider::Ptr serviceProvider) noexcept
         : m_serviceProvider(std::move(serviceProvider))
     {}
 
     template <typename Interface>
-    EXT_NODISCARD std::shared_ptr<Interface> GetInterface() const THROWS_DI_EXCEPTIONS
+    [[nodiscard]] std::shared_ptr<Interface> GetInterface() const THROWS_DI_EXCEPTIONS
     {
         return ext::GetInterface<Interface>(m_serviceProvider);
     }
 
     template <typename Object>
-    EXT_NODISCARD std::shared_ptr<Object> CreateObject() const THROWS_DI_EXCEPTIONS
+    [[nodiscard]] std::shared_ptr<Object> CreateObject() const THROWS_DI_EXCEPTIONS
     {
         return ext::CreateObject<Object>(m_serviceProvider);
     }
@@ -394,12 +394,12 @@ private:
 // Allow to create any object and provide it with all necessary interfaces
 struct any_interface_provider
 {
-    explicit any_interface_provider(ServiceProvider::Ptr&& serviceProvider, ObjectsMonitor::Ptr monitor) EXT_NOEXCEPT
+    explicit any_interface_provider(ServiceProvider::Ptr&& serviceProvider, ObjectsMonitor::Ptr monitor) noexcept
         : m_serviceProvider(std::move(serviceProvider))
         , m_objectMonitor(std::move(monitor))
     {}
 
-    operator ServiceProvider::Ptr() const EXT_NOEXCEPT
+    operator ServiceProvider::Ptr() const noexcept
     {
         EXT_REQUIRE(!!m_serviceProvider);
         return m_serviceProvider;
@@ -447,14 +447,14 @@ private:
 
 // Creating shared pointer on any object and provide it with all necessary interfaces
 template <typename Type, size_t... Index>
-EXT_NODISCARD std::shared_ptr<Type> CreateWithProviders(any_interface_provider& provider, const std::index_sequence<Index...>&) THROWS_DI_EXCEPTIONS
+[[nodiscard]] std::shared_ptr<Type> CreateWithProviders(any_interface_provider& provider, const std::index_sequence<Index...>&) THROWS_DI_EXCEPTIONS
 {
     return std::make_shared<Type>(((void)Index, provider)...);
 }
 
 // Internal function for create object with using an object monitor
 template <typename Type>
-EXT_NODISCARD std::shared_ptr<Type> CreateObject(ServiceProvider::Ptr serviceProvider, const di::ObjectsMonitor::Ptr& monitor) THROWS_DI_EXCEPTIONS
+[[nodiscard]] std::shared_ptr<Type> CreateObject(ServiceProvider::Ptr serviceProvider, const di::ObjectsMonitor::Ptr& monitor) THROWS_DI_EXCEPTIONS
 {
     EXT_EXPECT(!!serviceProvider);
     EXT_EXPECT(!!monitor);
@@ -470,7 +470,7 @@ EXT_NODISCARD std::shared_ptr<Type> CreateObject(ServiceProvider::Ptr servicePro
 // If any required interface not registered inside ServiceProvider - throws di::not_registered
 // If object can`t be created because of constructor exceptions - throws it
 template <typename Type>
-EXT_NODISCARD std::shared_ptr<Type> CreateObject(ServiceProvider::Ptr serviceProvider) THROWS_DI_EXCEPTIONS
+[[nodiscard]] std::shared_ptr<Type> CreateObject(ServiceProvider::Ptr serviceProvider) THROWS_DI_EXCEPTIONS
 {
     EXT_EXPECT(!!serviceProvider);
 
@@ -482,7 +482,7 @@ EXT_NODISCARD std::shared_ptr<Type> CreateObject(ServiceProvider::Ptr servicePro
 // If any required interface not registered inside ServiceProvider - throws di::not_registered
 // If object can`t be created because of constructor exceptions - throws it
 template <typename Interface>
-EXT_NODISCARD std::shared_ptr<Interface> GetInterface(const ServiceProvider::Ptr& serviceProvider) THROWS_DI_EXCEPTIONS
+[[nodiscard]] std::shared_ptr<Interface> GetInterface(const ServiceProvider::Ptr& serviceProvider) THROWS_DI_EXCEPTIONS
 {
     EXT_EXPECT(!!serviceProvider);
     return serviceProvider->GetInterface<Interface>();
@@ -490,19 +490,19 @@ EXT_NODISCARD std::shared_ptr<Interface> GetInterface(const ServiceProvider::Ptr
 
 struct ServiceProvider::IObject : ext::NonCopyable
 {
-    explicit IObject(const char* name) EXT_NOEXCEPT : m_objectName(name) {}
+    explicit IObject(const char* name) noexcept : m_objectName(name) {}
     virtual ~IObject() = default;
 
     // Get class hash
-    EXT_NODISCARD virtual size_t GetHash() const EXT_NOEXCEPT = 0;
+    [[nodiscard]] virtual size_t GetHash() const noexcept = 0;
     // Get class name, mostly for debug
-    EXT_NODISCARD virtual const char* GetName() const EXT_NOEXCEPT { return m_objectName; }
+    [[nodiscard]] virtual const char* GetName() const noexcept { return m_objectName; }
     // Get object, if object not exist - creating it
-    EXT_NODISCARD virtual std::any GetObject(ServiceProvider::Ptr&&, const di::ObjectsMonitor::Ptr& monitor) = 0;
+    [[nodiscard]] virtual std::any GetObject(ServiceProvider::Ptr&&, const di::ObjectsMonitor::Ptr& monitor) = 0;
     // On call CreateScope or BuildServiceProvider - creating new IObject
-    EXT_NODISCARD virtual std::shared_ptr<IObject> CreateScopedObject() EXT_NOEXCEPT = 0;
+    [[nodiscard]] virtual std::shared_ptr<IObject> CreateScopedObject() noexcept = 0;
     // Reset object if exists
-    virtual void Reset() EXT_NOEXCEPT = 0;
+    virtual void Reset() noexcept = 0;
 
 private:
     const char* m_objectName;
@@ -510,23 +510,23 @@ private:
 
 struct ServiceProvider::IObjectWrapper : IObject
 {
-    explicit IObjectWrapper(const char* name) EXT_NOEXCEPT : IObject(name) {}
+    explicit IObjectWrapper(const char* name) noexcept : IObject(name) {}
 
     // Get wrapped object reference
-    EXT_NODISCARD virtual std::shared_ptr<IObject>& GetWrappedObject() EXT_NOEXCEPT = 0;
+    [[nodiscard]] virtual std::shared_ptr<IObject>& GetWrappedObject() noexcept = 0;
     // Get wrapped interface hash
-    EXT_NODISCARD virtual size_t GetWrappedInterfaceHash() const EXT_NOEXCEPT = 0;
+    [[nodiscard]] virtual size_t GetWrappedInterfaceHash() const noexcept = 0;
 };
 
 template <typename Interface>
-EXT_NODISCARD std::shared_ptr<Interface> ServiceProvider::GetInterface() const THROWS_DI_EXCEPTIONS
+[[nodiscard]] std::shared_ptr<Interface> ServiceProvider::GetInterface() const THROWS_DI_EXCEPTIONS
 {
     const auto monitor = std::make_shared<di::ObjectsMonitor>();
     return GetInterface<Interface>(monitor);
 }
 
 template <typename Interface>
-EXT_NODISCARD std::shared_ptr<Interface> ServiceProvider::GetInterface(const std::shared_ptr<IObject>& objectHolder,
+[[nodiscard]] std::shared_ptr<Interface> ServiceProvider::GetInterface(const std::shared_ptr<IObject>& objectHolder,
                                                                        const di::ObjectsMonitor::Ptr& monitor) const EXT_THROWS(...)
 {
     try
@@ -556,7 +556,7 @@ EXT_NODISCARD std::shared_ptr<Interface> ServiceProvider::GetInterface(const std
 }
 
 template <typename Interface>
-EXT_NODISCARD std::shared_ptr<Interface> ServiceProvider::GetInterface(const di::ObjectsMonitor::Ptr& monitor) const THROWS_DI_EXCEPTIONS
+[[nodiscard]] std::shared_ptr<Interface> ServiceProvider::GetInterface(const di::ObjectsMonitor::Ptr& monitor) const THROWS_DI_EXCEPTIONS
 {
     if (auto it = m_registeredObjects.find(typeid(Interface).hash_code()); it != m_registeredObjects.end() && !it->second.empty())
     {
@@ -589,7 +589,7 @@ EXT_NODISCARD std::shared_ptr<Interface> ServiceProvider::GetInterface(const di:
 }
 
 template <typename Interface>
-EXT_NODISCARD std::shared_ptr<Interface> ServiceProvider::TryGetInterface() const EXT_NOEXCEPT
+[[nodiscard]] std::shared_ptr<Interface> ServiceProvider::TryGetInterface() const noexcept
 try
 {
     return GetInterface<Interface>();
@@ -600,7 +600,7 @@ catch (...)
 }
 
 template <typename Interface>
-EXT_NODISCARD std::list<std::shared_ptr<Interface>> ServiceProvider::GetInterfaces() const EXT_THROWS()
+[[nodiscard]] std::list<std::shared_ptr<Interface>> ServiceProvider::GetInterfaces() const EXT_THROWS()
 {
     std::list<std::shared_ptr<Interface>> result;
    
@@ -616,7 +616,7 @@ EXT_NODISCARD std::list<std::shared_ptr<Interface>> ServiceProvider::GetInterfac
 }
 
 template <typename Interface>
-EXT_NODISCARD std::list<ext::lazy_shared_ptr<Interface>> ServiceProvider::GetLazyInterfaces() const EXT_THROWS()
+[[nodiscard]] std::list<ext::lazy_shared_ptr<Interface>> ServiceProvider::GetLazyInterfaces() const EXT_THROWS()
 {
     std::list<ext::lazy_shared_ptr<Interface>> result;
    
@@ -636,17 +636,17 @@ EXT_NODISCARD std::list<ext::lazy_shared_ptr<Interface>> ServiceProvider::GetLaz
 }
 
 template <typename Interface>
-EXT_NODISCARD bool ServiceProvider::IsRegistered() const EXT_NOEXCEPT
+[[nodiscard]] bool ServiceProvider::IsRegistered() const noexcept
 {
     return (m_registeredObjects.find(typeid(Interface).hash_code()) != m_registeredObjects.end());
 }
 
-inline ServiceProvider::Ptr ServiceProvider::CreateScope() EXT_NOEXCEPT
+inline ServiceProvider::Ptr ServiceProvider::CreateScope() noexcept
 {
     return CreateScope(m_registeredObjects, m_createdScopesMutex, m_createdScopes);
 }
 
-inline void ServiceProvider::Reset() EXT_NOEXCEPT
+inline void ServiceProvider::Reset() noexcept
 {
     InterfaceMap registeredObjects;
     for (auto&& [interfaceId, objects] : m_registeredObjects)
@@ -667,13 +667,13 @@ inline void ServiceProvider::Reset() EXT_NOEXCEPT
     m_createdScopes.clear();
 }
 
-inline ServiceProvider::ServiceProvider(InterfaceMap&& objectsMap) EXT_NOEXCEPT
+inline ServiceProvider::ServiceProvider(InterfaceMap&& objectsMap) noexcept
     : m_registeredObjects(std::move(objectsMap))
 {}
 
-EXT_NODISCARD inline ServiceProvider::Ptr ServiceProvider::CreateScope(const InterfaceMap& registeredObjects,
+[[nodiscard]] inline ServiceProvider::Ptr ServiceProvider::CreateScope(const InterfaceMap& registeredObjects,
                                                                        std::mutex& createdScopesMutex,
-                                                                       std::list<std::weak_ptr<ServiceProvider>>& createdScopes) EXT_NOEXCEPT
+                                                                       std::list<std::weak_ptr<ServiceProvider>>& createdScopes) noexcept
 {
     ServiceProvider::InterfaceMap newScopeObjects;
     for (auto&& [interfaceId, objects] : registeredObjects)
@@ -704,7 +704,7 @@ EXT_NODISCARD inline ServiceProvider::Ptr ServiceProvider::CreateScope(const Int
 }
 
 inline void ServiceProvider::UpdateObjectWrappersInNewScope(const ServiceProvider::InterfaceMap& parentScope,
-                                                            ServiceProvider::InterfaceMap& newScope) EXT_NOEXCEPT
+                                                            ServiceProvider::InterfaceMap& newScope) noexcept
 {
     std::list<std::shared_ptr<IObjectWrapper>> handledWrappers;
     for (auto&& [interfaceId, objectsList] : newScope)
@@ -766,9 +766,9 @@ template <typename Object, typename Interface>
 struct ServiceCollection::SingletonObject : ServiceProvider::IObject,
     ext::enable_shared_from_this<ServiceCollection::SingletonObject<Object, Interface>, ServiceProvider::IObject>
 {
-    explicit SingletonObject() EXT_NOEXCEPT : IObject(ext::type_name<Object>()) {}
-    EXT_NODISCARD size_t GetHash() const EXT_NOEXCEPT override final { return typeid(Object).hash_code(); }
-    EXT_NODISCARD std::any GetObject(ServiceProvider::Ptr&& serviceProvider, const di::ObjectsMonitor::Ptr& monitor) override final
+    explicit SingletonObject() noexcept : IObject(ext::type_name<Object>()) {}
+    [[nodiscard]] size_t GetHash() const noexcept override final { return typeid(Object).hash_code(); }
+    [[nodiscard]] std::any GetObject(ServiceProvider::Ptr&& serviceProvider, const di::ObjectsMonitor::Ptr& monitor) override final
     {
         // Check if we already creating this object, otherwise it might lead to the dead lock in the mutex bellow
         monitor->CheckCyclicCreation<Object>();
@@ -784,12 +784,12 @@ struct ServiceCollection::SingletonObject : ServiceProvider::IObject,
             m_object = std::static_pointer_cast<Interface>(ext::di::CreateObject<Object>(std::move(serviceProvider), monitor));
         return std::make_any<std::shared_ptr<Interface>>(m_object);
     }
-    virtual EXT_NODISCARD std::shared_ptr<ServiceProvider::IObject> CreateScopedObject() EXT_NOEXCEPT override
+    virtual [[nodiscard]] std::shared_ptr<ServiceProvider::IObject> CreateScopedObject() noexcept override
     {
         // only one instance on whole scopes
         return ext::enable_shared_from_this<ServiceCollection::SingletonObject<Object, Interface>, ServiceProvider::IObject>::shared_from_this();
     }
-    void Reset() EXT_NOEXCEPT override final { std::unique_lock<std::shared_mutex> lock(m_mutex); m_object = nullptr; }
+    void Reset() noexcept override final { std::unique_lock<std::shared_mutex> lock(m_mutex); m_object = nullptr; }
 
 private:
     std::shared_mutex m_mutex;
@@ -799,7 +799,7 @@ private:
 template <typename Object, typename Interface>
 struct ServiceCollection::ScopedObject final : ServiceCollection::SingletonObject<Object, Interface>
 {
-    EXT_NODISCARD std::shared_ptr<ServiceProvider::IObject> CreateScopedObject() EXT_NOEXCEPT override final
+    [[nodiscard]] std::shared_ptr<ServiceProvider::IObject> CreateScopedObject() noexcept override final
     {
         // new instance for each scope
         return std::make_shared<ScopedObject<Object, Interface>>();
@@ -809,33 +809,33 @@ struct ServiceCollection::ScopedObject final : ServiceCollection::SingletonObjec
 template <typename Object, typename Interface>
 struct ServiceCollection::TransientObject final : ServiceProvider::IObject
 {
-    explicit TransientObject() EXT_NOEXCEPT : IObject(ext::type_name<Object>()) {}
+    explicit TransientObject() noexcept : IObject(ext::type_name<Object>()) {}
 
-    EXT_NODISCARD size_t GetHash() const EXT_NOEXCEPT override final { return typeid(Object).hash_code(); }
-    EXT_NODISCARD std::any GetObject(ServiceProvider::Ptr&& serviceProvider, const di::ObjectsMonitor::Ptr& monitor) override final
+    [[nodiscard]] size_t GetHash() const noexcept override final { return typeid(Object).hash_code(); }
+    [[nodiscard]] std::any GetObject(ServiceProvider::Ptr&& serviceProvider, const di::ObjectsMonitor::Ptr& monitor) override final
     {
         return std::make_any<std::shared_ptr<Interface>>(std::static_pointer_cast<Interface>(
             ext::di::CreateObject<Object>(std::move(serviceProvider), monitor)));
     }
-    EXT_NODISCARD std::shared_ptr<ServiceProvider::IObject> CreateScopedObject() EXT_NOEXCEPT override final
+    [[nodiscard]] std::shared_ptr<ServiceProvider::IObject> CreateScopedObject() noexcept override final
     {
         // new instance every time
         return std::make_shared<TransientObject<Object, Interface>>();
     }
-    void Reset() EXT_NOEXCEPT override final {}
+    void Reset() noexcept override final {}
 };
 
 template <typename Object, typename Interface, typename InterfaceWrapped>
 struct ServiceCollection::WrapperObject final : ServiceProvider::IObjectWrapper,
     ext::enable_shared_from_this<ServiceCollection::WrapperObject<Object, Interface, InterfaceWrapped>, ServiceProvider::IObject>
 {
-    explicit WrapperObject(const std::shared_ptr<ServiceProvider::IObject>& object) EXT_NOEXCEPT
+    explicit WrapperObject(const std::shared_ptr<ServiceProvider::IObject>& object) noexcept
         : IObjectWrapper(ext::type_name<Object>())
         , m_object(object)
     {}
 
-    EXT_NODISCARD size_t GetHash() const EXT_NOEXCEPT override final { return typeid(Object).hash_code(); }
-    EXT_NODISCARD std::any GetObject(ServiceProvider::Ptr&& serviceProvider, const di::ObjectsMonitor::Ptr& monitor) override final
+    [[nodiscard]] size_t GetHash() const noexcept override final { return typeid(Object).hash_code(); }
+    [[nodiscard]] std::any GetObject(ServiceProvider::Ptr&& serviceProvider, const di::ObjectsMonitor::Ptr& monitor) override final
     {
         std::shared_ptr<Interface> interfacePtr;
         try
@@ -855,14 +855,14 @@ struct ServiceCollection::WrapperObject final : ServiceProvider::IObjectWrapper,
             << ext::type_name<Interface>() << " inherited from" << ext::type_name<Object>();
         return std::make_any<std::shared_ptr<Interface>>(interfacePtr);
     }
-    EXT_NODISCARD std::shared_ptr<ServiceProvider::IObject> CreateScopedObject() EXT_NOEXCEPT override final
+    [[nodiscard]] std::shared_ptr<ServiceProvider::IObject> CreateScopedObject() noexcept override final
     {
         return std::make_shared<ServiceCollection::WrapperObject<Object, Interface, InterfaceWrapped>>(m_object);
     }
-    void Reset() EXT_NOEXCEPT override final { m_object->Reset(); }
+    void Reset() noexcept override final { m_object->Reset(); }
 
-    EXT_NODISCARD std::shared_ptr<IObject>& GetWrappedObject() EXT_NOEXCEPT override final { return m_object; }
-    EXT_NODISCARD size_t GetWrappedInterfaceHash() const EXT_NOEXCEPT override final { return typeid(InterfaceWrapped).hash_code(); }
+    [[nodiscard]] std::shared_ptr<IObject>& GetWrappedObject() noexcept override final { return m_object; }
+    [[nodiscard]] size_t GetWrappedInterfaceHash() const noexcept override final { return typeid(InterfaceWrapped).hash_code(); }
 
 private:
     std::shared_ptr<ServiceProvider::IObject> m_object;
@@ -926,21 +926,21 @@ void ServiceCollection::RegisterSingleton()
 }
 
 template <typename Interface>
-bool ServiceCollection::IsRegistered() const EXT_NOEXCEPT
+bool ServiceCollection::IsRegistered() const noexcept
 {
     std::shared_lock lock(m_registeredObjectsMutex);
     return m_registeredObjects.find(typeid(Interface).hash_code()) != m_registeredObjects.end();
 }
 
 template <typename Interface>
-bool ServiceCollection::Unregister() EXT_NOEXCEPT
+bool ServiceCollection::Unregister() noexcept
 {
     std::unique_lock lock(m_registeredObjectsMutex);
     return m_registeredObjects.erase(typeid(Interface).hash_code()) != 0;
 }
 
 template <typename Class, typename... Interfaces>
-void ServiceCollection::UnregisterObject() EXT_NOEXCEPT
+void ServiceCollection::UnregisterObject() noexcept
 {
     std::unique_lock lock(m_registeredObjectsMutex);
     ext::mpl::ForEach<ext::mpl::list<Interfaces...>>::Call([&, hash = typeid(Class).hash_code()](auto* type)
@@ -963,7 +963,7 @@ void ServiceCollection::UnregisterObject() EXT_NOEXCEPT
     });
 }
 
-inline void ServiceCollection::UnregisterAll() EXT_NOEXCEPT
+inline void ServiceCollection::UnregisterAll() noexcept
 {
     std::unique_lock lock(m_registeredObjectsMutex);
     m_registeredObjects.clear();
@@ -982,12 +982,12 @@ inline ServiceProvider::Ptr ServiceCollection::BuildServiceProvider()
     return ServiceProvider::CreateScope(m_registeredObjects, m_creaedServiceProvidersMutex, m_createdServiceProviders);
 }
 
-inline ext::ServiceCollection::~ServiceCollection() EXT_NOEXCEPT
+inline ext::ServiceCollection::~ServiceCollection() noexcept
 {
     ResetObjects();
 }
 
-inline void ServiceCollection::ResetObjects() EXT_NOEXCEPT
+inline void ServiceCollection::ResetObjects() noexcept
 {
     std::unique_lock<std::mutex> lock(m_creaedServiceProvidersMutex);
     for (auto& serviceProvider : m_createdServiceProviders)

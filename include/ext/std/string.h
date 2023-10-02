@@ -32,7 +32,7 @@ void string_trim_all(std::basic_string<CharType, std::char_traits<CharType>, std
     text = text.substr(indexFirstNotSpace, text.length() - indexLastNotSpace - indexFirstNotSpace);
 }
 
-EXT_NODISCARD inline std::wstring widen(const char* str)
+[[nodiscard]] inline std::wstring widen(const char* str)
 {
     const auto length = strlen(str);
 
@@ -48,7 +48,7 @@ EXT_NODISCARD inline std::wstring widen(const char* str)
     return result;
 }
 
-EXT_NODISCARD inline std::wstring widen(const std::string& str)
+[[nodiscard]] inline std::wstring widen(const std::string& str)
 {
     std::wstring result;
     result.reserve(str.size());
@@ -61,7 +61,7 @@ EXT_NODISCARD inline std::wstring widen(const std::string& str)
     return result;
 }
 
-EXT_NODISCARD inline std::string narrow(const wchar_t* str)
+[[nodiscard]] inline std::string narrow(const wchar_t* str)
 {
     const auto length = wcslen(str);
 
@@ -77,7 +77,7 @@ EXT_NODISCARD inline std::string narrow(const wchar_t* str)
     return result;
 }
 
-EXT_NODISCARD inline std::string narrow(const std::wstring& str)
+[[nodiscard]] inline std::string narrow(const std::wstring& str)
 {
     std::string result;
     result.reserve(str.size());
@@ -97,14 +97,14 @@ EXT_NODISCARD inline std::string narrow(const std::wstring& str)
 #include <string_view>
 
 template <typename... Args>
-EXT_NODISCARD std::string string_sprintf(std::string_view rt_fmt_str, Args&&... args)
+[[nodiscard]] std::string string_sprintf(std::string_view rt_fmt_str, Args&&... args)
 {
     return std::vformat(rt_fmt_str, std::make_format_args(args...));
 }
 
 #else // not c++ 20
 template <typename... Args>
-EXT_NODISCARD std::string string_sprintf(const char* format, Args&&... args) EXT_THROWS()
+[[nodiscard]] std::string string_sprintf(const char* format, Args&&... args) EXT_THROWS()
 {
     const int size_s = std::snprintf(nullptr, 0, format, std::forward<Args>(args)...) + 1; // + '\0'
     if (size_s <= 0) { EXT_DUMP_IF(true); throw std::runtime_error("Error during formatting."); }
@@ -116,7 +116,7 @@ EXT_NODISCARD std::string string_sprintf(const char* format, Args&&... args) EXT
 }
 
 template <typename... Args>
-EXT_NODISCARD std::wstring string_swprintf(const wchar_t* format, Args&&... args) EXT_THROWS()
+[[nodiscard]] std::wstring string_swprintf(const wchar_t* format, Args&&... args) EXT_THROWS()
 {
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
     const int size_s = std::swprintf(nullptr, 0, format, std::forward<Args>(args)...) + 1; // + '\0'

@@ -22,11 +22,11 @@ class stop_callback_control_block
 public:
     using callback_type = std::function<void()>;
 
-    stop_callback_control_block(callback_type&& callback) EXT_NOEXCEPT
+    stop_callback_control_block(callback_type&& callback) noexcept
         : m_callback{std::move(callback)}
     {}
 
-    void invoke_callback() EXT_NOEXCEPT
+    void invoke_callback() noexcept
     {
         m_callback();
 
@@ -37,14 +37,14 @@ public:
         }
     }
 
-    void mark_as_removed() EXT_NOEXCEPT
+    void mark_as_removed() noexcept
     {
         // Callback executed on this thread or is still currently executing
         // and is deregistering itself from within the callback.
         m_isRemoved = true;
     }
 
-    void wait_until_invoke_finishes() EXT_NOEXCEPT
+    void wait_until_invoke_finishes() noexcept
     {
         // Callback is currently executing on another thread, block until it finishes executing.
 
@@ -63,7 +63,7 @@ private:
 
 struct stop_state
 {
-    bool request_stop() EXT_NOEXCEPT
+    bool request_stop() noexcept
     {
         if (!try_lock_and_signal_until_signalled())
         {
@@ -103,17 +103,17 @@ struct stop_state
         return true;
     }
 
-    EXT_NODISCARD bool stop_requested() const EXT_NOEXCEPT
+    [[nodiscard]] bool stop_requested() const noexcept
     {
         return stop_requested(atomic_uint32_load_acquire(&m_state));
     }
 
-    EXT_NODISCARD bool stop_requestable() const EXT_NOEXCEPT
+    [[nodiscard]] bool stop_requestable() const noexcept
     {
         return stop_requestable(atomic_uint32_load_acquire(&m_state));
     }
 
-    EXT_NODISCARD bool try_add_callback(std::shared_ptr<detail::stop_callback_control_block>& cb) EXT_NOEXCEPT
+    [[nodiscard]] bool try_add_callback(std::shared_ptr<detail::stop_callback_control_block>& cb) noexcept
     {
         auto oldState = atomic_uint32_load_acquire(&m_state);
         do
@@ -146,7 +146,7 @@ struct stop_state
         return true;
     }
 
-    void remove_callback(std::shared_ptr<detail::stop_callback_control_block>& cb) EXT_NOEXCEPT
+    void remove_callback(std::shared_ptr<detail::stop_callback_control_block>& cb) noexcept
     {
         lock();
 
@@ -193,23 +193,23 @@ private:
     static constexpr state_type owner_ref_bits = source_ref_increment - 1;
     static constexpr state_type source_ref_bits = (stop_requested_flag - 1) ^ owner_ref_bits;
 
-    EXT_NODISCARD static bool is_locked(state_type state) EXT_NOEXCEPT
+    [[nodiscard]] static bool is_locked(state_type state) noexcept
     {
         return (state & locked_flag) != 0;
     }
 
-    EXT_NODISCARD static bool stop_requested(state_type state) EXT_NOEXCEPT
+    [[nodiscard]] static bool stop_requested(state_type state) noexcept
     {
         return (state & stop_requested_flag) != 0;
     }
 
-    EXT_NODISCARD static bool stop_requestable(state_type state) EXT_NOEXCEPT
+    [[nodiscard]] static bool stop_requestable(state_type state) noexcept
     {
         // Requestable if stop has already been requested or if there are still stop_source instances in existence.
         return stop_requested(state) || (state & source_ref_bits) != 0;
     }
 
-    EXT_NODISCARD bool try_lock_and_signal_until_signalled() EXT_NOEXCEPT
+    [[nodiscard]] bool try_lock_and_signal_until_signalled() noexcept
     {
         auto oldState = atomic_uint32_load_acquire(&m_state);
         do
@@ -227,7 +227,7 @@ private:
         return true;
     }
 
-    void lock() EXT_NOEXCEPT
+    void lock() noexcept
     {
         auto oldState = atomic_uint32_load_relaxed(&m_state);
         do
@@ -240,7 +240,7 @@ private:
         } while (!atomic_uint32_compare_exchange_weak_acquire_relaxed(&m_state, &oldState, oldState | locked_flag));
     }
 
-    void unlock() EXT_NOEXCEPT
+    void unlock() noexcept
     {
         const auto res = (0 == (locked_flag & atomic_uint32_sub_fetch_release(&m_state, locked_flag)));
         EXT_ASSERT(res);
@@ -249,7 +249,7 @@ private:
         }
     }
 
-    void spin_yield() EXT_NOEXCEPT
+    void spin_yield() noexcept
     {
         ext::thread_details::exponential_wait::FastWait(1);
     }

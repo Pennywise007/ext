@@ -128,7 +128,6 @@ public:
             m_invokedTimer.IsHandlerExist(handler, tickParam) ||
 #endif // __AFX_H__
             m_asyncTimer.IsHandlerExist(handler, tickParam);
-
     }
 
 private:
@@ -335,7 +334,13 @@ private:
 struct TickSubscriber : public ITickHandler
 {
     TickSubscriber() = default;
-    virtual ~TickSubscriber() { UnsubscribeTimer(); UnsubscribeInvokedTimer(); }
+    virtual ~TickSubscriber()
+    {
+        UnsubscribeTimer();
+#ifdef __AFX_H__
+        UnsubscribeInvokedTimer();
+#endif // __AFX_H__
+    }
 
     /// <summary>Add tick handler, tick function will be called async.</summary>
     /// <param name="tickInterval">Tick interval for this parameter.</param>

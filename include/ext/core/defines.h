@@ -4,7 +4,7 @@
 #define EXT_UNUSED(variable) static_cast<void>(variable)
 #define EXT_IGNORE_RESULT(...) static_cast<void>(__VA_ARGS__)
 
-// Functions declaration
+// Shows that function can throw exceptions, in params you can specify exception types
 #define EXT_THROWS(...)     noexcept(false)
 
 #define EXT_CALL            __cdecl
@@ -23,7 +23,7 @@
 #define EXT_PP_CAT_I(x, y)  EXT_PP_EXPAND(x##y)
 #define EXT_PP_CAT(x, y)    EXT_PP_CAT_I(x, y)
 
-// STRINGINIZE(ttt) = "ttt"
+// STRINGINIZE(test) = "test"
 #define TO_STRING(x)        #x
 #define STRINGINIZE(val)    TO_STRING(val)
 

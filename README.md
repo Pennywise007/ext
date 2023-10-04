@@ -52,7 +52,7 @@ const std::shared_ptr<CreatedObjectExample> object = ext::CreateObject<CreatedOb
 </details>
 
 - [Source](https://github.com/Pennywise007/ext/blob/main/include/ext/core/dependency_injection.h)
-- [Tests and examples](https://github.com/Pennywise007/ext/blob/main/test/core/dependency_injection_test.cpp)
+- [Tests and examples](https://github.com/Pennywise007/ext/blob/main/tests/core/dependency_injection_test.cpp)
 
 # Serialization
 Serialization objects to/from text, xml
@@ -100,7 +100,7 @@ struct TestStruct : SerializableObject<TestStruct>
 </details>
 
 - [Source](https://github.com/Pennywise007/ext/tree/main/include/ext/serialization)
-- [Tests and examples](https://github.com/Pennywise007/ext/blob/main/test/serialization/serialization_test.cpp)
+- [Tests and examples](https://github.com/Pennywise007/ext/blob/main/tests/serialization/serialization_test.cpp)
 
 # Event dispatcher
 Allow to register events and notify subscribers
@@ -155,7 +155,7 @@ EXPECT_TRUE(myThread.interrupted());
 ```
 
 - [Source](https://github.com/Pennywise007/ext/blob/main/include/ext/thread/thread.h)
-- [Tests](https://github.com/Pennywise007/ext/blob/main/test/thread/thread_test.cpp)
+- [Tests](https://github.com/Pennywise007/ext/blob/main/tests/thread/thread_test.cpp)
 
 </details>
 
@@ -182,7 +182,7 @@ threadPool.wait_for_tasks();
 ```
 
 - [Source](https://github.com/Pennywise007/ext/blob/main/include/ext/thread/thread_pool.h)
-- [Tests](https://github.com/Pennywise007/ext/blob/main/test/thread/thread_pool_test.cppp)
+- [Tests](https://github.com/Pennywise007/ext/blob/main/tests/thread/thread_pool_test.cppp)
 
 </details>
 

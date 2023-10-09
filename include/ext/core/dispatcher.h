@@ -30,13 +30,13 @@ Example of recipient:
 
 #include <type_traits>
 
-#include <ext/core/check.h>
 #include <ext/core/defines.h>
 #include <ext/core/noncopyable.h>
 #include <ext/core/singleton.h>
 #include <ext/core/mpl.h>
 #include <ext/error/exception.h>
 #include <ext/scope/defer.h>
+#include <ext/trace/itracer.h>
 
 #include <ext/thread/invoker.h>
 #include <ext/thread/thread_pool.h>
@@ -283,7 +283,7 @@ void Dispatcher::ForEveryRecipient(const std::function<void(IEvent* recipient)>&
     auto it = m_eventRecipients.find(typeid(IEvent).hash_code());
     if (it != m_eventRecipients.end())
     {
-        for (size_t index = 0; index < it->second.size() && !ext::this_thread::interruption_requested(); ++index)
+        for (size_t index = 0; index < it->second.size(); ++index)
         {
             IEvent* recipient = dynamic_cast<IEvent*>(*std::next(it->second.begin(), index));
             EXT_DUMP_IF(!recipient) << "How we skip this situation in subscribe?";
@@ -314,7 +314,7 @@ void Dispatcher::ForEveryRecipient(const std::function<void(IEvent* recipient)>&
         }
     }
     else
-        EXT_ASSERT(false) << "No subscribers on event";
+        EXT_TRACE() << EXT_TRACE_FUNCTION << "No subscribers on interface " << ext::type_name<IEvent>();
 }
 
 } // namespace events

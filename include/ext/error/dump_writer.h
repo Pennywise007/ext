@@ -94,7 +94,8 @@ Checks boolean expression, if true:
 * generate breakpoint if debugger present, othervise - create dump
 * show error in log*/
 #define EXT_DUMP_IF(bool_expression)                                \
-    if (const bool __result = (bool_expression); !__result) {}      \
+    if (const bool __result = (bool_expression); !__result)         \
+        {}                                                          \
     else                                                            \
         for (bool __firstEnter = true;; __firstEnter = false)       \
             if (!__firstEnter)                                      \
@@ -111,7 +112,15 @@ namespace ext::dump {
 
 constexpr unsigned long long g_exceptionWriteDumpAndContinue = 0x42849fc0;
 
+static std::atomic_bool g_dumpGenerationDisabled = true;
 static std::atomic_bool g_exceptionHandlerAdded = false;
+
+// Helper to disable dump generation, might be usefull in negative test cases
+struct ScopeDumpDisabler
+{
+    ScopeDumpDisabler() noexcept { g_dumpGenerationDisabled = true; }
+    ~ScopeDumpDisabler() noexcept { g_dumpGenerationDisabled = false; }
+};
 
 inline void make_minidump(EXCEPTION_POINTERS* e)
 {
@@ -164,6 +173,9 @@ inline LONG CALLBACK unhandled_handler(EXCEPTION_POINTERS* e)
 
 inline void create_dump(const char *msg = nullptr) noexcept
 {
+    if (g_dumpGenerationDisabled)
+        return;
+
     EXT_DUMP_DECLARE_HANDLER();
     __try
     {

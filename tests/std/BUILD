@@ -4,6 +4,6 @@ cc_test(
     name = "string_test",
     srcs = ["string_test.cpp"],
     deps = [
-        "//test:test_main",
+        "//tests:test_main",
     ],
 )

@@ -4,6 +4,6 @@ cc_test(
     name = "constructor_traits_details_test",
     srcs = ["constructor_traits_details_test.cpp"],
     deps = [
-        "//test:test_main",
+        "//tests:test_main",
     ],
 )

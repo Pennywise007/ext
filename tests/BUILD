@@ -7,5 +7,5 @@ cc_library(
         "//include:ext",
         "@googletest//:gtest_main",
     ],
-    visibility = ["//test:__subpackages__"],
+    visibility = ["//tests:__subpackages__"],
 )

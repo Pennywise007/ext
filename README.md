@@ -255,6 +255,7 @@ Can be called for scope call function check. Trace start and end scope with the 
 # Check code execution and handling errors
 <details><summary>Allows to add simple checks inside executing code and manage ezxceptions</summary>
 
+
 ```c++
 #include <ext/core/check.h>
 ```
@@ -263,7 +264,7 @@ Can be called for scope call function check. Trace start and end scope with the 
 **EXT_CHECK**(bool_expression) << "Text";
 ```c++
 if (!bool_expression)
-	throw ::ext::check::CheckFailedException(EXT_SRC_LOCATION, #bool_expression "Text"));
+	throw ::ext::check::CheckFailedException(EXT_SRC_LOCATION, #bool_expression "Text");
 ```
 
 **EXT_EXPECT** - if expression is false:

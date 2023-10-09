@@ -4,7 +4,7 @@ cc_test(
     name = "dependency_injection_test",
     srcs = ["dependency_injection_test.cpp"],
     deps = [
-        "//test:test_main",
+        "//tests:test_main",
     ],
 )
 
@@ -12,6 +12,6 @@ cc_test(
     name = "dispatcher_test",
     srcs = ["dispatcher_test.cpp"],
     deps = [
-        "//test:test_main",
+        "//tests:test_main",
     ],
 )

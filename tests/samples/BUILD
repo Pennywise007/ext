@@ -8,5 +8,5 @@ cc_library(
       "serialization/*.txt",
       "serialization/*.xml",
    ]),
-   visibility = ["//test:__subpackages__"],
+   visibility = ["//tests:__subpackages__"],
 )

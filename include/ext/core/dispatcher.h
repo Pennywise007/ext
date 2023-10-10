@@ -128,9 +128,11 @@ public:
     // @see send_event. Sending event and waiting for handling event by recipients synchronously
     template <typename IEvent, typename Function, typename... Args>
     void SendEvent(Function IEvent::* function, Args&&... eventArgs) const EXT_THROWS(...);
+
     // @see send_event_async. Sending event and don`t wait for handling, continue execution, args should be copy constructible
     template <typename IEvent, typename Function, typename... Args>
     std::future<void> SendEventAsync(Function IEvent::* function, Args&&... eventArgs) const noexcept;
+
     // @see call_for_every_recipient. Call callback for every recipient who subscribed on event
     template <typename IEvent>
     void ForEveryRecipient(const std::function<void(IEvent* recipient)>& callback) const EXT_THROWS(...);
@@ -264,15 +266,16 @@ void Dispatcher::SendEvent(Function IEvent::* function, Args&&... eventArgs) con
 template <typename IEvent, typename Function, typename... Args>
 std::future<void> Dispatcher::SendEventAsync(Function IEvent::* function, Args&&... eventArgs) const noexcept
 {
+    auto functionToInvoke = [](Function IEvent::* function, std::decay_t<Args>&&... eventArgs) {
+        get_service<Dispatcher>().SendEvent(function, std::forward<Args>(eventArgs)...);
+    };
+
+    ext::ThreadInvoker invoker(std::move(functionToInvoke), function, std::forward<Args>(eventArgs)...);
+    
     static thread_pool thread_pool(1);
-    return thread_pool.add_task([invoker = ext::ThreadInvoker(
-            &Dispatcher::SendEvent<IEvent, Function, Args...>,
-            std::ref(get_service<Dispatcher>()),
-            function,
-            std::forward<Args>(eventArgs)...)]
-            () mutable {
-                invoker();
-            }).second;
+    return thread_pool.add_task([invoker = std::move(invoker)]() mutable { 
+            invoker();
+        }).second;
 }
 
 template <typename IEvent>

@@ -29,7 +29,7 @@ template <typename Function, typename... Args>
 struct ThreadInvoker
 {
 public:
-    static_assert(std::is_invocable_v<std::decay_t<Function>, std::decay_t<Args>...>,
+    static_assert(std::is_invocable_v<std::decay_t<Function>, std::decay_t<Args>&&...>,
          "Arguments must be invocable after conversion to rvalues");
     
     using _Tuple = std::tuple<std::decay_t<Function>, std::decay_t<Args>...>;
@@ -40,14 +40,14 @@ public:
     ThreadInvoker(ThreadInvoker &&other) noexcept = default;
     ThreadInvoker(const ThreadInvoker &other) noexcept = default;
 
-    std::invoke_result_t<Function, Args...> operator()()
+    std::invoke_result_t<Function, std::decay_t<Args>&&...> operator()()
     {
         return invoke(std::make_index_sequence<1 + sizeof...(Args)>{});
     }
 
 private:
 	template<size_t... _Ind>
-	std::invoke_result_t<Function, Args...> invoke(std::index_sequence<_Ind...>)
+	std::invoke_result_t<Function, std::decay_t<Args>&&...> invoke(std::index_sequence<_Ind...>)
     {
         return std::invoke(std::get<_Ind>(std::move(*decay_))...);
     }

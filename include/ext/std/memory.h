@@ -1,10 +1,7 @@
 #pragma once
 
-#include <functional>
 #include <memory>
 #include <type_traits>
-
-#include <ext/utils/lazy_type.h>
 
 namespace ext {
 
@@ -37,75 +34,5 @@ template<typename _Tp, typename SharedClass = _Tp>
 using enable_shared_from_this = std::enable_shared_from_this<SharedClass>;
 
 #endif
-
-/*
-* Allows to execute object creation only on first call, example
-
-   struct Test
-   {
-       Test(bool,int) {}
-       void Init() {}
-   };
-   ext::lazy_shared_ptr<Test> lazyPointer([]() { return std::make_shared<Test>(100, 500); });
-//* object not created yet
-
-   lazyPointer->Init();
-//* object created and function executed
-*/
-template <typename Type>
-struct lazy_shared_ptr : ext::lazy_type<std::shared_ptr<Type>>
-{
-    lazy_shared_ptr(std::function<std::shared_ptr<Type>()>&& getterFunction)
-        : ext::lazy_type<std::shared_ptr<Type>>(std::move(getterFunction))
-    {}
-
-    [[nodiscard]] const Type* get() const EXT_THROWS(...)
-    {
-        return ext::lazy_type<std::shared_ptr<Type>>::value().get();
-    }
-
-    [[nodiscard]] Type* get() EXT_THROWS(...)
-    {
-        return ext::lazy_type<std::shared_ptr<Type>>::value().get();
-    }
-
-    [[nodiscard]] Type* operator->() EXT_THROWS(...)
-    {
-        return get();
-    }
-
-    [[nodiscard]] const Type* operator->() const EXT_THROWS(...)
-    {
-        return get();
-    }
-};
-
-template <typename Type>
-struct lazy_weak_ptr : ext::lazy_type<std::weak_ptr<Type>>
-{
-    lazy_weak_ptr(std::function<std::weak_ptr<Type>()>&& getterFunction)
-        : ext::lazy_type<std::weak_ptr<Type>>(std::move(getterFunction))
-    {}
-
-    [[nodiscard]] const Type* get() const EXT_THROWS(...)
-    {
-        return ext::lazy_type<std::weak_ptr<Type>>::value().lock().get();
-    }
-
-    [[nodiscard]] Type* get() EXT_THROWS(...)
-    {
-        return ext::lazy_type<std::weak_ptr<Type>>::value().lock().get();
-    }
-
-    [[nodiscard]] Type* operator->() EXT_THROWS(...)
-    {
-        return get();
-    }
-
-    [[nodiscard]] const Type* operator->() const EXT_THROWS(...)
-    {
-        return get();
-    }
-};
 
 } // namespace ext

@@ -8,6 +8,7 @@
 
 namespace ext {
 
+// Allows to get a type name with valid format not depending on a platform
 template <typename Type>
 [[nodiscard]] const char* type_name()
 {

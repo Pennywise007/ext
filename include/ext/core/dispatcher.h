@@ -41,7 +41,7 @@ Example of recipient:
 #include <ext/thread/invoker.h>
 #include <ext/thread/thread_pool.h>
 
-#include <ext/utils/utils.h>
+#include <ext/types/utils.h>
 
 namespace ext::events { class Dispatcher; }
 namespace ext {

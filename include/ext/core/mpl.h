@@ -28,7 +28,7 @@ Get type from types list by index
 find_type_by_index<0, 0, int, float>::type == int;
 find_type_by_index<0, 1, int, float>::type == float;
 */
-template<size_t CurrentIndex, size_t SearchedIndex, typename... Types>
+template <size_t CurrentIndex, size_t SearchedIndex, typename... Types>
 struct find_type_by_index;
 
 // CurrentIndex == SearchedIndex and no more types are left

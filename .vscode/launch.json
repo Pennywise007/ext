@@ -4,12 +4,13 @@
         {
             "name": "(gdb) Launch",
             "preLaunchTask": "build",
-            "type": "cppvsdbg",
+            "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bazel-bin/${relativeFileDirname}/${fileBasenameNoExtension}",
             "args": [],
             "cwd": "${workspaceFolder}",
             "windows": {
+                "type": "cppvsdbg",
                 "program": "${workspaceFolder}/bazel-bin/${relativeFileDirname}/${fileBasenameNoExtension}.exe",
                 // Fixing breakpoints hit location, for windows you need to set environment variable __BAZEL_HASH__ with bazel hash
                 // For some details check https://github.com/vadimcn/codelldb/discussions/517

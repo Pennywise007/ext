@@ -61,7 +61,7 @@ struct TestStruct :  ext::serializable::SerializableObject<TestStruct>, Internal
 
 #include <ext/serialization/serializable_value.h>
 
-#include <ext/utils/utils.h>
+#include <ext/types/utils.h>
 
 /*
 * Register serializable field of current class, current class must be inherited from SerializableObject

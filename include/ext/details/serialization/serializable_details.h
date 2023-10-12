@@ -19,7 +19,7 @@
 #include <ext/std/type_traits.h>
 #include <ext/std/string.h>
 
-#include <ext/utils/utils.h>
+#include <ext/types/utils.h>
 
 namespace ext::serializable {
 namespace details {

@@ -38,7 +38,7 @@ threadPool.wait_for_tasks();
 #include <ext/thread/event.h>
 #include <ext/thread/thread.h>
 
-#include <ext/utils/uuid.h>
+#include <ext/types/uuid.h>
 
 namespace ext {
 

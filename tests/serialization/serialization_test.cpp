@@ -13,7 +13,7 @@
 #include <ext/std/filesystem.h>
 #include <ext/std/string.h>
 
-#include <ext/utils/uuid.h>
+#include <ext/types/uuid.h>
 
 using namespace ext::serializable;
 using namespace ext::serializer;

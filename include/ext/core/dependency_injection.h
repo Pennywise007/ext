@@ -64,7 +64,8 @@ const std::shared_ptr<CreatedObjectExample> object = ext::CreateObject<CreatedOb
 
 #include <ext/details/constructor_traits_details.h>
 
-#include <ext/utils/utils.h>
+#include <ext/types/lazy.h>
+#include <ext/types/utils.h>
 
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
 #pragma push_macro("GetObject")

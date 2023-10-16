@@ -2,12 +2,11 @@
 
 #include <algorithm>
 #include <cctype>
-#include <locale>
+#include <codecvt> 
 #include <cwctype>
+#include <locale>
 #include <string>
 #include <sstream>
-
-#include <codecvt> 
 
 #include <ext/core/defines.h>
 #include <ext/error/dump_writer.h>
@@ -34,6 +33,7 @@ void string_trim_all(std::basic_string<CharType, std::char_traits<CharType>, std
 
 [[nodiscard]] inline std::wstring widen(const char* str)
 {
+#if defined(_WIN32) || defined(__CYGWIN__) // windows
     const auto length = strlen(str);
 
     std::wstring result;
@@ -46,10 +46,15 @@ void string_trim_all(std::basic_string<CharType, std::char_traits<CharType>, std
         return facet.widen(ch);
     });
     return result;
+#else
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+    return converter.from_bytes(str);
+#endif
 }
 
 [[nodiscard]] inline std::wstring widen(const std::string& str)
 {
+#if defined(_WIN32) || defined(__CYGWIN__) // windows
     std::wstring result;
     result.reserve(str.size());
     // do not forget about std::locale::global(std::locale("")); for some characters
@@ -59,10 +64,15 @@ void string_trim_all(std::basic_string<CharType, std::char_traits<CharType>, std
         result.append(1, facet.widen(ch));
     }
     return result;
+#else
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+    return converter.from_bytes(str);
+#endif
 }
 
 [[nodiscard]] inline std::string narrow(const wchar_t* str)
 {
+#if defined(_WIN32) || defined(__CYGWIN__) // windows
     const auto length = wcslen(str);
 
     std::string result;
@@ -75,10 +85,15 @@ void string_trim_all(std::basic_string<CharType, std::char_traits<CharType>, std
         return facet.narrow(ch, '\0');
     });
     return result;
+#else
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+    return converter.to_bytes(str);
+#endif
 }
 
 [[nodiscard]] inline std::string narrow(const std::wstring& str)
 {
+#if defined(_WIN32) || defined(__CYGWIN__) // windows
     std::string result;
     result.reserve(str.size());
     // do not forget about std::locale::global(std::locale("")); for some characters
@@ -88,6 +103,10 @@ void string_trim_all(std::basic_string<CharType, std::char_traits<CharType>, std
         result.append(1, facet.narrow(ch, '\0'));
     }
     return result;
+#else
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+    return converter.to_bytes(str);
+#endif
 }
 
 #if defined(__cplusplus) && __cplusplus >= 202004L
@@ -118,7 +137,10 @@ template <typename... Args>
 template <typename... Args>
 [[nodiscard]] std::wstring string_swprintf(const wchar_t* format, Args&&... args) EXT_THROWS()
 {
-#if defined(_WIN32) || defined(__CYGWIN__) // windows
+#if defined(__GNUC__) // linux
+    // swprintf doesn't calculate string length in linux
+    return widen(string_sprintf(narrow(format).c_str(), std::forward<Args>(args)...));
+#else
     const int size_s = std::swprintf(nullptr, 0, format, std::forward<Args>(args)...) + 1; // + '\0'
     if (size_s <= 0) { EXT_DUMP_IF(true); throw std::runtime_error("Error during formatting."); }
     const auto size = static_cast<size_t>(size_s);
@@ -126,9 +148,6 @@ template <typename... Args>
     std::swprintf(string.data(), size, format, std::forward<Args>(args)...);
     string.pop_back(); // - '\0'
     return string;
-#elif defined(__GNUC__) // linux
-    // swprintf doesn't calculate string length in linux
-    return widen(string_sprintf(narrow(format).c_str(), std::forward<Args>(args)...));
 #endif
 }
 #endif

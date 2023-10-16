@@ -88,7 +88,7 @@ struct ObjectHolder : ::ext::NonCopyable
         : m_freeObjectFunction(std::move(freeObjectFunction))
         , m_objectInvalidValue(std::move(objectInvalidValue))
     {}
-    // Move constuctor
+    // Move constructor
     ObjectHolder(ObjectHolder&& otherObjectHolder) noexcept
         : m_freeObjectFunction(std::move(otherObjectHolder.m_freeObjectFunction))
         , m_object(std::move(otherObjectHolder.m_object))

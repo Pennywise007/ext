@@ -24,7 +24,7 @@ struct numbers_formatter : std::numpunct<T>
     typename std::numpunct<T>::char_type do_decimal_point() const override { return {','}; }
 };
 
-// initialization for ext library(not neccessary, but usefull)
+// initialization for ext library(not necessary, but useful)
 inline void Init()
 {
     // for Russian output in concole

@@ -5,7 +5,6 @@
 #include <ext/core/check.h>
 #include <ext/core/defines.h>
 #include <ext/error/exception.h>
-#include <ext/trace/itracer.h>
 #include <ext/scope/on_exit.h>
 
 namespace ext {

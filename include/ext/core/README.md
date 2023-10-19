@@ -47,7 +47,6 @@ if (!bool_expression)
 - [Source](https://github.com/Pennywise007/ext/blob/main/include/ext/core/check.h)
 </details>
 
-
 # Dependency injection
 Usage simple with .Net [Microsoft.Extensions.DependencyInjection](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection/)
 <details><summary>Example</summary>
@@ -127,6 +126,36 @@ struct Recipient : ext::events::ScopeSubscription<IEvent>
 </details>
 
 - [Source](https://github.com/Pennywise007/ext/blob/main/include/ext/core/dispatcher.h)
+
+# Tracer
+
+Show traces with defferent levels and time stamps in cout/cerr/output/trace file
+
+<details><summary>Details</summary>
+Don`t forget enable traces via 
+
+```C++
+#include <ext/core/tracer.h>
+ext::get_tracer().Enable(true);
+```
+Simple macroses:
+Default information trace
+
+	EXT_TRACE() << "My trace"; 
+
+Debug information only for Debug build
+
+	EXT_TRACE_DBG() << EXT_TRACE_FUNCTION "called";
+	
+Error trace to cerr, mostly used in EXT_CHECK/EXT_EXPECT
+
+	EXT_TRACE_ERR() << EXT_TRACE_FUNCTION "called";
+	
+Can be called for scope call function check. Trace start and end scope with the given text
+
+	EXT_TRACE_SCOPE() << EXT_TRACE_FUNCTION << "Main called with " << args;
+
+</details>
 
 # Other
 

@@ -1,7 +1,6 @@
 #include "gtest/gtest.h"
 
 #include <ext/core/check.h>
-#include <ext/trace/tracer.h>
 #include <ext/error/exception.h>
 
 TEST(exception_test, check_nested)

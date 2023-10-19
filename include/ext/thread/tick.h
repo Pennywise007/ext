@@ -35,7 +35,7 @@ Example:
 #include <optional>
 
 #ifdef __AFX_H__
-#include <windef.h>
+#include <windows.h>
 #include <WinUser.h>
 #endif // __AFX_H__
 

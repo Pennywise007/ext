@@ -16,8 +16,8 @@
 #endif
 
 #include <ext/core/defines.h>
+#include <ext/core/tracer.h>
 #include <ext/scope/on_exit.h>
-#include <ext/trace/itracer.h>
 #include <ext/utils/call_once.h>
 
 /*
@@ -145,7 +145,7 @@ inline void make_minidump(EXCEPTION_POINTERS* e)
         wsprintfA(name + strlen(name), "_%4d.%02d.%02d_%02d.%02d.%02d.dmp", t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond);
     }
 
-    EXT_TRACE() << "Dump file: " << name;
+    EXT_TRACE_DBG() << "Dump file: " << name;
 
     auto hFile = CreateFileA(name, GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
     if (hFile == INVALID_HANDLE_VALUE)

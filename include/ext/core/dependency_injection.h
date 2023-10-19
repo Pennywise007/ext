@@ -585,7 +585,7 @@ template <typename Interface>
         }
     }
     const std::string error = std::string("failed to get ") + ext::type_name<Interface>() + " interface, not registered";
-    EXT_TRACE() << EXT_TRACE_FUNCTION << error;
+    EXT_TRACE_DBG() << EXT_TRACE_FUNCTION << error;
     throw di::not_registered(error.c_str());
 }
 

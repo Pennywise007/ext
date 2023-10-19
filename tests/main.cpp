@@ -3,7 +3,7 @@
 #include "gmock/gmock.h"
 
 #include <ext/core.h>
-#include <ext/trace/tracer.h>
+#include <ext/core/tracer.h>
 
 int main(int argc, char **argv)
 {
@@ -13,7 +13,6 @@ int main(int argc, char **argv)
     ::testing::InitGoogleMock(&argc, argv);
 
     ext::core::Init();
-    ext::get_tracer()->EnableTraces(true);
 
     return RUN_ALL_TESTS();
 }

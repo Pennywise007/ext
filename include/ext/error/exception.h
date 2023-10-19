@@ -35,9 +35,9 @@ catch (...)
 #include <sstream>
 
 #include <ext/core/defines.h>
+#include <ext/core/tracer.h>
 #include <ext/std/string.h>
 #include <ext/std/type_traits.h>
-#include <ext/trace/itracer.h>
 
 namespace ext {
 

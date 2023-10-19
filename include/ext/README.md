@@ -227,8 +227,8 @@ myThread.join();
 <details><summary>Show traces with defferent levels and time stamps in cout/cerr/output/trace file</summary>
 
 ```c++
-#include <ext/traces/tracer.h>
-ext::get_tracer()->EnableTraces(true);
+#include <ext/core/tracer.h>
+ext::get_tracer().Enable();
 ```
 
 Simple macroses:
@@ -248,7 +248,7 @@ Can be called for scope call function check. Trace start and end scope with the 
 
 `	EXT_TRACE_SCOPE() << EXT_TRACE_FUNCTION << "Main function called with " << args;`
 
-- [Source](https://github.com/Pennywise007/ext/blob/main/include/ext/trace/itracer.h)
+- [Source](https://github.com/Pennywise007/ext/blob/main/include/ext/core/tracer.h)
 
 </details>
 

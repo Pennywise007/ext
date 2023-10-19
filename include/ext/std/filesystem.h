@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <fstream>
 #include <filesystem>
 
@@ -10,7 +11,6 @@
 #endif // linux
 
 #include <ext/core/defines.h>
-#include <ext/error/dump_writer.h>
 
 namespace std::filesystem {
 
@@ -19,11 +19,12 @@ namespace std::filesystem {
     constexpr auto kMaxPath = 4096;
     char exePath[kMaxPath] = {0};  
 #if defined(_WIN32) || defined(__CYGWIN__)
-    EXT_DUMP_IF(GetModuleFileNameA(/*AfxGetApp()->m_hInstance*/nullptr, exePath, kMaxPath - 1) == 0);
+    if (GetModuleFileNameA(/*AfxGetApp()->m_hInstance*/nullptr, exePath, kMaxPath - 1) == 0)
+        assert(false);
 #elif __GNUC__ // windows
     const auto len = readlink("/proc/self/exe", exePath, kMaxPath - 1);
     if (len == -1) {
-        EXT_DUMP_IF(true);
+        assert(false);
         return "";
     }
     exePath[len] = '\0';

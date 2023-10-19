@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 
-#include <ext/trace/tracer.h>
 #include <ext/std/string.h>
 
 TEST(string_test, format)

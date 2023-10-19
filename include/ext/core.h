@@ -11,9 +11,9 @@
 #include "core/defines.h"
 #include "core/dispatcher.h"
 #include "core/singleton.h"
+#include "core/tracer.h"
 #include "error/dump_writer.h"
 #include "thread/thread.h"
-#include "trace/tracer.h"
 
 namespace ext::core {
 

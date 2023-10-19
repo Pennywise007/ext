@@ -31,12 +31,14 @@ Example of recipient:
 #include <type_traits>
 
 #include <ext/core/defines.h>
+#include <ext/core/mpl.h>
 #include <ext/core/noncopyable.h>
 #include <ext/core/singleton.h>
-#include <ext/core/mpl.h>
+#include <ext/core/tracer.h>
+
 #include <ext/error/exception.h>
+
 #include <ext/scope/defer.h>
-#include <ext/trace/itracer.h>
 
 #include <ext/thread/invoker.h>
 #include <ext/thread/thread_pool.h>
@@ -317,7 +319,7 @@ void Dispatcher::ForEveryRecipient(const std::function<void(IEvent* recipient)>&
         }
     }
     else
-        EXT_TRACE() << EXT_TRACE_FUNCTION << "No subscribers on interface " << ext::type_name<IEvent>();
+        EXT_TRACE_DBG() << EXT_TRACE_FUNCTION << "No subscribers on interface " << ext::type_name<IEvent>();
 }
 
 } // namespace events

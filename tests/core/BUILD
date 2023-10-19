@@ -15,3 +15,11 @@ cc_test(
         "//tests:test_main",
     ],
 )
+
+cc_test(
+    name = "tracer_test",
+    srcs = ["tracer_test.cpp"],
+    deps = [
+        "//tests:test_main",
+    ],
+)

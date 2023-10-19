@@ -371,3 +371,17 @@ Dump generation and debug break in case with EXT_DUMP_IF generates only once to 
 - [Auto setter on scope change](https://github.com/Pennywise007/ext/blob/main/include/ext/scope/auto_setter.h)
 - [Defer (GO analog)](https://github.com/Pennywise007/ext/blob/main/include/ext/scope/defer.h)
 - [Object holder](https://github.com/Pennywise007/ext/blob/main/include/ext/scope/on_exit.h#L70)
+
+# Build
+
+<details><summary>CMake build and run tests</summary>
+
+```ps
+mkdir build
+cd build
+cmake .. -DEXT_BUILD_TESTS=ON
+cmake --build . --parallel
+.\tests\Debug\ext_tests.exe
+```
+
+</details>

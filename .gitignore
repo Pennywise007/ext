@@ -8,3 +8,6 @@ bazel-bin
 bazel-ext
 
 .vscode/settings.json
+
+# Cmake
+build

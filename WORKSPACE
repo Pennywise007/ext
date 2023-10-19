@@ -8,7 +8,7 @@ http_archive(
 
 http_archive(
     name = "com_github_zeux_pugixml",
-    url = "https://github.com/zeux/pugixml/archive/v1.13.tar.gz",
+    url = "https://github.com/zeux/pugixml/archive/refs/tags/v1.13.zip",
     strip_prefix = "pugixml-1.13",
     build_file = "//bazel:BUILD.pugixml",
 )

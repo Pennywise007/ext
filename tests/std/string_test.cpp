@@ -2,10 +2,24 @@
 
 #include <ext/std/string.h>
 
-TEST(string_test, format)
+TEST(string_test, string_sprintf)
 {
     EXPECT_STREQ(std::string_sprintf("test %d - %s - %S", 10, "wow", L"test").c_str(), "test 10 - wow - test");
-    EXPECT_STREQ(std::string_swprintf(L"test %d - %S - %s", 10, L"wow", "test").c_str(), L"test 10 - wow - test");
+    EXPECT_STREQ(std::string_sprintf("test %%s %%S", "wow", L"tt").c_str(), "test %s %S");
+    EXPECT_STREQ(std::string_sprintf("test %%%s %%%S", "wow", L"tt").c_str(), "test %wow %tt");
+    EXPECT_STREQ(std::string_sprintf("test /%%s /%%S", "wow", L"tt").c_str(), "test /%s /%S");
+    EXPECT_STREQ(std::string_sprintf("test %/%s %/%S", "wow", L"tt").c_str(), "test /wow /tt");
+    EXPECT_STREQ(std::string_sprintf("test s%% S%%", "wow", L"tt").c_str(), "test s% S%");
+}
+
+TEST(string_test, string_swprintf)
+{
+    EXPECT_STREQ(std::string_swprintf(L"test %d - %s - %S", 10, L"wow", "test").c_str(), L"test 10 - wow - test");
+    EXPECT_STREQ(std::string_swprintf(L"test %%s %%S", L"wow", "tt").c_str(), L"test %s %S");
+    EXPECT_STREQ(std::string_swprintf(L"test %%%s %%%S", L"wow", "tt").c_str(), L"test %wow %tt");
+    EXPECT_STREQ(std::string_swprintf(L"test /%%s /%%S", L"wow", "tt").c_str(), L"test /%s /%S");
+    EXPECT_STREQ(std::string_swprintf(L"test %/%s %/%S", L"wow", "tt").c_str(), L"test /wow /tt");
+    EXPECT_STREQ(std::string_swprintf(L"test s%% S%%", L"wow", "tt").c_str(), L"test s% S%");
 }
 
 TEST(string_test, trim_all)

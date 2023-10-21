@@ -138,8 +138,22 @@ template <typename... Args>
 [[nodiscard]] std::wstring string_swprintf(const wchar_t* format, Args&&... args) EXT_THROWS()
 {
 #if defined(__GNUC__) // linux
-    // swprintf doesn't calculate string length in linux
-    return widen(string_sprintf(narrow(format).c_str(), std::forward<Args>(args)...));
+    // swprintf doesn't work properly on linux, we will use string_sprintf
+    std::wstring formatStr(format);
+    for (size_t i = 0, length = formatStr.size(); i + 1 < length; ++i) {
+        if (formatStr[i] == L'%') {
+            auto& symb = formatStr[++i];
+            switch (symb) {
+                case L's':
+                    symb = L'S';
+                    break;
+                case L'S':
+                    symb = L's';
+                    break;
+            }
+        }
+    }
+    return widen(string_sprintf(narrow(formatStr).c_str(), std::forward<Args>(args)...));
 #else
     const int size_s = std::swprintf(nullptr, 0, format, std::forward<Args>(args)...) + 1; // + '\0'
     if (size_s <= 0) { EXT_DUMP_IF(true); throw std::runtime_error("Error during formatting."); }

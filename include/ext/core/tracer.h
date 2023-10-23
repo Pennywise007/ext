@@ -203,11 +203,11 @@ inline TraceManager& get_tracer()
 
 /* Trace text inside scope, will show text on begin and end of current scope
 Usage: EXT_TRACE_SCOPE() << EXT_TRACE_FUNCTION << "my trace"; */
-#define EXT_TRACE_SCOPE()       EXT_TRACE_SCOPE_TYPE(::ext::ITracer::Type::eInfo)
+#define EXT_TRACE_SCOPE()       EXT_TRACE_SCOPE_TYPE(::ext::ITracer::Level::eInfo)
 
 /* Trace text in DBG inside scope, will show text on begin and end of current scope
 Usage: EXT_TRACE_SCOPE_DBG() << EXT_TRACE_FUNCTION << "my trace";*/
-#define EXT_TRACE_SCOPE_DBG()   EXT_TRACE_SCOPE_TYPE(::ext::ITracer::Type::eDebug)
+#define EXT_TRACE_SCOPE_DBG()   EXT_TRACE_SCOPE_TYPE(::ext::ITracer::Level::eDebug)
 
 /*
 * Special class to trace scope enter and exit, Trace "%TRACE_TEXT% << begin" on SetData and "%TRACE_TEXT% << end" on scope exit
@@ -218,22 +218,22 @@ struct ScopedCallTracer final : ::ext::NonCopyable
 {
     ~ScopedCallTracer()
     {
-        if (m_text.has_value())
-            EXT_TRACE_LEVEL(traceLevel) << m_text.value() << " end";
+        if (text_.has_value())
+            EXT_TRACE_LEVEL(traceLevel) << text_.value().c_str() << " end";
     }
 
     void SetData(std::wstring&& text)
     {
-        m_text = std::move(text);
-        EXT_TRACE_LEVEL(traceLevel) << m_text.value() << " begin";
+        text_ = std::move(text);
+        EXT_TRACE_LEVEL(traceLevel) << text_.value().c_str() << " begin";
     }
 
-    bool CanTrace() const noexcept { return m_tracer->CanTrace(traceLevel); }
-    bool operator!() const noexcept { return !m_text.has_value(); }
+    bool CanTrace() const noexcept { return tracer_.CanTrace(traceLevel); }
+    bool operator!() const noexcept { return !text_.has_value(); }
 
 private:
-    ::ext::ITracer* m_tracer = ::ext::get_tracer();
-    std::optional<std::wstring> m_text;
+    TraceManager& tracer_ = get_tracer();
+    std::optional<std::wstring> text_;
 };
 
 template <typename StreamType>

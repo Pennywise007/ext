@@ -1,4 +1,4 @@
-﻿/*
+/*
 Tracer for data. Examples:
 
 - Default information trace
@@ -142,7 +142,12 @@ public:
         std::string DateFormat = "%H:%M:%S";
 
         // Enabled extensions list
-        std::bitset<size_t(Extensions::eCount)> Extenstions = {Extensions::eDateWithMilliseconds | Extensions::eThreadId};
+        std::bitset<size_t(Extensions::eCount)> Extenstions;
+        Settings()
+        {
+            Extenstions.set(Extensions::eDateWithMilliseconds);
+            Extenstions.set(Extensions::eThreadId);
+        }
     };
     // Set tracer settings
     void SetSettings(Settings&& settings) noexcept
@@ -189,7 +194,7 @@ inline TraceManager& get_tracer()
 
 // Internal macro to call scope tracer, allow adding extra text to stream after call
 #define EXT_TRACE_SCOPE_TYPE_EX(__level, __name)                            \
-    ::ext::trace::ScopedCallTracer<__level> __name;                         \
+    ::ext::ScopedCallTracer<__level> __name;                                \
     while (__name.CanTrace() && !__name)                                    \
         for (std::wostringstream stream; !__name;)                          \
             for (bool streamSetted = false; !__name; streamSetted = true)   \

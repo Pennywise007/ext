@@ -37,7 +37,7 @@ namespace std::filesystem {
     return get_full_exe_path().remove_filename();
 }
 
-[[nodiscard]] inline std::filesystem::path get_exe_name() noexcept
+[[nodiscard]] inline std::filesystem::path get_binary_name() noexcept
 {
     return get_full_exe_path().filename();
 }

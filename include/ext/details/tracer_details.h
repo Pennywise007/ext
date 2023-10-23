@@ -23,7 +23,7 @@ struct FileTracer : ::ext::ITracer
 {
     FileTracer(std::filesystem::path traceFileName = {}) EXT_THROWS(std::runtime_error, std::filesystem::filesystem_error)
     {
-        if (!traceFileName.empty()) {
+        if (traceFileName.empty()) {
             auto tracesDirectory = std::filesystem::get_exe_directory().append("Traces");
             if (!std::filesystem::exists(tracesDirectory) && !std::filesystem::create_directories(tracesDirectory))
             {
@@ -37,20 +37,16 @@ struct FileTracer : ::ext::ITracer
                 const auto now = system_clock::now();
                 const std::time_t t = system_clock::to_time_t(now);
             
-                char buffer[80];
-                if (!std::strftime(buffer, sizeof(buffer), "_%d.%m.%Y_%H.%M.%S.log", std::localtime(&t)))
+                std::string buffer(80, '\0');
+                int res = std::strftime(buffer.data(), buffer.size(), "_%d.%m.%Y_%H.%M.%S.log", std::localtime(&t));
+                if (!res)
                     return "strftime error";
-
-                return buffer;
+                buffer.resize(res);
+                return std::filesystem::get_binary_name().replace_extension("").string() + buffer;
             };
 
             // %EXE_DIR%//Traces//%EXE_NAME%_%DATA%_%TIME%.log
-            traceFileName = tracesDirectory
-                .append(std::filesystem::get_exe_name().string())
-                .append(getLogName());
-
-            // it must be first file creation
-            assert(!std::filesystem::exists(traceFileName));
+            traceFileName = tracesDirectory.append(getLogName());
         }
 
         m_outputFile.open(traceFileName);

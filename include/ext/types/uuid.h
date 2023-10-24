@@ -9,7 +9,6 @@
 #include <uuid/uuid.h>
 #endif
 
-#include <ext/core/defines.h>
 #include <ext/std/string.h>
 
 namespace ext {

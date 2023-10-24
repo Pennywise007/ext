@@ -24,7 +24,6 @@ Example:
 #include <optional>
 
 #include <ext/core/check.h>
-#include <ext/core/defines.h>
 #include <ext/core/noncopyable.h>
 #include <ext/error/dump_writer.h>
 

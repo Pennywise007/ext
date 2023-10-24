@@ -5,7 +5,6 @@
 #include <optional>
 #include <mutex>
 
-#include <ext/core/defines.h>
 #include <ext/core/noncopyable.h>
 #include <ext/core/check.h>
 

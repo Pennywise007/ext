@@ -15,7 +15,6 @@
 #include <ctype.h>
 #endif
 
-#include <ext/core/defines.h>
 #include <ext/core/tracer.h>
 #include <ext/scope/on_exit.h>
 #include <ext/utils/call_once.h>

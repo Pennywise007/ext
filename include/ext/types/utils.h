@@ -4,8 +4,6 @@
 #include <cxxabi.h>
 #endif
 
-#include <ext/core/defines.h>
-
 namespace ext {
 
 // Allows to get a type name with valid format not depending on a platform

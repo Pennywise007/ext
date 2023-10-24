@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 /*
 * Implementation for ext/serialization/serializer.h
@@ -6,6 +6,7 @@
 
 #include <string.h>
 
+#include <ext/core/defines.h>
 #include <ext/core/check.h>
 
 #include <ext/serialization/serializer.h>

@@ -31,7 +31,6 @@ threadPool.wait_for_tasks();
 #include <type_traits>
 #include <queue>
 
-#include <ext/core/defines.h>
 #include <ext/core/check.h>
 #include <ext/core/noncopyable.h>
 

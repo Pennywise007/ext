@@ -33,6 +33,28 @@ TEST(string_test, trim_all)
     EXPECT_STREQ(string_text.c_str(), "t e\ts\nt\r\na");
 }
 
+TEST(string_test, trim_left)
+{
+    std::wstring wstring_text = L"  \t\r\nt e\ts\nt\r\na\t\r\n  ";
+    std::string_trim_left(wstring_text);
+    EXPECT_STREQ(wstring_text.c_str(), L"t e\ts\nt\r\na\t\r\n  ");
+
+    std::string string_text = "  \t\r\nt e\ts\nt\r\na\t\r\n  ";
+    std::string_trim_left(string_text);
+    EXPECT_STREQ(string_text.c_str(), "t e\ts\nt\r\na\t\r\n  ");
+}
+
+TEST(string_test, trim_right)
+{
+    std::wstring wstring_text = L"  \t\r\nt e\ts\nt\r\na\t\r\n  ";
+    std::string_trim_right(wstring_text);
+    EXPECT_STREQ(wstring_text.c_str(), L"  \t\r\nt e\ts\nt\r\na");
+
+    std::string string_text = "  \t\r\nt e\ts\nt\r\na\t\r\n  ";
+    std::string_trim_right(string_text);
+    EXPECT_STREQ(string_text.c_str(), "  \t\r\nt e\ts\nt\r\na");
+}
+
 TEST(string_test, narrow_english)
 {
     EXPECT_STREQ(std::narrow(L"test").c_str(), "test");

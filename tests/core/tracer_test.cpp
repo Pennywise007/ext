@@ -135,13 +135,14 @@ TEST_F(TestFixture, default_tracing)
 {
     auto checkText = [](auto&&, const std::string& text) {
         int miliseconds;
-        char level[10], traceText[20];
+        char level[10], traceText[20], threadId[20];
         
         std::time_t localTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
         std::time_t traceTime = localTime;
         std::tm* traceTm = std::localtime(&localTime);
-        std::sscanf(text.c_str(), "%d:%d:%d.%d\t%s\t%s",
-            &traceTm->tm_hour, &traceTm->tm_min, &traceTm->tm_sec, &miliseconds, level, traceText);
+        std::sscanf(text.c_str(), "%d:%d:%d.%d\t%s\t%s\t%s",
+            &traceTm->tm_hour, &traceTm->tm_min, &traceTm->tm_sec, &miliseconds,
+            &threadId, level, traceText);
 
         EXPECT_STREQ("Text", traceText);
         EXPECT_LE(miliseconds, 999);

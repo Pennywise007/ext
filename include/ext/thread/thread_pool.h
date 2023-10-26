@@ -136,15 +136,15 @@ private:
     typedef std::unique_ptr<TaskInfo> TaskInfoPtr;
 
     // synchronization of m_queueTasks
-    std::mutex m_mutex;
-    std::condition_variable m_notifier;
+    std::mutex m_taskQueueMutex;
+    std::condition_variable m_taskQueueChangedNotifier;
     // queue of tasks ordered by TaskPriority
     std::list<TaskInfoPtr> m_queueTasks;
 
     // event about task done
     ext::Event m_taskDoneEvent;
     // count executing tasks at that moment threads
-    std::atomic_uint m_countExecutingTasksThread = 0;
+    std::atomic_uint m_countExecutingTasks = 0;
     // callback to callers about task done
     const std::function<void(const TaskId&)> m_onTaskDone;
 
@@ -221,7 +221,7 @@ std::pair<thread_pool::TaskId,
                 taskPtr->operator()();
             });
 
-        std::lock_guard<std::mutex> lock(m_mutex);
+        std::lock_guard<std::mutex> lock(m_taskQueueMutex);
         switch (priority)
         {
         case TaskPriority::eHigh:
@@ -240,8 +240,8 @@ std::pair<thread_pool::TaskId,
         default:
             EXT_UNREACHABLE();
         }
+        m_taskQueueChangedNotifier.notify_one();
     }
-    m_notifier.notify_one();
 
     EXT_ASSERT(std::any_of(m_threads.begin(), m_threads.end(), std::mem_fn(&ext::thread::thread_works)))
         << "Threads interrupted or stopped";
@@ -252,30 +252,29 @@ std::pair<thread_pool::TaskId,
 inline void thread_pool::erase_task(const TaskId& taskId)
 {
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
+        std::lock_guard<std::mutex> lock(m_taskQueueMutex);
         m_queueTasks.erase(std::find_if(m_queueTasks.begin(), m_queueTasks.end(), [&taskId](const TaskInfoPtr& task)
         {
             return task->taskId == taskId;
         }), m_queueTasks.end());
     }
-    m_taskDoneEvent.Set();
+    m_taskDoneEvent.RaiseAll();
 }
 
 [[nodiscard]] inline uint32_t thread_pool::running_tasks_count() const noexcept
 {
-    return m_countExecutingTasksThread;
+    return m_countExecutingTasks;
 }
 
 inline void thread_pool::interrupt_and_remove_all_tasks()
 {
-    EXT_ASSERT(std::all_of(m_threads.begin(), m_threads.end(), std::mem_fn(&ext::thread::thread_works)))
-        << "Threads already interrupted or stopped";
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
+        std::lock_guard<std::mutex> lock(m_taskQueueMutex);
         m_queueTasks.clear();
+        std::for_each(m_threads.begin(), m_threads.end(), std::mem_fn(&ext::thread::interrupt));
     }
-    std::for_each(m_threads.begin(), m_threads.end(), std::mem_fn(&ext::thread::interrupt));
-    m_taskDoneEvent.Set();
+    m_taskDoneEvent.RaiseAll();
+
     wait_for_tasks();
     std::for_each(m_threads.begin(), m_threads.end(), std::mem_fn(&ext::thread::restore_interrupted));
 }
@@ -283,7 +282,7 @@ inline void thread_pool::interrupt_and_remove_all_tasks()
 inline thread_pool::thread_pool(std::function<void(const TaskId&)>&& onTaskDone, std::uint_fast32_t threadsCount)
     : m_onTaskDone(std::move(onTaskDone))
 {
-    EXT_EXPECT(threadsCount > 0) << "Zero thread count";
+    EXT_ASSERT(threadsCount > 0) << "Zero thread count";
     m_threads.resize(threadsCount);
     for (auto& thread : m_threads)
         thread.run(&thread_pool::worker, this);
@@ -296,14 +295,15 @@ inline thread_pool::thread_pool(std::uint_fast32_t threadsCount)
 inline thread_pool::~thread_pool()
 {
     m_threadPoolWorks = false;
+
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
+        std::lock_guard<std::mutex> lock(m_taskQueueMutex);
+        std::for_each(m_threads.begin(), m_threads.end(), std::mem_fn(&ext::thread::interrupt));
         m_queueTasks.clear();
+        m_taskQueueChangedNotifier.notify_all();
     }
-    std::for_each(m_threads.begin(), m_threads.end(), [](ext::thread& thread) {
-        thread.interrupt();
-    });
-    m_notifier.notify_all();
+    m_taskDoneEvent.RaiseAll();
+
     std::for_each(m_threads.begin(), m_threads.end(), [](ext::thread& thread) {
         thread.join();
     });
@@ -314,31 +314,14 @@ inline void thread_pool::wait_for_tasks()
     for (;;)
     {
         {
-            std::unique_lock lock(m_mutex);
-            if (m_queueTasks.empty())
-            {
-                lock.unlock();
-
-                if (m_countExecutingTasksThread == 0)
-                    return;
-            }
+            std::unique_lock lock(m_taskQueueMutex);
+            if (m_queueTasks.empty() && m_countExecutingTasks == 0)
+                return;
         }
 
         m_taskDoneEvent.Wait();
         m_taskDoneEvent.Reset();
     }
-}
-
-inline void thread_pool::detach_all()
-{
-    std::for_each(m_threads.begin(), m_threads.end(), [](ext::thread& thread) {
-        thread.interrupt();
-    });
-    m_notifier.notify_all();
-    std::for_each(m_threads.begin(), m_threads.end(), [](ext::thread& thread) {
-        thread.detach();
-    });
-    m_threads.clear();
 }
 
 inline void thread_pool::worker()
@@ -347,27 +330,23 @@ inline void thread_pool::worker()
     {
         thread_pool::TaskInfoPtr taskToExecute;
         {
-            std::unique_lock<std::mutex> lock(m_mutex);
-            while (m_queueTasks.empty())
-            {
-                m_notifier.wait(lock);
+            std::unique_lock<std::mutex> lock(m_taskQueueMutex);
 
-                // notification call can be connected with interrupting
-                if (!m_threadPoolWorks)
-                    return;
-            }
+            m_taskQueueChangedNotifier.wait(lock, [&]() { return !m_queueTasks.empty() || !m_threadPoolWorks; });
+            if (!m_threadPoolWorks)
+                return;
 
             taskToExecute = std::move(m_queueTasks.front());
             m_queueTasks.pop_front();
         }
 
-        ++m_countExecutingTasksThread;
+        ++m_countExecutingTasks;
         taskToExecute->task();
         if (m_onTaskDone)
             m_onTaskDone(taskToExecute->taskId);
+        --m_countExecutingTasks;
 
-        --m_countExecutingTasksThread;
-        m_taskDoneEvent.Set();
+        m_taskDoneEvent.RaiseAll();
     }
 }
 

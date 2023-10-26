@@ -157,7 +157,7 @@ TEST(thread_test, check_interruption_requested)
         });
         EXPECT_FALSE(myThread.interrupted());
         myThread.interrupt();
-        interrupted.Set();
+        interrupted.RaiseOne();
         join_thread_and_check(myThread, false);
     }
 }
@@ -177,7 +177,7 @@ TEST(thread_test, thead_swapping)
     ext::Event e;
     ext::thread oldThread(thread_function, [&e]()
     {
-        e.Set();
+        e.RaiseOne();
         ext::this_thread::interruptible_sleep_for(std::chrono::seconds(5));
     });
 
@@ -198,7 +198,7 @@ TEST(thread_test, check_interruption_point)
         ext::Event threadStarted;
         ext::thread myThread(thread_function, [&]()
         {
-            threadStarted.Set();
+            threadStarted.RaiseOne();
             std::this_thread::sleep_for(std::chrono::milliseconds(20));
             ext::this_thread::interruption_point();
         });
@@ -210,7 +210,7 @@ TEST(thread_test, check_interruption_point)
         ext::Event threadStarted;
         ext::thread myThread(thread_function, [&]()
         {
-            threadStarted.Set();
+            threadStarted.RaiseOne();
             std::this_thread::sleep_for(std::chrono::milliseconds(20));
             ext::this_thread::interruption_point();
         });
@@ -237,7 +237,7 @@ TEST(thread_test, check_detaching)
     });
     myThread.interrupt();
     myThread.detach();
-    threadInterruptedAndDetached.Set();
+    threadInterruptedAndDetached.RaiseOne();
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
 
     EXPECT_TRUE(interrupted);
@@ -247,7 +247,7 @@ TEST(thread_test, check_ordinary_sleep)
 {
     ext::Event threadStarted;
     ext::thread myThread(thread_function, [&]() {
-        threadStarted.Set();
+        threadStarted.RaiseOne();
         ext::this_thread::sleep_for(std::chrono::milliseconds(20));
     });
     threadStarted.Wait();
@@ -260,7 +260,7 @@ TEST(thread_test, check_interruption_sleeping)
     ext::Event threadStartedEvent;
     ext::thread myThread(thread_function, [&]()
                          {
-                             threadStartedEvent.Set();
+                             threadStartedEvent.RaiseOne();
                              ext::this_thread::interruptible_sleep_for(std::chrono::seconds(1));
                          });
     EXPECT_TRUE(threadStartedEvent.Wait());
@@ -287,7 +287,7 @@ TEST(thread_test, check_stop_token)
     ext::Event threadStartedEvent;
     ext::thread myThread(thread_function, [&threadStartedEvent]()
                          {
-                             threadStartedEvent.Set();
+                             threadStartedEvent.RaiseOne();
 
                              const auto token = ext::this_thread::get_stop_token();
                              while (!token.stop_requested())

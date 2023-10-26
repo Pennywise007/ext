@@ -214,7 +214,7 @@ class thread::ThreadsManager
         {
             // We might interrupt thread before calling a thread function
             if (stopToken.stop_requested())
-                interruptionEvent->Set(true);
+                interruptionEvent->RaiseAll();
         }
 
         [[nodiscard]] bool interrupted() const noexcept
@@ -224,7 +224,7 @@ class thread::ThreadsManager
         void on_interrupt()
         {
             EXT_ASSERT(interrupted());
-            interruptionEvent->Set(true);
+            interruptionEvent->RaiseAll();
         }
         void restore_interrupted(ext::stop_token&& token)
         {

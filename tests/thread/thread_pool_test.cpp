@@ -94,13 +94,13 @@ TEST(thread_pool_test, waiting_for_tasks)
     std::atomic_bool doneCalled = false, functionExecuted = false, erasedFunctionExecuted = false;
     ext::thread_pool threadPool([&](const ext::thread_pool::TaskId& taskId)
     {
-        doneStart.Set(true);
+        doneStart.RaiseAll();
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         doneCalled = true;
     }, 1);
 
     threadPool.add_task([&]() {
-        threadStart.Set(true);
+        threadStart.RaiseAll();
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         functionExecuted = true;
     });
@@ -183,7 +183,7 @@ TEST(thread_pool_test, interrupt_and_rerun)
         const auto token = ext::this_thread::get_stop_token();
         while (!token.stop_requested())
         {
-            threadStarted.Set();
+            threadStarted.RaiseOne();
             ext::this_thread::yield();
         }
     };

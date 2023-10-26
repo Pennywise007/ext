@@ -14,7 +14,7 @@ TEST(stop_token_test, check_stop)
     {
         while (!stop_token.stop_requested())
         {
-            threadStartedEvent.Set();
+            threadStartedEvent.RaiseAll();
         }
     });
 
@@ -37,7 +37,7 @@ TEST(stop_token_test, check_callback)
 
         while (!stop_token.stop_requested())
         {
-            threadStartedEvent.Set();
+            threadStartedEvent.RaiseAll();
         }
     });
 
@@ -59,13 +59,13 @@ TEST(stop_token_test, check_callback_not_called)
         {
             ext::stop_callback callback(stop_token, [&]() { callbackCalled = true; });
 
-            threadStartedEvent.Set();
+            threadStartedEvent.RaiseAll();
             EXPECT_TRUE(stopThreadEvent.Wait());
         });
 
         EXPECT_TRUE(threadStartedEvent.Wait());
         EXPECT_FALSE(callbackCalled);
-        stopThreadEvent.Set();
+        stopThreadEvent.RaiseAll();
         myThread.join();
     }
     EXPECT_FALSE(callbackCalled);

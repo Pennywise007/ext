@@ -3,8 +3,6 @@
 #include <thread>
 #include <type_traits>
 
-#include <ext/core/defines.h>
-
 namespace std {
 
 // remove in v142 toolset VS 2019

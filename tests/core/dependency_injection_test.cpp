@@ -2,6 +2,7 @@
 
 #include "gtest/gtest.h"
 
+#include <ext/core/defines.h>
 #include <ext/core/dependency_injection.h>
 #include <ext/core/singleton.h>
 

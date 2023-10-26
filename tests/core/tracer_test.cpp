@@ -142,7 +142,7 @@ TEST_F(TestFixture, default_tracing)
         std::tm* traceTm = std::localtime(&localTime);
         std::sscanf(text.c_str(), "%d:%d:%d.%d\t%s\t%s\t%s",
             &traceTm->tm_hour, &traceTm->tm_min, &traceTm->tm_sec, &miliseconds,
-            &threadId, level, traceText);
+            threadId, level, traceText);
 
         EXPECT_STREQ("Text", traceText);
         EXPECT_LE(miliseconds, 999);

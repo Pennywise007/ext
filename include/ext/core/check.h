@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <type_traits>
 
-#include <ext/core/defines.h>
 #include <ext/core/tracer.h>
 #include <ext/error/exception.h>
 #include <ext/error/dump_writer.h>

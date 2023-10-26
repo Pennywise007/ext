@@ -237,9 +237,9 @@ TEST(thread_pool_test, task_execution_priority)
 {
     ext::thread_pool threadPool(1);
 
-    std::atomic_int sequence = 0;
-    auto task = [&sequence](int expectedSequence) {
-        EXPECT_EQ(++sequence, expectedSequence);
+    std::atomic_int executedThreads = 0;
+    auto task = [&executedThreads](int expectedSequence) {
+        EXPECT_EQ(++executedThreads, expectedSequence);
         ext::this_thread::sleep_for(std::chrono::milliseconds(100));
     };
 
@@ -251,16 +251,16 @@ TEST(thread_pool_test, task_execution_priority)
     threadPool.add_high_priority_task(task, 2);
 
     threadPool.wait_for_tasks();
-    EXPECT_EQ(sequence, 3);
+    EXPECT_EQ(executedThreads, 3);
 }
 
 TEST(thread_pool_test, task_execution_high_priority)
 {
     ext::thread_pool threadPool(1);
 
-    std::atomic_int sequence = 0;
-    auto task = [&sequence](int expectedSequence) {
-        EXPECT_EQ(++sequence, expectedSequence);
+    std::atomic_int executedThreads = 0;
+    auto task = [&executedThreads](int expectedSequence) {
+        EXPECT_EQ(++executedThreads, expectedSequence);
         ext::this_thread::sleep_for(std::chrono::milliseconds(50));
     };
 
@@ -270,5 +270,5 @@ TEST(thread_pool_test, task_execution_high_priority)
     threadPool.add_high_priority_task(task, 3);
 
     threadPool.wait_for_tasks();
-    EXPECT_EQ(sequence, 4);
+    EXPECT_EQ(executedThreads, 4);
 }

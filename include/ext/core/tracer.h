@@ -1,4 +1,4 @@
-/*
+﻿/*
 Tracer for data. Examples:
 
 - Default information trace
@@ -223,18 +223,26 @@ struct ScopedCallTracer final : ::ext::NonCopyable
 {
     ~ScopedCallTracer()
     {
-        if (text_.has_value())
-            EXT_TRACE_LEVEL(traceLevel) << text_.value().c_str() << " end";
+        Trace("end");
     }
 
     void SetData(std::wstring&& text)
     {
         text_ = std::move(text);
-        EXT_TRACE_LEVEL(traceLevel) << text_.value().c_str() << " begin";
+        Trace("begin");
     }
 
     bool CanTrace() const noexcept { return tracer_.CanTrace(traceLevel); }
     bool operator!() const noexcept { return !text_.has_value(); }
+
+private:
+    void Trace(const char* suffix) const
+    {
+        if (!text_.has_value())
+            return;
+        const auto& outputText = text_.value();
+        EXT_TRACE_LEVEL(traceLevel) << std::narrow(outputText).c_str() << (outputText.empty() ? "" : " ") << suffix;
+    }
 
 private:
     TraceManager& tracer_ = get_tracer();

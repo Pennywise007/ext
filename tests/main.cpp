@@ -3,7 +3,6 @@
 #include "gmock/gmock.h"
 
 #include <ext/core.h>
-#include <ext/core/tracer.h>
 
 int main(int argc, char **argv)
 {

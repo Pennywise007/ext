@@ -4,8 +4,6 @@
 #include <tuple>
 #include <type_traits>
 
-#include <ext/core/defines.h>
-
 namespace ext::mpl {
 
 template <typename TypeToFound, typename... Types>

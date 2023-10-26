@@ -1,9 +1,10 @@
-﻿#pragma once
+#pragma once
 
 #include <string>
 #include <string_view>
 #include <stack>
 
+#include <ext/core/defines.h>
 #include <ext/core/check.h>
 
 #include <ext/serialization/serializer.h>

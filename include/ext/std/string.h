@@ -16,7 +16,7 @@ namespace std {
 template <typename CharType>
 void string_trim_all(std::basic_string<CharType, std::char_traits<CharType>, std::allocator<CharType>>& text)
 {
-    auto isNotSpace = [](const CharType ch)
+    auto isNotSpace = [](CharType ch)
     {
         if (ch < 0 || ch > 255)
             return true;
@@ -29,6 +29,72 @@ void string_trim_all(std::basic_string<CharType, std::char_traits<CharType>, std
     const auto indexFirstNotSpace = std::distance(text.begin(), std::find_if(text.begin(), text.end(), isNotSpace));
     const auto indexLastNotSpace = std::distance(text.rbegin(), std::find_if(text.rbegin(), text.rend(), isNotSpace));
     text = text.substr(indexFirstNotSpace, text.length() - indexLastNotSpace - indexFirstNotSpace);
+}
+
+template <typename CharType>
+void string_trim_left(std::basic_string<CharType, std::char_traits<CharType>, std::allocator<CharType>>& text)
+{
+    auto isNotSpace = [](CharType ch)
+    {
+        if (ch < 0 || ch > 255)
+            return true;
+
+        if constexpr (std::is_same_v<CharType, wchar_t>)
+            return !std::iswspace(ch);
+        else
+            return !std::isspace(ch);
+    };
+    const auto indexFirstNotSpace = std::distance(text.begin(), std::find_if(text.begin(), text.end(), isNotSpace));
+    text.erase(text.begin(), std::find_if(text.begin(), text.end(), isNotSpace));
+}
+
+template <typename CharType>
+auto string_trim_left(std::basic_string_view<CharType, std::char_traits<CharType>>& text)
+{
+    auto isNotSpace = [](CharType ch)
+    {
+        if (ch < 0 || ch > 255)
+            return true;
+
+        if constexpr (std::is_same_v<CharType, wchar_t>)
+            return !std::iswspace(ch);
+        else
+            return !std::isspace(ch);
+    };
+    return text.substr(std::distance(text.begin(), std::find_if(text.begin(), text.end(), isNotSpace)));
+}
+
+template <typename CharType>
+void string_trim_right(std::basic_string<CharType, std::char_traits<CharType>, std::allocator<CharType>>& text)
+{
+    auto isNotSpace = [](CharType ch)
+    {
+        if (ch < 0 || ch > 255)
+            return true;
+
+        if constexpr (std::is_same_v<CharType, wchar_t>)
+            return !std::iswspace(ch);
+        else
+            return !std::isspace(ch);
+    };
+    const auto charsToRemove = std::distance(text.rbegin(), std::find_if(text.rbegin(), text.rend(), isNotSpace));
+    text.resize(text.size() - charsToRemove);
+}
+
+template <typename CharType>
+auto string_trim_right(const std::basic_string_view<CharType, std::char_traits<CharType>>& text)
+{
+    auto isNotSpace = [](CharType ch)
+    {
+        if (ch < 0 || ch > 255)
+            return true;
+
+        if constexpr (std::is_same_v<CharType, wchar_t>)
+            return !std::iswspace(ch);
+        else
+            return !std::isspace(ch);
+    };
+    return text.substr(0, text.size() - std::distance(text.rbegin(), std::find_if(text.rbegin(), text.rend(), isNotSpace)));
 }
 
 [[nodiscard]] inline std::wstring widen(const char* str)

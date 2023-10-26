@@ -18,7 +18,6 @@ wg.done();
 #include <condition_variable>
 #include <mutex>
 
-#include <ext/core/defines.h>
 #include <ext/core/noncopyable.h>
 
 namespace ext {

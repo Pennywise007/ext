@@ -40,7 +40,6 @@ Example:
 #endif // __AFX_H__
 
 #include <ext/core/check.h>
-#include <ext/core/defines.h>
 #include <ext/core/singleton.h>
 
 #include <ext/scope/defer.h>

@@ -7,7 +7,6 @@
 #include <mutex>
 #include <handleapi.h>
 
-#include <ext/core/defines.h>
 #include <ext/core/noncopyable.h>
 #include <ext/core/check.h>
 

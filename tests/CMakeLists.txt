@@ -8,6 +8,13 @@ pkg_search_module(UUID REQUIRED uuid)
 file(GLOB test_SRC "*.cpp" "*/*.cpp")
 add_executable(ext_tests ${test_SRC})
 
+# Adding compile time checks
+if(MSVC)
+  target_compile_options(ext_tests PRIVATE /W4 /WX)
+else()
+  target_compile_options(ext_tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
+
 # Adding pugixml source file to fix linker problems
 target_sources(ext_tests PRIVATE ${pugixml_SOURCE_DIR}/src/pugixml.cpp)
 

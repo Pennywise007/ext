@@ -348,7 +348,7 @@ protected:
             collection->AddField(std::make_shared<SerializableValueHolder>("Key", serialize_value(it->first)));
 
         collection->AddField(get_as_serializable("Value", &it->second));
-        return std::move(collection);
+        return collection;
     }
 };
 
@@ -446,7 +446,7 @@ std::shared_ptr<ISerializable> get_as_serializable(const std::string& name, Type
         auto collection = std::make_shared<SerializableCollectionImpl>(name);
         collection->AddField(get_as_serializable<decltype(Type::first)>("First", &type->first));
         collection->AddField(get_as_serializable<decltype(Type::second)>("Second", &type->second));
-        return std::move(collection);
+        return collection;
     }
     else if constexpr (details::is_array_v<Type>)
         return std::make_shared<details::SerializableArray<Type>>(name, type);

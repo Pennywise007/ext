@@ -381,7 +381,10 @@ mkdir build
 cd build
 cmake .. -DEXT_BUILD_TESTS=ON
 cmake --build . --parallel
+# On windows
 .\tests\Debug\ext_tests.exe
+# On linux
+./tests/ext_tests
 ```
 
 </details>

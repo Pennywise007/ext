@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 #include <cctype>
 #include <codecvt> 
 #include <cwctype>
@@ -9,7 +10,6 @@
 #include <sstream>
 
 #include <ext/core/defines.h>
-#include <ext/error/dump_writer.h>
 
 namespace std {
 
@@ -44,7 +44,6 @@ void string_trim_left(std::basic_string<CharType, std::char_traits<CharType>, st
         else
             return !std::isspace(ch);
     };
-    const auto indexFirstNotSpace = std::distance(text.begin(), std::find_if(text.begin(), text.end(), isNotSpace));
     text.erase(text.begin(), std::find_if(text.begin(), text.end(), isNotSpace));
 }
 
@@ -192,7 +191,7 @@ template <typename... Args>
 [[nodiscard]] std::string string_sprintf(const char* format, Args&&... args) EXT_THROWS()
 {
     const int size_s = std::snprintf(nullptr, 0, format, std::forward<Args>(args)...) + 1; // + '\0'
-    if (size_s <= 0) { EXT_DUMP_IF(true); throw std::runtime_error("Error during formatting."); }
+    if (size_s <= 0) { assert(false); throw std::runtime_error("Error during formatting."); }
     const auto size = static_cast<size_t>(size_s);
     std::string string(size, {});
     std::snprintf(string.data(), size, format, std::forward<Args>(args)...);
@@ -222,7 +221,7 @@ template <typename... Args>
     return widen(string_sprintf(narrow(formatStr).c_str(), std::forward<Args>(args)...));
 #else
     const int size_s = std::swprintf(nullptr, 0, format, std::forward<Args>(args)...) + 1; // + '\0'
-    if (size_s <= 0) { EXT_DUMP_IF(true); throw std::runtime_error("Error during formatting."); }
+    if (size_s <= 0) { assert(false); throw std::runtime_error("Error during formatting."); }
     const auto size = static_cast<size_t>(size_s);
     std::wstring string(size, {});
     std::swprintf(string.data(), size, format, std::forward<Args>(args)...);
@@ -252,6 +251,26 @@ template <typename StreamCharType, typename CharType>
 auto& operator<<(std::basic_ostringstream<StreamCharType>& stream, const std::basic_string_view<CharType>& string)
 {
     return stream << string.data();
+}
+
+inline auto& operator<<(std::ostream& stream, const wchar_t* text)
+{
+    return stream << narrow(text);
+}
+
+inline auto& operator<<(std::wostream& stream, const char* text)
+{
+    return stream << widen(text);
+}
+
+inline auto& operator<<(std::ostream& stream, const std::wstring& text)
+{
+    return stream << narrow(text).c_str();
+}
+
+inline auto& operator<<(std::wostream& stream, const std::string& text)
+{
+    return stream << widen(text).c_str();
 }
 
 } // namespace std

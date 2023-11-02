@@ -1,16 +1,9 @@
 #pragma once
 
-#include <Windows.h>
 #include <chrono>
 #include <condition_variable>
 #include <optional>
 #include <mutex>
-#include <handleapi.h>
-
-#include <ext/core/noncopyable.h>
-#include <ext/core/check.h>
-
-#include <ext/scope/on_exit.h>
 
 namespace ext {
 

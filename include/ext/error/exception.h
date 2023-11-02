@@ -153,7 +153,7 @@ template <class CharType>
 inline auto /*std::string*/ManageExceptionText(const CharType* prefixText = nullptr, bool splitExceptionText = true) noexcept
 {
     // std::ostringstream / wostringstream
-    std::basic_ostringstream<CharType, std::char_traits<CharType>, std::allocator<CharType>> exceptionStream;
+    std::basic_ostringstream<CharType> exceptionStream;
     if (prefixText)
         exceptionStream << prefixText;
     if (!exceptionStream.str().empty())

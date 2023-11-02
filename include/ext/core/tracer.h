@@ -30,6 +30,7 @@ Can be called for scope call function check. Trace start and end scope with the 
 
 #include <ext/core/defines.h>
 #include <ext/core/noncopyable.h>
+#include <ext/std/string.h>         // to make operator<< for strings visible
 
 // Macro for tracing current function, basically used in trace prefix
 #define EXT_TRACE_FUNCTION (std::string("[") + EXT_FUNCTION + "(line " + std::to_string(__LINE__) + ")]: ").c_str()
@@ -47,7 +48,7 @@ Can be called for scope call function check. Trace start and end scope with the 
                     __tracer = nullptr;                                                                         \
                 }                                                                                               \
                 else                                                                                            \
-                    __stream
+                    __stream << ""
 
 // Default trace macros, example:           EXT_TRACE() << EXT_TRACE_FUNCTION << "my text";
 #define EXT_TRACE()         EXT_TRACE_LEVEL(::ext::ITracer::Level::eInfo)

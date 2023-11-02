@@ -55,7 +55,7 @@ public:
 //  If ARM
 #   elif defined(__arm64) || defined(__arm64__) || defined(__aarch64__) || defined(__ARM__) || defined(__arm__)
 //      If no yield support        
-#       if  defined(__ARM_ARCH_2__)     || \ 
+#       if  defined(__ARM_ARCH_2__)     || \
             defined(__ARM_ARCH_3__)     || \
             defined(__ARM_ARCH_3M__)    || \
             defined(__ARM_ARCH_4T__)    || \

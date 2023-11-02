@@ -45,7 +45,6 @@ Example of recipient:
 
 #include <ext/types/utils.h>
 
-namespace ext::events { class Dispatcher; }
 namespace ext {
 /*
     Sending event and waiting for handling event by recipients.
@@ -58,10 +57,7 @@ namespace ext {
         ext::send_event(&IEvent::Event, 10);
 */
 template <typename IEvent, typename Function, typename... Args>
-void send_event(Function IEvent::* function, Args&&... eventArgs) EXT_THROWS(...)
-{
-    get_service<events::Dispatcher>().SendEvent(function, std::forward<Args>(eventArgs)...);
-}
+void send_event(Function IEvent::* function, Args&&... eventArgs) EXT_THROWS(...);
 
 /*
     Sending event nd don`t wait for handling, continue execution
@@ -75,10 +71,7 @@ void send_event(Function IEvent::* function, Args&&... eventArgs) EXT_THROWS(...
         ext::send_event_async(&IEvent::Event, 10);
 */
 template <typename IEvent, typename Function, typename... Args>
-std::future<void> send_event_async(Function IEvent::* function, Args&&... eventArgs) noexcept
-{
-    return get_service<events::Dispatcher>().SendEventAsync(function, std::forward<Args>(eventArgs)...);
-}
+std::future<void> send_event_async(Function IEvent::* function, Args&&... eventArgs) noexcept;
 
 /*
     Executing callback for every event recipient
@@ -92,10 +85,7 @@ std::future<void> send_event_async(Function IEvent::* function, Args&&... eventA
         });
 */
 template <typename IEvent>
-void call_for_every_recipient(const std::function<void(IEvent* recipient)>& callback) EXT_THROWS(...)
-{
-    return get_service<events::Dispatcher>().ForEveryRecipient(callback);
-}
+void call_for_every_recipient(const std::function<void(IEvent* recipient)>& callback) EXT_THROWS(...);
 
 namespace events {
 
@@ -323,4 +313,23 @@ void Dispatcher::ForEveryRecipient(const std::function<void(IEvent* recipient)>&
 }
 
 } // namespace events
+
+template <typename IEvent, typename Function, typename... Args>
+void send_event(Function IEvent::* function, Args&&... eventArgs) EXT_THROWS(...)
+{
+    get_service<events::Dispatcher>().SendEvent(function, std::forward<Args>(eventArgs)...);
+}
+
+template <typename IEvent, typename Function, typename... Args>
+std::future<void> send_event_async(Function IEvent::* function, Args&&... eventArgs) noexcept
+{
+    return get_service<events::Dispatcher>().SendEventAsync(function, std::forward<Args>(eventArgs)...);
+}
+
+template <typename IEvent>
+void call_for_every_recipient(const std::function<void(IEvent* recipient)>& callback) EXT_THROWS(...)
+{
+    return get_service<events::Dispatcher>().ForEveryRecipient(callback);
+}
+
 } // namespace ext

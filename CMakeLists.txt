@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(sample CXX)
+project(ext LANGUAGES CXX)
 
 include(FetchContent)
 
@@ -44,8 +44,8 @@ if (EXT_BUILD_TESTS)
         message(STATUS "Not using system gtest, using built-in googletest project instead.")
 
         FetchContent_Declare(googletest
-                            GIT_REPOSITORY https://github.com/google/googletest.git
-                            GIT_TAG release-${GTEST_VERSION})
+                             GIT_REPOSITORY https://github.com/google/googletest.git
+                             GIT_TAG release-${GTEST_VERSION})
 
         FetchContent_GetProperties(googletest)
         if (NOT googletest_POPULATED)
@@ -71,8 +71,8 @@ if (EXT_BUILD_TESTS)
     if (NOT PUGIXML_FOUND)
         message(STATUS "Not using system pugixml, using built-in pugixml project instead.")
         FetchContent_Declare(pugixml
-                            GIT_REPOSITORY https://github.com/zeux/pugixml.git
-                            GIT_TAG ${PUGI_XML_VERSION})
+                             GIT_REPOSITORY https://github.com/zeux/pugixml.git
+                             GIT_TAG ${PUGI_XML_VERSION})
         
         FetchContent_GetProperties(pugixml)
         if (NOT pugixml_POPULATED)

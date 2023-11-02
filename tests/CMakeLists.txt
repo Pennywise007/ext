@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
 
+# Including uuid package
+find_package(PkgConfig REQUIRED)
+pkg_search_module(UUID REQUIRED uuid)
+
 # Adding tests files
 file(GLOB test_SRC "*.cpp" "*/*.cpp")
 add_executable(ext_tests ${test_SRC})
@@ -13,4 +17,4 @@ target_include_directories(ext_tests PRIVATE samples)
 target_compile_definitions(ext_tests PRIVATE PUGIXML_WCHAR_MODE)
 
 # Linking third-party libraries
-target_link_libraries(ext_tests PRIVATE gtest_int pugixml-static)
+target_link_libraries(ext_tests PRIVATE ${UUID_LIBRARIES} gtest_int pugixml-static)

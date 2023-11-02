@@ -785,7 +785,7 @@ struct ServiceCollection::SingletonObject : ServiceProvider::IObject,
             m_object = std::static_pointer_cast<Interface>(ext::di::CreateObject<Object>(std::move(serviceProvider), monitor));
         return std::make_any<std::shared_ptr<Interface>>(m_object);
     }
-    virtual [[nodiscard]] std::shared_ptr<ServiceProvider::IObject> CreateScopedObject() noexcept override
+    virtual std::shared_ptr<ServiceProvider::IObject> CreateScopedObject() noexcept override
     {
         // only one instance on whole scopes
         return ext::enable_shared_from_this<ServiceCollection::SingletonObject<Object, Interface>, ServiceProvider::IObject>::shared_from_this();

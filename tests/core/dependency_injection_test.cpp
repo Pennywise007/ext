@@ -399,10 +399,10 @@ TEST_F(dependency_injection_fixture, check_resetting_objects)
 TEST_F(dependency_injection_fixture, cyclic_dependencies)
 {
     struct Object1 : Interface1 { 
-        Object1(std::shared_ptr<Interface2> obj) {}
+        Object1(std::shared_ptr<Interface2>) {}
     };
     struct Object2 : Interface2 {
-        Object2(std::shared_ptr<Interface1> obj) {}
+        Object2(std::shared_ptr<Interface1>) {}
     };
 
     m_serviceCollection.RegisterScoped<Object1, Interface1>();
@@ -423,7 +423,7 @@ TEST_F(dependency_injection_fixture, cyclic_dependencies)
 TEST_F(dependency_injection_fixture, cyclic_dependencies_lazy_objects)
 {
     struct Object1 : Interface1 {
-        Object1(std::shared_ptr<Interface2> obj) {}
+        Object1(std::shared_ptr<Interface2>) {}
     };
     struct ObjectLazyInterface : Interface2 {
         ObjectLazyInterface(ext::lazy_interface<Interface1> obj) { (void)obj.get(); }

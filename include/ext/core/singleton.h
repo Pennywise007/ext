@@ -3,7 +3,7 @@ Default thread safe singleton
 
 Example of using:
 
-/*class Logger
+class Logger
 {
     friend ext::Singleton<Logger>;
 public:

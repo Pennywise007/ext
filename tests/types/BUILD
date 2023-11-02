@@ -1,9 +1,6 @@
-load("@rules_cc//cc:defs.bzl", "cc_test")
+load("//tests:extensions.bzl", "ext_test")
 
-cc_test(
+ext_test(
     name = "const_map_test",
     srcs = ["const_map_test.cpp"],
-    deps = [
-        "//tests:test_main",
-    ],
 )

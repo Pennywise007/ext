@@ -72,9 +72,9 @@ private:
 struct exception : std::exception
 {
     explicit exception(source_location&& source, const char* description = "", const char* exceptionType = "Exception") noexcept
-        : m_source(std::move(source))
-        , m_exceptionType(exceptionType)
+        : m_exceptionType(exceptionType)
         , m_description(description)
+        , m_source(std::move(source))
     {
         EXT_TRACE_ERR() << to_string().c_str();
     }

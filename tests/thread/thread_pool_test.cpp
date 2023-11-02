@@ -66,7 +66,7 @@ TEST(thread_pool_test, parallel_execution)
     std::atomic_bool firstExecuting = false, secondExecuted = false;
     std::atomic_uint onDoneCalls = 0;
 
-    ext::thread_pool threadPool([&onDoneCalls](const ext::thread_pool::TaskId& taskId)
+    ext::thread_pool threadPool([&onDoneCalls](const ext::thread_pool::TaskId&)
     {
         ++onDoneCalls;
     }, 2);
@@ -92,7 +92,7 @@ TEST(thread_pool_test, waiting_for_tasks)
 {
     ext::Event threadStart, doneStart;
     std::atomic_bool doneCalled = false, functionExecuted = false, erasedFunctionExecuted = false;
-    ext::thread_pool threadPool([&](const ext::thread_pool::TaskId& taskId)
+    ext::thread_pool threadPool([&](const ext::thread_pool::TaskId&)
     {
         doneStart.RaiseAll();
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -133,7 +133,7 @@ TEST(thread_pool_test, waiting_for_tasks)
 TEST(thread_pool_test, check_removing_tasks_with_post_processing_delay)
 {
     std::atomic_uint executedTasksCount = 0;
-    ext::thread_pool threadPool([&executedTasksCount](const ext::thread_pool::TaskId& taskId)
+    ext::thread_pool threadPool([&executedTasksCount](const ext::thread_pool::TaskId&)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         ++executedTasksCount;
@@ -152,7 +152,7 @@ TEST(thread_pool_test, check_removing_tasks_with_post_processing_delay)
 TEST(thread_pool_test, check_removing_tasks_with_processing_delay)
 {
     std::atomic_uint executedTasksCount = 0;
-    ext::thread_pool threadPool([&executedTasksCount](const ext::thread_pool::TaskId& taskId)
+    ext::thread_pool threadPool([&executedTasksCount](const ext::thread_pool::TaskId&)
     {
         ++executedTasksCount;
     }, 1);

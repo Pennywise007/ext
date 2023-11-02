@@ -102,7 +102,7 @@ struct TestStruct :  ext::serializable::SerializableObject<TestStruct>, Internal
         {                                                                                                                   \
             SerializableObjectType::RegisterSerializableBaseClasses<__VA_ARGS__>();                                         \
             return true;                                                                                                    \
-        }();
+        }()
 
 namespace ext::serializable {
 

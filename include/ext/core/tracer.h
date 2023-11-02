@@ -1,4 +1,4 @@
-﻿/*
+/*
 Tracer for data. Examples:
 
 - Default information trace
@@ -35,16 +35,18 @@ Can be called for scope call function check. Trace start and end scope with the 
 #define EXT_TRACE_FUNCTION (std::string("[") + EXT_FUNCTION + "(line " + std::to_string(__LINE__) + ")]: ").c_str()
 
 // Default trace macros, usage: EXT_TRACE_TYPE(::ext::ITracer::TraceType::eInfo) << EXT_TRACE_FUNCTION << "my text";
-#define EXT_TRACE_LEVEL(__Level) \
-    for (auto* __tracer = &::ext::get_tracer(); __tracer && __tracer->CanTrace(__Level); __tracer = nullptr)   \
-        if (std::ostringstream __stream; __tracer)                                                          \
-            for (bool __streamIsSet = false; __tracer; __streamIsSet = true)                                \
-                if (__streamIsSet)                                                                          \
-                {                                                                                           \
-                    __tracer->Trace(__Level, __stream.str());                                                 \
-                    __tracer = nullptr;                                                                     \
-                }                                                                                           \
-                else                                                                                        \
+#define EXT_TRACE_LEVEL(__Level)                                                                                \
+    for (auto* __tracer = &::ext::get_tracer(); __tracer && __tracer->CanTrace(__Level); __tracer = nullptr)    \
+        if (std::ostringstream __stream; !__tracer)                                                             \
+        {}                                                                                                      \
+        else                                                                                                    \
+            for (bool __streamIsSet = false; __tracer; __streamIsSet = true)                                    \
+                if (__streamIsSet)                                                                              \
+                {                                                                                               \
+                    __tracer->Trace(__Level, __stream.str());                                                   \
+                    __tracer = nullptr;                                                                         \
+                }                                                                                               \
+                else                                                                                            \
                     __stream
 
 // Default trace macros, example:           EXT_TRACE() << EXT_TRACE_FUNCTION << "my text";

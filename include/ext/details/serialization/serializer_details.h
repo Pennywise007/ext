@@ -209,7 +209,7 @@ inline void Visitor::UpdateCurrentCollectionSize()
 
 inline bool Visitor::UpdateObjectType()
 {
-    if (const ISerializableOptional* optional = m_currentSerializableObject)
+    if (const ISerializableOptional* optional = m_currentSerializableObject; optional)
         m_currentObjectType = ObjectType::eOptional;
     else if (const ISerializableCollection* collection = m_currentSerializableObject)
     {
@@ -221,7 +221,7 @@ inline bool Visitor::UpdateObjectType()
         else
             m_collectionsDepth.emplace_back(collection);
     }
-    else if (const ISerializableField* field = m_currentSerializableObject)
+    else if (const ISerializableField* field = m_currentSerializableObject; field)
         m_currentObjectType = ObjectType::eField;
     else
     {

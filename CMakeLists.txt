@@ -27,10 +27,6 @@ ext_option(EXT_USE_SYSTEM_GTEST "If ON, this project will use an installed gtest
 ext_option(EXT_USE_SYSTEM_PUGIXML "If ON, this project will use an installed pugixml library. If none is found it will use the built-in one." OFF)
 ext_option(EXT_BUILD_TESTS "Set to ON to build ext tests." OFF)
 
-# pthread
-#if (NOT (MSVC))
-    #target_link_options(pymatching_perf PRIVATE -pthread -O3)
-
 # Add ext include libraries
 include_directories(include)
 

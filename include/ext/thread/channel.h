@@ -62,21 +62,21 @@ private:
             other.m_value = std::nullopt;
         }
 
-        constexpr [[nodiscard]] bool operator==(const ChannelIterator& other) const {
+        constexpr bool operator==(const ChannelIterator& other) const {
             return m_channel == other.m_channel && !m_value.has_value() && !other.m_value.has_value();
         }
 
-        constexpr [[nodiscard]] bool operator!=(const ChannelIterator& other) const {
+        constexpr bool operator!=(const ChannelIterator& other) const {
             return !operator==(other);
         }
 
-        constexpr [[nodiscard]] const value_type& operator*() const { return m_value.value(); }
+        constexpr const value_type& operator*() const { return m_value.value(); }
 
-        constexpr [[nodiscard]] value_type& operator*() { return m_value.value(); }
+        constexpr value_type& operator*() { return m_value.value(); }
 
-        constexpr [[nodiscard]] value_type* operator->() { return &m_value.value(); }
+        constexpr value_type* operator->() { return &m_value.value(); }
 
-        constexpr [[nodiscard]] const value_type* operator->() const { return &m_value.value(); }
+        constexpr const value_type* operator->() const { return &m_value.value(); }
 
         ChannelIterator& operator++() EXT_THROWS(std::bad_function_call) {
             if (!m_value.has_value()) {

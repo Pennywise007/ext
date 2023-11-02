@@ -37,11 +37,11 @@ using extract_value_type_v = typename extract_value_type<U>::value_type;
 // if constexpr (has_reserve_function_v<std::vector<int>>) ...
 #define DECLARE_CHECK_FUNCTION(FunctionName)                        \
 template<typename Class, class = std::void_t<>>                     \
-struct has_ ##FunctionName##_function : std::false_type {};            \
+struct has_ ##FunctionName##_function : std::false_type {};         \
 template<typename Class>                                            \
 struct has_##FunctionName##_function<Class, std::enable_if_t<std::is_member_function_pointer_v<decltype(&Class::FunctionName)>>> : std::true_type {}; \
 template<class T>                                                   \
-inline constexpr bool has_##FunctionName##_function_v = has_##FunctionName##_function<T>::value;
+inline constexpr bool has_##FunctionName##_function_v = has_##FunctionName##_function<T>::value
 
 
 } // namespace std

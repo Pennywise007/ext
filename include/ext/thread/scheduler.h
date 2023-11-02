@@ -73,7 +73,7 @@ private:
 
     std::atomic_bool m_interrupted = false;
     std::thread m_thread;
-};;
+};
 
 struct Scheduler::TaskInfo
 {

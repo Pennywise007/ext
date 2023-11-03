@@ -1,6 +1,8 @@
 #include "gtest/gtest.h"
 
 #include <atomic>
+#include <algorithm>
+#include <functional>
 #include <thread>
 #include <list>
 
@@ -97,5 +99,5 @@ TEST(event_test, multy_notification)
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     ASSERT_EQ(threads_count, doneThreads);
 
-    for_each(threads.begin(), threads.end(), std::mem_fn(&std::thread::join));
+    std::for_each(threads.begin(), threads.end(), std::mem_fn(&std::thread::join));
 }

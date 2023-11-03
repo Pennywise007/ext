@@ -56,9 +56,9 @@ public:
     }
 
 private:
-    const callback_type m_callback;
     std::atomic_bool m_isRemoved{false};
     std::atomic_bool m_invokeFinishes{false};
+    const callback_type m_callback;
 };
 
 struct stop_state
@@ -256,8 +256,8 @@ private:
 
 private:
     state_type m_state{owner_ref_increment + source_ref_increment};
-    std::list<std::shared_ptr<detail::stop_callback_control_block>> m_callbacks;
     std::thread::id m_signallingThread{};
+    std::list<std::shared_ptr<detail::stop_callback_control_block>> m_callbacks;
 };
 
 } // namespace ext::detail

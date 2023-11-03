@@ -172,7 +172,7 @@ private:
         const std::time_t t = system_clock::to_time_t(now);
 
         std::string res(100, '\0');
-        int len = std::strftime(res.data(), res.size(), settings_.DateFormat.c_str(), std::localtime(&t));
+        const size_t len = std::strftime(res.data(), res.size(), settings_.DateFormat.c_str(), std::localtime(&t));
         if (!len)
             return "strftime error";
         res.resize(len);

@@ -26,11 +26,12 @@ channel.close();
 #include <queue>
 
 #include <ext/core/defines.h>
+#include <ext/core/noncopyable.h>
 
 namespace ext {
 
 template <typename T>
-class Channel {
+class Channel : ::ext::NonCopyable {
 private:
     mutable std::mutex m_queue_mutex;
     mutable std::condition_variable m_queue_not_full;

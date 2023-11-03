@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.15)
 
-# Including uuid package
-find_package(PkgConfig REQUIRED)
-pkg_search_module(UUID REQUIRED uuid)
+if(NOT MSVC)
+  # Including uuid package
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(UUID REQUIRED uuid)
+endif()
 
 # Adding tests files
 file(GLOB test_SRC "*.cpp" "*/*.cpp")

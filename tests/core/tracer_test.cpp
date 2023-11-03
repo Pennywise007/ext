@@ -110,12 +110,21 @@ TEST_F(TestFixture, tracing_date)
     ext::get_tracer().SetSettings(std::move(extensions));
 
     auto checkText = [](auto&&, const std::string& text) {
-        char level[10], traceText[20];
+        constexpr unsigned length = 10;
+        char level[length], traceText[length];
         
         std::time_t localTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-        std::time_t traceTime = localTime;
-        std::tm* traceTm = std::localtime(&localTime);
-        std::sscanf(text.c_str(), "%d:%d:%d\t%s\t%s", &traceTm->tm_hour, &traceTm->tm_min, &traceTm->tm_sec, level, traceText);
+        std::tm traceTm{};
+#if defined(_WIN32) || defined(__CYGWIN__) // windows
+        localtime_s(&traceTm, &localTime);
+#else
+        localtime_r(&traceTm, &localTime);
+#endif
+
+        EXPECT_EQ(5, sscanf_s(text.c_str(), "%d:%d:%d\t%s\t%s",
+            &traceTm.tm_hour, &traceTm.tm_min, &traceTm.tm_sec,
+            level, length, traceText, length));
+        std::time_t traceTime = std::mktime(&traceTm);
 
         EXPECT_STREQ("Trace", traceText);
         ASSERT_LE(traceTime, localTime);
@@ -135,14 +144,21 @@ TEST_F(TestFixture, default_tracing)
 {
     auto checkText = [](auto&&, const std::string& text) {
         int miliseconds;
-        char level[10], traceText[20], threadId[20];
+        constexpr unsigned length = 10;
+        char level[length], traceText[length], threadId[length];
         
         std::time_t localTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-        std::time_t traceTime = localTime;
-        std::tm* traceTm = std::localtime(&localTime);
-        std::sscanf(text.c_str(), "%d:%d:%d.%d\t%s\t%s\t%s",
-            &traceTm->tm_hour, &traceTm->tm_min, &traceTm->tm_sec, &miliseconds,
-            threadId, level, traceText);
+        std::tm traceTm{};
+#if defined(_WIN32) || defined(__CYGWIN__) // windows
+        localtime_s(&traceTm, &localTime);
+#else
+        localtime_r(&traceTm, &localTime);
+#endif
+
+        EXPECT_EQ(7, sscanf_s(text.c_str(), "%d:%d:%d.%d\t%s\t%s\t%s",
+            &traceTm.tm_hour, &traceTm.tm_min, &traceTm.tm_sec, &miliseconds,
+            threadId, length, level, length, traceText, length));
+        std::time_t traceTime = std::mktime(&traceTm);
 
         EXPECT_STREQ("Text", traceText);
         EXPECT_LE(miliseconds, 999);

@@ -171,8 +171,15 @@ private:
         const auto now = system_clock::now();
         const std::time_t t = system_clock::to_time_t(now);
 
+        std::tm time{};
+#if defined(_WIN32) || defined(__CYGWIN__) // windows
+        localtime_s(&time, &t);
+#else
+        localtime_r(&time, &t);
+#endif
         std::string res(100, '\0');
-        const size_t len = std::strftime(res.data(), res.size(), settings_.DateFormat.c_str(), std::localtime(&t));
+        const size_t len = std::strftime(res.data(), res.size(), settings_.DateFormat.c_str(), &time);
+
         if (!len)
             return "strftime error";
         res.resize(len);

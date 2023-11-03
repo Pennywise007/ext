@@ -738,7 +738,7 @@ inline void ServiceProvider::UpdateObjectWrappersInNewScope(const ServiceProvide
                 });
             if (it != objectInParentScopeIt->second.cend())
             {
-                const auto indexInParentScope = std::distance(objectInParentScopeIt->second.cbegin(), it);
+                const size_t indexInParentScope = std::distance(objectInParentScopeIt->second.cbegin(), it);
                 EXT_ASSERT(newScope[wrappedInterfaceHash].size() > indexInParentScope) << "Scopes must be the same size";
                 wrappedObject = *std::next(newScope[wrappedInterfaceHash].begin(), indexInParentScope);
                 continue;

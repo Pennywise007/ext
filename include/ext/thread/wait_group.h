@@ -31,7 +31,7 @@ private:
 public:
     WaitGroup() = default;
 
-    void add(size_t delta = 0) noexcept {
+    void add(int delta = 1) noexcept {
         m_counter += delta;
     }
 

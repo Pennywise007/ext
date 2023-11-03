@@ -181,6 +181,7 @@ namespace details {
 
 struct ISerializableFieldInfo
 {
+    virtual ~ISerializableFieldInfo() = default;
     [[nodiscard]] virtual std::shared_ptr<ISerializable> GetField(const ISerializable* object) const = 0;
 };
 } // namespace details

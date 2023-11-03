@@ -75,6 +75,8 @@ private:
     {
         SingletonWatcher() { kSingletonCreated<T> = true; }
         ~SingletonWatcher() { kSingletonDestroyed<T> = true; }
+        SingletonWatcher(SingletonWatcher const&) = delete;
+        SingletonWatcher& operator= (SingletonWatcher const&) = delete;
 
         T object;
     };

@@ -108,18 +108,20 @@ TEST_F(dependency_injection_fixture, check_singleton)
     m_serviceCollection.RegisterSingleton<Interface1Impl, Interface1>();
     const auto serviceProvider = m_serviceCollection.BuildServiceProvider();
 
-    const std::shared_ptr<Interface1> interface1 = ext::GetInterface<Interface1>(serviceProvider);
-    const std::shared_ptr<Interface1> interface2 = ext::GetInterface<Interface1>(serviceProvider);
-    const std::shared_ptr<Interface1Impl> object = ext::CreateObject<Interface1Impl>(serviceProvider);
-    EXPECT_NE(nullptr, interface1);
-    EXPECT_NE(nullptr, interface2);
-    EXPECT_NE(nullptr, object);
-    EXPECT_EQ(interface1, interface2);
-    EXPECT_NE(interface1, object);
+    {
+        const std::shared_ptr<Interface1> interface1 = ext::GetInterface<Interface1>(serviceProvider);
+        const std::shared_ptr<Interface1> interface2 = ext::GetInterface<Interface1>(serviceProvider);
+        const std::shared_ptr<Interface1Impl> object = ext::CreateObject<Interface1Impl>(serviceProvider);
+        EXPECT_NE(nullptr, interface1);
+        EXPECT_NE(nullptr, interface2);
+        EXPECT_NE(nullptr, object);
+        EXPECT_EQ(interface1, interface2);
+        EXPECT_NE(interface1, object);
 
-    EXPECT_EQ(interface1, ext::GetInterface<Interface1>(m_serviceCollection.BuildServiceProvider()));
-    EXPECT_EQ(interface1, ext::GetInterface<Interface1>(serviceProvider->CreateScope()));
-
+        EXPECT_EQ(interface1, ext::GetInterface<Interface1>(m_serviceCollection.BuildServiceProvider()));
+        EXPECT_EQ(interface1, ext::GetInterface<Interface1>(serviceProvider->CreateScope()));
+    }
+    
     ASSERT_THROW(auto const _ = ext::GetInterface<Interface2>(serviceProvider), ext::di::not_registered);
 
     {

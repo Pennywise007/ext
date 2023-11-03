@@ -92,7 +92,7 @@ public:
 
     template<class _Function, class... _Args>
     explicit thread(_Function&& function, _Args&&... args)
-        : thread(ext::stop_source{}, std::forward<_Function>(function), std::forward<_Args>(args)...)
+        : thread(ext::stop_source(), std::forward<_Function>(function), std::forward<_Args>(args)...)
     {}
 
     thread& operator=(thread&& other) noexcept;

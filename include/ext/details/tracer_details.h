@@ -12,6 +12,7 @@
 
 #include <ext/core/defines.h>
 #include <ext/core/mpl.h>
+#include <ext/core/noncopyable.h>
 
 #include <ext/std/filesystem.h>
 
@@ -19,7 +20,7 @@
 
 namespace ext::tracer::details {
 
-struct FileTracer : ::ext::ITracer
+struct FileTracer : ::ext::ITracer, ::ext::NonCopyable
 {
     FileTracer(std::filesystem::path traceFileName = {}) EXT_THROWS(std::runtime_error, std::filesystem::filesystem_error)
     {
@@ -38,7 +39,7 @@ struct FileTracer : ::ext::ITracer
                 const std::time_t t = system_clock::to_time_t(now);
             
                 std::string buffer(80, '\0');
-                int res = std::strftime(buffer.data(), buffer.size(), "_%d.%m.%Y_%H.%M.%S.log", std::localtime(&t));
+                size_t res = std::strftime(buffer.data(), buffer.size(), "_%d.%m.%Y_%H.%M.%S.log", std::localtime(&t));
                 if (!res)
                     return "strftime error";
                 buffer.resize(res);

@@ -5,9 +5,11 @@
 #include <optional>
 #include <mutex>
 
+#include <ext/core/noncopyable.h>
+
 namespace ext {
 
-struct Event
+struct Event : ::ext::NonCopyable
 {
     // Raise of the single event, only one context who is waiting this event will be awaked.
     // After wait is done the event will be reseted
@@ -68,14 +70,13 @@ struct Event
     }
 
 private:
-    std::condition_variable cv_;
-    mutable std::mutex mutex_;
-
     enum class State {
         eNotRaised,         
         eRaisedOne,
         eRaisedAll,
     } state_ = State::eNotRaised;
+    std::condition_variable cv_;
+    mutable std::mutex mutex_;
 };
 
 } // namespace ext

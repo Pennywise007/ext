@@ -30,7 +30,7 @@ Example:
 namespace ext {
 
 typedef size_t TaskId;
-constexpr TaskId kInvalidId = -1;
+constexpr TaskId kInvalidId = TaskId(-1);
 
 // Task schedule, allow to set the execution schedule for task or execute it at specific time
 // You can use global schedule instance for fast task, or use own copy for long executing tasks

@@ -169,106 +169,99 @@ TEST(TestCOM, TestClassToInterfaceQuery)
     EXPECT_TRUE(pITestWithBase) << "Failed to cast class to interface with inheritance";
 }
 
-// Checking the casting and equalization of interfaces
-TEST(TestCOM, TestInterfaceQuerying)
+TEST(TestCOM, TestInterfaceQuerying_Constructor)
 {
-    ITestPtr pITest;
+    ITestPtr pITest = TestClass::create();
+
+    CComPtr<ITest> pCComITest(pITest);
+    EXPECT_TRUE(pCComITest) << "Failed to pass interface to CComPtr constructor";
+    CComQIPtr<ITest> pCComQIITest(pITest);
+    EXPECT_TRUE(pCComQIITest) << "Failed to pass interface to CComQIPtr constructor";
+    ITestPtr pITest1(pCComITest);
+    EXPECT_TRUE(pITest1) << "Failed to pass CComPtr to interface constructor";
+    ITestPtr pITest2(pCComQIITest);
+    EXPECT_TRUE(pITest2) << "Failed to pass CComQIPtr to interface constructor";
+}
+
+TEST(TestCOM, TestInterfaceQuerying_Constructor_FromDifferentInterfaces)
+{
+    ITestSecondPtr pITestSecond = TestClassSecond::create();
+
+    ITestPtr pITest(pITestSecond);
+    EXPECT_TRUE(pITest) << "Failed to pass ITestSecondPtr to ITestPtr constructor";
+    CComPtr<ITest> pCComITest(pITestSecond);
+    EXPECT_TRUE(pCComITest) << "Failed to pass ITestSecondPtr to CComPtr<ITest> constructor";
+    CComQIPtr<ITest> pCComQIITest(pITestSecond);
+    EXPECT_TRUE(pCComQIITest) << "Failed to pass ITestSecondPtr to CComQIPtr<ITest> constructor";
+    ITestSecondPtr pITestSecond1(pCComITest);
+    EXPECT_TRUE(pITestSecond1) << "Failed to pass CComPtr<ITest> to ITestSecondPtr constructor";
+    ITestSecondPtr pITestSecond2(pCComQIITest);
+    EXPECT_TRUE(pITestSecond2) << "Failed to pass CComQIPtr<ITest> to ITestSecondPtr constructor";
+}
+
+TEST(TestCOM, Test_CopyOperator_FromOneInterface)
+{
+    ITestPtr pITest = TestClass::create();
 
     CComPtr<ITest> pCComITest;
     CComQIPtr<ITest> pCComQIITest;
 
-    {
-        pITest = TestClass::create();
+    pCComITest = pITest;
+    EXPECT_TRUE(pCComITest) << "Failed to equate interface to CComPtr";
+    pCComQIITest = pITest;
+    EXPECT_TRUE(pCComITest) << "Failed to equate interface to CComQIPtr";
+    pITest = pCComITest;
+    EXPECT_TRUE(pITest) << "Failed to equate CComPtr to interface";
+    pITest = pCComQIITest;
+    EXPECT_TRUE(pITest) << "Failed to equate CComQIPtr to interface";
+}
 
-        // operators = to COM objects from one interface
-        pCComITest = pITest;
-        EXPECT_TRUE(pCComITest) << "Failed to equate interface to CComPtr";
-        pCComQIITest = pITest;
-        EXPECT_TRUE(pCComITest) << "Failed to equate interface to CComQIPtr";
-        pITest = pCComITest;
-        EXPECT_TRUE(pITest) << "Failed to equate CComPtr to interface";
-        pITest = pCComQIITest;
-        EXPECT_TRUE(pITest) << "Failed to equate CComQIPtr to interface";
-    }
+TEST(TestCOM, Test_CopyOperator_FromDifferentInterfaces)
+{
+    // operators = to COM objects from different interfaces
+    CComPtr<ITest> pCComITest;
+    CComQIPtr<ITest> pCComQIITest;
 
-    {
-        pITest = TestClass::create();
+    ITestSecondPtr pITestSecond = TestClassSecond::create();
+    ITestPtr pITest = pITestSecond;
 
-        // constructors
-        CComPtr<ITest> pCComITest(pITest);
-        EXPECT_TRUE(pCComITest) << "Failed to pass interface to CComPtr constructor";
-        CComQIPtr<ITest> pCComQIITest(pITest);
-        EXPECT_TRUE(pCComQIITest) << "Failed to pass interface to CComQIPtr constructor";
-        ITestPtr pITest1(pCComITest);
-        EXPECT_TRUE(pITest1) << "Failed to pass CComPtr to interface constructor";
-        ITestPtr pITest2(pCComQIITest);
-        EXPECT_TRUE(pITest2) << "Failed to pass CComQIPtr to interface constructor";
-    }
+    EXPECT_TRUE(pITest) << "Failed to equate ITestSecondPtr to ITestPtr";
+    pCComITest = pITestSecond;
+    EXPECT_TRUE(pCComITest) << "Failed to equate ITestSecondPtr to CComPtr<ITest>";
+    pCComQIITest = pITestSecond;
+    EXPECT_TRUE(pCComQIITest) << "Failed to equate ITestSecondPtr to CComQIPtr<ITest>";
+    pITestSecond = pCComITest;
+    EXPECT_TRUE(pITestSecond) << "Failed to equate CComPtr <ITest> to ITestSecondPtr";
+    pITestSecond = pCComQIITest;
+    EXPECT_TRUE(pITestSecond) << "Failed to equate CComQIPtr<ITest> to ITestSecondPtr";
+}
 
-    {
-        // operators = to COM objects from different interfaces
+TEST(TestCOM, Test_TypeCasting_AssemblyChecking)
+{
+    CComPtr<ITestSecond> pCComITestSecond = TestClassSecond::create();
+    EXPECT_TRUE(pCComITestSecond) << "Failed to get CComPtr from ComInternal via constructor";
+    // CComPtr has problems with the operator = to other interfaces, we use casting
+    pCComITestSecond = (decltype(pCComITestSecond))TestClassSecond::create();
+    EXPECT_TRUE(pCComITestSecond) << "Failed to get CComPtr from ComInternal via =";
 
-        ITestSecondPtr pITestSecond = TestClassSecond::create();
+    // CComQIPtr does not have a constructor for COM objects with a different interface, we use casting
+    CComQIPtr<ITestSecond> pCComQIITestSecond = (decltype(pCComQIITestSecond))TestClassSecond::create();
+    EXPECT_TRUE(pCComITestSecond) << "Failed to get CComQIPtr from ComInternal via constructor";
+    pCComQIITestSecond = TestClassSecond::create();
+    EXPECT_TRUE(pCComITestSecond) << "Failed to get CComQIPtr from ComInternal via =";
+}
 
-        pITest = pITestSecond;
-        EXPECT_TRUE(pITest) << "Failed to equate ITestSecondPtr to ITestPtr";
-        pCComITest = pITestSecond;
-        EXPECT_TRUE(pCComITest) << "Failed to equate ITestSecondPtr to CComPtr<ITest>";
-        pCComQIITest = pITestSecond;
-        EXPECT_TRUE(pCComQIITest) << "Failed to equate ITestSecondPtr to CComQIPtr<ITest>";
-        pITestSecond = pCComITest;
-        EXPECT_TRUE(pITestSecond) << "Failed to equate CComPtr <ITest> to ITestSecondPtr";
-        pITestSecond = pCComQIITest;
-        EXPECT_TRUE(pITestSecond) << "Failed to equate CComQIPtr<ITest> to ITestSecondPtr";
-    }
-
-    {
-        // constructors for COM objects from different interfaces
-
-        ITestSecondPtr pITestSecond = TestClassSecond::create();
-
-        ITestPtr pITest(pITestSecond);
-        EXPECT_TRUE(pITest) << "Failed to pass ITestSecondPtr to ITestPtr constructor";
-        CComPtr<ITest> pCComITest(pITestSecond);
-        EXPECT_TRUE(pCComITest) << "Failed to pass ITestSecondPtr to CComPtr<ITest> constructor";
-        CComQIPtr<ITest> pCComQIITest(pITestSecond);
-        EXPECT_TRUE(pCComQIITest) << "Failed to pass ITestSecondPtr to CComQIPtr<ITest> constructor";
-        ITestSecondPtr pITestSecond1(pCComITest);
-        EXPECT_TRUE(pITestSecond1) << "Failed to pass CComPtr<ITest> to ITestSecondPtr constructor";
-        ITestSecondPtr pITestSecond2(pCComQIITest);
-        EXPECT_TRUE(pITestSecond2) << "Failed to pass CComQIPtr<ITest> to ITestSecondPtr constructor";
-    }
+TEST(TestCOM, Test_Lifetime)
+{
+    ITestSecondPtr pITestSecond;
+    EXPECT_FALSE(pITestSecond) << "After the interface constructor - the object is not empty";
 
     {
-        // type casting, just checking for assembly
-
-        CComPtr<ITestSecond> pCComITestSecond = TestClassSecond::create();
-        EXPECT_TRUE(pCComITestSecond) << "Failed to get CComPtr from ComInternal via constructor";
-        // CComPtr has problems with the operator = to other interfaces, we use casting
-        pCComITestSecond = (decltype(pCComITestSecond))TestClassSecond::create();
-        EXPECT_TRUE(pCComITestSecond) << "Failed to get CComPtr from ComInternal via =";
-
-        // CComQIPtr does not have a constructor for COM objects with a different interface, we use casting
-        CComQIPtr<ITestSecond> pCComQIITestSecond =
-            (decltype(pCComQIITestSecond))TestClassSecond::create();
-        EXPECT_TRUE(pCComITestSecond) << "Failed to get CComQIPtr from ComInternal via constructor";
-        pCComQIITestSecond = TestClassSecond::create();
-        EXPECT_TRUE(pCComITestSecond) << "Failed to get CComQIPtr from ComInternal via =";
+        ITestPtr pITestInternal = TestClassSecond::create();
+        pITestSecond = pITestInternal;
     }
 
-    {
-        // checking the lifetime of an object
-
-        ITestSecondPtr pITestSecond;
-        EXPECT_FALSE(pITestSecond) << "After the interface constructor - the object is not empty";
-
-        {
-            ITestPtr pITestInternal = TestClassSecond::create();
-            pITestSecond = pITestInternal;
-        }
-
-        EXPECT_TRUE(pITestSecond) << "After leaving the scope of the interface - the object is destroyed";
-    }
+    EXPECT_TRUE(pITestSecond) << "After leaving the scope of the interface - the object is destroyed";
 }
 
 #endif // _MSC_VER

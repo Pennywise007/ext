@@ -208,13 +208,14 @@ TEST_F(dependency_injection_fixture, check_scoped_with_unregistration)
     m_serviceCollection.Unregister<Interface1>();
 
     const auto serviceProviderScope1 = m_serviceCollection.BuildServiceProvider();
+    {
+        const std::shared_ptr<Interface123Impl> interface1InScope1 = std::dynamic_pointer_cast<Interface123Impl>(ext::GetInterface<Interface2>(serviceProviderScope1));
+        const std::shared_ptr<Interface123Impl> interface2InScope1 = std::dynamic_pointer_cast<Interface123Impl>(ext::GetInterface<Interface3>(serviceProviderScope1));
 
-    const std::shared_ptr<Interface123Impl> interface1InScope1 = std::dynamic_pointer_cast<Interface123Impl>(ext::GetInterface<Interface2>(serviceProviderScope1));
-    const std::shared_ptr<Interface123Impl> interface2InScope1 = std::dynamic_pointer_cast<Interface123Impl>(ext::GetInterface<Interface3>(serviceProviderScope1));
-
-    EXPECT_NE(nullptr, interface1InScope1);
-    EXPECT_EQ(interface1InScope1, interface2InScope1);
-    EXPECT_THROW(auto const _ = ext::GetInterface<Interface1>(serviceProviderScope1), ext::dependency_injection::not_registered);
+        EXPECT_NE(nullptr, interface1InScope1);
+        EXPECT_EQ(interface1InScope1, interface2InScope1);
+        EXPECT_THROW(auto const _ = ext::GetInterface<Interface1>(serviceProviderScope1), ext::dependency_injection::not_registered);
+    }
 
     {
         const auto newServiceProvider = m_serviceCollection.BuildServiceProvider();

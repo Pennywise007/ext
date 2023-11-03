@@ -6,7 +6,6 @@
 TEST(thread_pool_test, add_task)
 {
     std::atomic_uint onDoneCalls = 0;
-
     ext::thread_pool threadPool([&](const ext::thread_pool::TaskId&)
     {
         ++onDoneCalls;
@@ -21,8 +20,8 @@ TEST(thread_pool_test, add_task)
     threadPool.wait_for_tasks();
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    EXPECT_EQ(onDoneCalls, 1);
-    EXPECT_EQ(taskExecuted, 1);
+    EXPECT_EQ(onDoneCalls, 1u);
+    EXPECT_EQ(taskExecuted, 1u);
 }
 
 TEST(thread_pool_test, check_adding_and_executing_tasks)
@@ -30,7 +29,7 @@ TEST(thread_pool_test, check_adding_and_executing_tasks)
     std::mutex listMutex;
     std::set<ext::thread_pool::TaskId> taskList;
 
-    std::atomic_int runTaskCount = 0;
+    std::atomic_uint runTaskCount = 0;
 
     ext::thread_pool threadPool([&taskList, &listMutex](const ext::thread_pool::TaskId& taskId)
     {
@@ -58,7 +57,7 @@ TEST(thread_pool_test, check_adding_and_executing_tasks)
 
     threadPool.wait_for_tasks();
     EXPECT_TRUE(taskList.empty()) << "not all tasks finish callbacks called";
-    EXPECT_EQ(runTaskCount, 0) << "not all task executed";
+    EXPECT_EQ(runTaskCount, 0u) << "not all task executed";
 }
 
 TEST(thread_pool_test, parallel_execution)
@@ -85,7 +84,7 @@ TEST(thread_pool_test, parallel_execution)
 
     EXPECT_TRUE(secondExecuted);
     EXPECT_FALSE(firstExecuting);
-    EXPECT_EQ(onDoneCalls, 2);
+    EXPECT_EQ(onDoneCalls, 2u);
 }
 
 TEST(thread_pool_test, waiting_for_tasks)
@@ -146,7 +145,7 @@ TEST(thread_pool_test, check_removing_tasks_with_post_processing_delay)
             threadPool.erase_task(taskId);
     }
     threadPool.wait_for_tasks();
-    EXPECT_EQ(executedTasksCount, 1);
+    EXPECT_EQ(executedTasksCount, 1u);
 }
 
 TEST(thread_pool_test, check_removing_tasks_with_processing_delay)
@@ -167,7 +166,7 @@ TEST(thread_pool_test, check_removing_tasks_with_processing_delay)
             threadPool.erase_task(taskId);
     }
     threadPool.wait_for_tasks();
-    EXPECT_EQ(executedTasksCount, 1);
+    EXPECT_EQ(executedTasksCount, 1u);
 }
 
 TEST(thread_pool_test, interrupt_and_rerun)
@@ -192,14 +191,14 @@ TEST(thread_pool_test, interrupt_and_rerun)
 
     EXPECT_TRUE(threadStarted.Wait());
     threadPool.interrupt_and_remove_all_tasks();
-    EXPECT_EQ(1, executedTasksCount);
+    EXPECT_EQ(1u, executedTasksCount);
 
     threadStarted.Reset();
     threadPool.add_task(threadFunction);
 
     EXPECT_TRUE(threadStarted.Wait());
     threadPool.interrupt_and_remove_all_tasks();
-    EXPECT_EQ(2, executedTasksCount);
+    EXPECT_EQ(2u, executedTasksCount);
 }
 
 TEST(thread_pool_test, arguments_copying_test)

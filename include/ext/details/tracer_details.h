@@ -38,8 +38,15 @@ struct FileTracer : ::ext::ITracer, ::ext::NonCopyable
                 const auto now = system_clock::now();
                 const std::time_t t = system_clock::to_time_t(now);
             
+                std::tm time{};
+#if defined(_WIN32) || defined(__CYGWIN__) // windows
+                localtime_s(&time, &t);
+#else
+                localtime_r(&time, &t);
+#endif
+
                 std::string buffer(80, '\0');
-                size_t res = std::strftime(buffer.data(), buffer.size(), "_%d.%m.%Y_%H.%M.%S.log", std::localtime(&t));
+                size_t res = std::strftime(buffer.data(), buffer.size(), "_%d.%m.%Y_%H.%M.%S.log", &time);
                 if (!res)
                     return "strftime error";
                 buffer.resize(res);

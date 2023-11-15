@@ -42,7 +42,7 @@ struct FileTracer : ::ext::ITracer, ::ext::NonCopyable
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
                 localtime_s(&time, &t);
 #else
-                localtime_r(&time, &t);
+                localtime_r(&t, &time);
 #endif
 
                 std::string buffer(80, '\0');

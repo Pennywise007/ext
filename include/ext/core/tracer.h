@@ -74,7 +74,7 @@ struct ITracer
 };
 
 namespace tracer::details {
-// Get default trasers list
+// Get default tracers list
 // defined in: ext/details/tracer_details.h
 [[nodiscard]] std::list<std::shared_ptr<ITracer>> default_tracers(); 
 } // tracer::details
@@ -145,11 +145,11 @@ public:
         std::string DateFormat = "%H:%M:%S";
 
         // Enabled extensions list
-        std::bitset<size_t(Extensions::eCount)> Extenstions;
+        std::bitset<size_t(Extensions::eCount)> Extensions;
         Settings()
         {
-            Extenstions.set(Extensions::eDateWithMilliseconds);
-            Extenstions.set(Extensions::eThreadId);
+            Extensions.set(Extensions::eDateWithMilliseconds);
+            Extensions.set(Extensions::eThreadId);
         }
     };
     // Set tracer settings
@@ -162,8 +162,8 @@ public:
 private:
     std::string getTime()
     {
-        if (!settings_.Extenstions.test(Settings::Extensions::eDate) &&
-            !settings_.Extenstions.test(Settings::Extensions::eDateWithMilliseconds))
+        if (!settings_.Extensions.test(Settings::Extensions::eDate) &&
+            !settings_.Extensions.test(Settings::Extensions::eDateWithMilliseconds))
             return {};
 
         using namespace std::chrono;
@@ -175,7 +175,7 @@ private:
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
         localtime_s(&time, &t);
 #else
-        localtime_r(&time, &t);
+        localtime_r(&t, &time);
 #endif
         std::string res(100, '\0');
         const size_t len = std::strftime(res.data(), res.size(), settings_.DateFormat.c_str(), &time);
@@ -184,7 +184,7 @@ private:
             return "strftime error";
         res.resize(len);
 
-        if (settings_.Extenstions.test(Settings::Extensions::eDateWithMilliseconds))
+        if (settings_.Extensions.test(Settings::Extensions::eDateWithMilliseconds))
             res += "." + std::to_string(std::chrono::duration_cast<milliseconds>(now.time_since_epoch()).count() % 1000);
         return res + "\t";
     }
@@ -296,7 +296,7 @@ inline void TraceManager::Trace(Level level, const std::string& text)
 
     std::ostringstream traceText;
     traceText << getTime();    
-    if (settings_.Extenstions.test(Settings::Extensions::eThreadId))
+    if (settings_.Extensions.test(Settings::Extensions::eThreadId))
         traceText << "0x" << std::hex << std::this_thread::get_id() << '\t';
     traceText << level << "\t" << trimTextRight(text);
     const auto str = traceText.str();

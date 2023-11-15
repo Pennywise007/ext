@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
+#include <cstdio>
 #include <memory>
 #include <list>
 
@@ -71,7 +72,7 @@ TEST_F(TestFixture, full_tracing_for_debug_mode)
 TEST_F(TestFixture, tracing_without_extensions)
 {
     ext::TraceManager::Settings extensions;
-    extensions.Extenstions.reset();
+    extensions.Extensions.reset();
     ext::get_tracer().SetSettings(std::move(extensions));
 
     EnableTraces(ext::ITracer::Level::eDebug);
@@ -86,8 +87,8 @@ TEST_F(TestFixture, tracing_without_extensions)
 TEST_F(TestFixture, tracing_thread_id)
 {
     ext::TraceManager::Settings extensions;
-    extensions.Extenstions.reset();
-    extensions.Extenstions.set(ext::TraceManager::Settings::Extensions::eThreadId);
+    extensions.Extensions.reset();
+    extensions.Extensions.set(ext::TraceManager::Settings::Extensions::eThreadId);
     ext::get_tracer().SetSettings(std::move(extensions));
 
     std::ostringstream threadIdText;
@@ -105,25 +106,24 @@ TEST_F(TestFixture, tracing_thread_id)
 TEST_F(TestFixture, tracing_date)
 {
     ext::TraceManager::Settings extensions;
-    extensions.Extenstions.reset();
-    extensions.Extenstions.set(ext::TraceManager::Settings::Extensions::eDate);
+    extensions.Extensions.reset();
+    extensions.Extensions.set(ext::TraceManager::Settings::Extensions::eDate);
     ext::get_tracer().SetSettings(std::move(extensions));
 
     auto checkText = [](auto&&, const std::string& text) {
-        constexpr unsigned length = 10;
-        char level[length], traceText[length];
+        char level[10], traceText[10];
         
         std::time_t localTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
         std::tm traceTm{};
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
         localtime_s(&traceTm, &localTime);
 #else
-        localtime_r(&traceTm, &localTime);
+        localtime_r(&localTime, &traceTm);
 #endif
 
-        EXPECT_EQ(5, sscanf_s(text.c_str(), "%d:%d:%d\t%s\t%s",
+        EXPECT_EQ(5, std::sscanf(text.c_str(), "%d:%d:%d\t%s\t%s",
             &traceTm.tm_hour, &traceTm.tm_min, &traceTm.tm_sec,
-            level, length, traceText, length));
+            level, traceText));
         std::time_t traceTime = std::mktime(&traceTm);
 
         EXPECT_STREQ("Trace", traceText);
@@ -144,20 +144,19 @@ TEST_F(TestFixture, default_tracing)
 {
     auto checkText = [](auto&&, const std::string& text) {
         int miliseconds;
-        constexpr unsigned length = 10;
-        char level[length], traceText[length], threadId[length];
+        char level[10], traceText[10], threadId[20];
         
         std::time_t localTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
         std::tm traceTm{};
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
         localtime_s(&traceTm, &localTime);
 #else
-        localtime_r(&traceTm, &localTime);
+        localtime_r(&localTime, &traceTm);
 #endif
 
-        EXPECT_EQ(7, sscanf_s(text.c_str(), "%d:%d:%d.%d\t%s\t%s\t%s",
+        EXPECT_EQ(7, std::sscanf(text.c_str(), "%d:%d:%d.%d\t%s\t%s\t%s",
             &traceTm.tm_hour, &traceTm.tm_min, &traceTm.tm_sec, &miliseconds,
-            threadId, length, level, length, traceText, length));
+            threadId, level, traceText));
         std::time_t traceTime = std::mktime(&traceTm);
 
         EXPECT_STREQ("Text", traceText);

@@ -1,5 +1,15 @@
-
 #pragma once
+
+/*
+Implementation of the map which can be used in a compile time.
+Example:
+
+    constexpr ext::constexpr_map my_map = {{std::pair{11, 10}, {std::pair{22, 33}}}};
+    static_assert(my_map.size() == 2);
+
+    static_assert(10 == my_map.get_value(11));
+    static_assert(33 == my_map.get_value(22));
+*/
 
 #include <algorithm>
 #include <array>
@@ -28,28 +38,28 @@ private:
 
 // constexpr Map, allows to execute search and different checks in a compile time
 // Example:
-//    constexpr const_map kMapValues = { std::pair{1, "one"}, std::pair{2, "two"}};
+//    constexpr constexpr_map kMapValues = { std::pair{1, "one"}, std::pair{2, "two"}};
 //
 //    static_assert(!kMapValues.contain_duplicate_keys());
 //    static_assert(kMapValues.contains_key(1));
 //    static_assert(kMapValues.get_value(1) == "one");
 template <typename Key, typename Value, std::size_t Size>
-struct const_map : std::array<std::pair<Key, Value>, Size>
+struct constexpr_map : std::array<std::pair<Key, Value>, Size>
 {
     using BaseArray = std::array<std::pair<Key, Value>, Size>;
 
-    constexpr const_map(std::array<std::pair<Key, Value>, Size> other) noexcept
+    constexpr constexpr_map(std::array<std::pair<Key, Value>, Size> other) noexcept
         : BaseArray(std::move(other)) {}
 
     // Creating with std::pair initializer list, Example:
-    // constexpr const_map array = {{ std::pair{K1,V1}, std::pair(K2, V2)}}
-    constexpr const_map(const std::pair<Key, Value>(&&array)[Size]) 
+    // constexpr constexpr_map array = {{ std::pair{K1,V1}, std::pair(K2, V2)}}
+    constexpr constexpr_map(const std::pair<Key, Value>(&&array)[Size]) 
         : BaseArray(create_array(std::move(array), std::make_index_sequence<Size>{})) {}
 
     // Creating with std::pair, Example:
-    // constexpr const_map array = { std::pair{K1,V1}, std::pair(K2, V2) }
+    // constexpr constexpr_map array = { std::pair{K1,V1}, std::pair(K2, V2) }
     template <typename... Pair>
-    constexpr const_map(std::pair<Key, Value>&& firstPair, Pair&&... otherPairs) 
+    constexpr constexpr_map(std::pair<Key, Value>&& firstPair, Pair&&... otherPairs) 
         : BaseArray({std::move(firstPair), std::forward<Pair>(otherPairs)...}) {}
 
     [[nodiscard]] constexpr bool contains_key(const Key& key) const noexcept { return find_key_index(key).valid(); }
@@ -154,10 +164,10 @@ struct const_map : std::array<std::pair<Key, Value>, Size>
     }
 };
 
-// template deduction guide to create pair like: constexpr const_map val = { std::pair{1, 2} };
+// template deduction guide to create pair like: constexpr constexpr_map val = { std::pair{1, 2} };
 template <typename Key, typename Value, typename... Pair>
-const_map(std::pair<Key, Value>, Pair...)
-    -> const_map<std::enable_if_t<(std::is_same_v<std::pair<Key, Value>, Pair> && ...), Key>, Value,
+constexpr_map(std::pair<Key, Value>, Pair...)
+    -> constexpr_map<std::enable_if_t<(std::is_same_v<std::pair<Key, Value>, Pair> && ...), Key>, Value,
                     sizeof...(Pair) + 1>;
 
 }  // namespace ext

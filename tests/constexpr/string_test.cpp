@@ -10,13 +10,13 @@ constexpr constexpr_string textFirst = "test";
 constexpr constexpr_string textSecond = "second";
 
 TEST(constexpr_string_test, text_and_size) {
-    static_assert(textFirst.str() == std::string_view("test"));
+    static_assert(textFirst == std::string_view("test"));
     static_assert(textFirst.size() == 4);
     static_assert(textSecond.str() == std::string_view("second"));
     static_assert(textSecond.size() == 6);
 
     constexpr constexpr_string emptyText = "";
-    static_assert(emptyText.str() == std::string_view(""));
+    static_assert(emptyText == std::string_view(""));
     static_assert(emptyText.size() == 0);
 }
 
@@ -29,8 +29,8 @@ TEST(constexpr_string_test, chars) {
 }
 
 TEST(constexpr_string_test, uniting_text) {
-    static_assert((textFirst + "_" + textSecond).str() == std::string_view("test_second"));
-    static_assert(("some_" + textFirst).str() == std::string_view("some_test"));
+    static_assert(textFirst + "_" + textSecond == std::string_view("test_second"));
+    static_assert("some_" + textFirst == std::string_view("some_test"));
 }
 
 TEST(constexpr_string_test, equal_text) {
@@ -44,4 +44,9 @@ TEST(constexpr_string_test, not_equal_text) {
     static_assert(constexpr_string("wow") != constexpr_string("wo"));
     static_assert(constexpr_string("text") != "tost");
     static_assert("text" != constexpr_string("tost"));
+}
+
+TEST(constexpr_string_test, string_view) {
+    constexpr std::string_view sw = textFirst;
+    static_assert(sw == "test");
 }

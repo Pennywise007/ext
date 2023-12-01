@@ -34,13 +34,15 @@ struct constexpr_string {
      : value_(std::to_array(_str))
     {}
 
+    constexpr operator std::string_view() const {
+        return str();
+    }
     constexpr std::string_view str() const {
         return std::string_view(value_.data(), N - 1);
     }
     constexpr size_t size() const {
         return N - 1;
     }
-
     constexpr char operator[](std::size_t i) const {
         return value_[i];
     }
@@ -57,22 +59,14 @@ struct constexpr_string {
         return resultText;
     }
 
-    constexpr bool operator==(const constexpr_string<N> str) const {
-        for (int i = 0; i < N; ++i) {
-            if (value_[i] != str.value_[i])
-                return false;
-        }
-        return true;
+    template<std::size_t Size>
+    constexpr bool operator==(const constexpr_string<Size> other) const {
+        return str() == other;
     }
 
-    template<std::size_t N2>
-    constexpr bool operator==(const constexpr_string<N2> str) const {
-        return false;
-    }
-
-    template<std::size_t N2>
-    constexpr bool operator!=(const constexpr_string<N2> str) const {
-        return !operator==(str);
+    template<std::size_t Size>
+    constexpr bool operator!=(const constexpr_string<Size> other) const {
+        return !operator==(other);
     }
 
     const std::array<char, N> value_;

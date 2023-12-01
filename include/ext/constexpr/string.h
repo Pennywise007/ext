@@ -35,10 +35,10 @@ struct constexpr_string {
     {}
 
     constexpr operator std::string_view() const {
-        return str();
+        return std::string_view(value_.data(), N - 1);
     }
     constexpr std::string_view str() const {
-        return std::string_view(value_.data(), N - 1);
+        return *this;
     }
     constexpr size_t size() const {
         return N - 1;

@@ -355,6 +355,53 @@ Dump generation and debug break in case with EXT_DUMP_IF generates only once to 
 
 </details>
 
+# Compile time classes
+<details><summary>Constexpr string</summary>
+
+Allows to combine and check text in compile time.
+```c++
+#include <ext/constexpr/string.h>
+
+constexpr ext::constexpr_string textFirst = "test";
+constexpr ext::constexpr_string textSecond = "second";
+
+constexpr auto TextCombination = textFirst + "_" + textSecond;
+static_assert(TextCombination == "test_second");
+```
+
+In C++20 can be used to store text as a template argument:
+```c++
+    template <ext::constexpr_string name__>
+    struct Object {
+        constexpr std::string_view Name() const {
+            return name__.str();
+        }
+        ...
+    };
+
+    Object<"object_name"> object;
+    static_assert(object.Name() == std::string_view("object_name"));
+```
+
+[Source](https://github.com/Pennywise007/ext/blob/main/include/ext/constexpr/string.h)
+</details>
+
+<details><summary>Constexpr map</summary>
+
+Compile time extension for strings, allow to combine and check text in compile time.
+```c++
+#include <ext/constexpr/map.h>
+
+constexpr ext::constexpr_map my_map = {{std::pair{11, 10}, {std::pair{22, 33}}}};
+static_assert(my_map.size() == 2);
+
+static_assert(10 == my_map.get_value(11));
+static_assert(33 == my_map.get_value(22));
+```
+
+[Source](https://github.com/Pennywise007/ext/blob/main/include/ext/constexpr/map.h)
+</details>
+
 # Std extensions
 ## Memory:
 - [lazy_shared_ptr](https://github.com/Pennywise007/ext/blob/main/include/ext/std/memory.h#L56C8-L56C23) - allow to create a shared memory which will be created only on first call

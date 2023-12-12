@@ -5,8 +5,7 @@
 #include <ext/core/mpl.h>
 #include <ext/std/type_traits.h>
 
-namespace ext::detail {
-namespace constructor {
+namespace ext::details::refletion {
 
 struct convertible_to_any
 {
@@ -52,22 +51,47 @@ struct make_constructor_signature_impl<Type, 2>
 template <typename Type, size_t Index>
 using make_constructor_signature = typename make_constructor_signature_impl<Type, Index>::type;
 
+template <typename Type, size_t Index>
+inline constexpr bool constructible = ext::mpl::apply<std::is_constructible, make_constructor_signature<Type, Index>>::value;
+
 template <typename Type, size_t Index, size_t End>
-struct find_constructor : std::conditional_t<
-        ext::mpl::apply<std::is_constructible, make_constructor_signature<Type, Index>>::value,
+struct find_min_constructor : std::conditional_t<
+        constructible<Type, Index>,
         make_constructor_signature<Type, Index>,
-        find_constructor<Type, Index + 1, End>
+        find_min_constructor<Type, Index + 1, End>
     >
 {};
 
 template <typename Type, size_t End>
-struct find_constructor<Type, End, End>
+struct find_min_constructor<Type, End, End>
 {
     using type = typename Type::error_constructor_signature_is_not_recognized;
 };
-} // namespace constructor
 
-template <typename T>
-inline constexpr size_t constructor_size = constructor::find_constructor<T, 0, 16>::Count() - 1;
+template <class T, class... TArgs>
+decltype(void(T{std::declval<TArgs>()...}), std::true_type{}) test_is_braces_constructible(int);
 
-} // namespace ext::detail
+template <class, class...>
+std::false_type test_is_braces_constructible(...);
+
+template <class T, class... TArgs>
+using is_braces_constructible = decltype(test_is_braces_constructible<T, TArgs...>(0));
+
+template <typename Type, size_t Index>
+inline constexpr bool braces_constructible = ext::mpl::apply<is_braces_constructible, make_constructor_signature<Type, Index>>::value;
+
+template <typename Type, size_t Index, size_t End>
+struct find_max_brace_constructor : std::conditional_t<
+        braces_constructible<Type, Index>,
+        make_constructor_signature<Type, Index>,
+        find_max_brace_constructor<Type, Index - 1, End>
+    >
+{};
+
+template <typename Type, size_t End>
+struct find_max_brace_constructor<Type, End, End>
+{
+    using type = typename Type::error_constructor_signature_is_not_recognized;
+};
+
+} // namespace ext::details::refletion

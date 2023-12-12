@@ -62,7 +62,7 @@ const std::shared_ptr<CreatedObjectExample> object = ext::CreateObject<CreatedOb
 
 #include <ext/std/memory.h>
 
-#include <ext/details/constructor_traits_details.h>
+#include <ext/utils/reflection.h>
 
 #include <ext/types/lazy.h>
 #include <ext/types/utils.h>
@@ -462,7 +462,7 @@ template <typename Type>
 
     const auto observer = di::ObjectsMonitor::ScopeObserver<Type>(monitor);
     di::any_interface_provider provider(std::move(serviceProvider), monitor);
-    return di::CreateWithProviders<Type>(provider, std::make_index_sequence<ext::detail::constructor_size<Type>>{});
+    return di::CreateWithProviders<Type>(provider, std::make_index_sequence<ext::reflection::constructor_size<Type>>{});
 }
 
 } // namespace dependency_injection

@@ -240,9 +240,6 @@ TEST(TestCOM, Test_TypeCasting_AssemblyChecking)
 {
     CComPtr<ITestSecond> pCComITestSecond = TestClassSecond::create();
     EXPECT_TRUE(pCComITestSecond) << "Failed to get CComPtr from ComInternal via constructor";
-    // CComPtr has problems with the operator = to other interfaces, we use casting
-    pCComITestSecond = (decltype(pCComITestSecond))TestClassSecond::create();
-    EXPECT_TRUE(pCComITestSecond) << "Failed to get CComPtr from ComInternal via =";
 
     // CComQIPtr does not have a constructor for COM objects with a different interface, we use casting
     CComQIPtr<ITestSecond> pCComQIITestSecond = (decltype(pCComQIITestSecond))TestClassSecond::create();

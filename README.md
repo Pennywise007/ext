@@ -85,7 +85,7 @@ struct TestStruct : SerializableObject<TestStruct>
 
     MyTestStruct()
     {
-        REGISTER_SERIALIZABLE_FIELD(m_listOfParams); // or use DECLARE_SERIALIZABLE macro
+        REGISTER_SERIALIZABLE_FIELD(m_listOfParams); // or use DECLARE_SERIALIZABLE_FIELD macro
 
         Executor::DeserializeObject(Factory::TextDeserializer(L"C:\\Test.xml"), testStruct);
     }

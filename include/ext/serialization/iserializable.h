@@ -10,8 +10,8 @@
 
 struct InternalStruct : ext::serializable::SerializableObject<InternalStruct, "Pretty name">
 {
-    DECLARE_SERIALIZABLE((long) value);
-    DECLARE_SERIALIZABLE((std::list<int>) valueList);
+    DECLARE_SERIALIZABLE_FIELD(long, value);
+    DECLARE_SERIALIZABLE_FIELD(std::list<int>, valueList);
 };
 
 struct CustomField : ISerializableField
@@ -25,18 +25,18 @@ struct TestStruct :  ext::serializable::SerializableObject<TestStruct>, Internal
 {
     REGISTER_SERIALIZABLE_BASE(InternalStruct);
 
-    DECLARE_SERIALIZABLE((long) valueLong, 2);
-    DECLARE_SERIALIZABLE((int) valueInt);
-    DECLARE_SERIALIZABLE((std::vector<bool>) boolVector, { true, false });
+    DECLARE_SERIALIZABLE_FIELD(long, valueLong, 2);
+    DECLARE_SERIALIZABLE_FIELD(int, valueInt);
+    DECLARE_SERIALIZABLE_FIELD(std::vector<bool>, boolVector, { true, false });
 
-    DECLARE_SERIALIZABLE((CustomField) field);
-    DECLARE_SERIALIZABLE((InternalStruct) internalStruct);
+    DECLARE_SERIALIZABLE_FIELD(CustomField, field);
+    DECLARE_SERIALIZABLE_FIELD(InternalStruct, internalStruct);
 
     std::list<int> m_listOfParams;
 
     MyTestStruct()
     {
-        REGISTER_SERIALIZABLE_FIELD(m_listOfParams); // or use DECLARE_SERIALIZABLE macro
+        REGISTER_SERIALIZABLE_FIELD(m_listOfParams); // or use DECLARE_SERIALIZABLE_FIELD macro
         using namespace ext::serializer;
         Executor::DeserializeObject(Factory::XMLDeserializer(L"C:\\Test.xml"), testStruct);
     }
@@ -187,7 +187,7 @@ struct ISerializableFieldInfo
 } // namespace details
 
 /*
-* Base class for class with serializable fields, register field by RegisterField function or DECLARE_SERIALIZABLE macros.
+* Base class for class with serializable fields, register field by RegisterField function or DECLARE_SERIALIZABLE_FIELD macros.
 */
 template <class Type, const char* TypeName = nullptr, class ICollectionInterface = ISerializableCollection>
 struct SerializableObject : ICollectionInterface

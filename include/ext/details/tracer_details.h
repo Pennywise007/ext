@@ -94,8 +94,8 @@ struct OutputTracer : ::ext::ITracer
     // ITracer
     void Trace(Level /*level*/, const std::string& text) override
     {
-        OutputDebugString(text.c_str());
-        OutputDebugString("\n");
+        OutputDebugStringA(text.c_str());
+        OutputDebugStringA("\n");
     }
 };
 #endif

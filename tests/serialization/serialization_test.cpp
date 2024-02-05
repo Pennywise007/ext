@@ -310,3 +310,27 @@ TEST(serialization_test, serialization_custom)
     EXPECT_EQ(initialSettings.registeredUsers, result.registeredUsers);
 }
 
+struct PrivateInheritance : ext::serializable::SerializableObject<PrivateInheritance>
+{
+    struct CollectionWithPrivateInheritance : private ext::serializable::SerializableObject<CollectionWithPrivateInheritance>
+    {
+        DECLARE_SERIALIZABLE_FIELD(int, val);
+    };
+    DECLARE_SERIALIZABLE_FIELD(CollectionWithPrivateInheritance, collection);
+};
+
+TEST(serialization_test, collection_as_a_field_with_private_inheritance)
+{
+    PrivateInheritance settings;
+    settings.collection.val = 2;
+
+    std::wstring data;
+    Executor::SerializeObject(Factory::TextSerializer(data), &settings);
+
+    ASSERT_STREQ(data.c_str(), L"\"struct PrivateInheritance\": {\n    \"collection\": {\n        \"val\": 2\n    }\n}\n");
+
+    PrivateInheritance settingsResult;
+    Executor::DeserializeObject(Factory::TextDeserializer(data), &settingsResult);
+
+    ASSERT_EQ(settings.collection.val, settingsResult.collection.val);
+}

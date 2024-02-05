@@ -244,15 +244,33 @@ protected:
 // ISerializableOptional
     [[nodiscard]] std::shared_ptr<ISerializable> Get() const override
     {
-        std::extract_value_type_v<Type>* pointer = nullptr;
-        if constexpr (std::is_same_v<std::unique_ptr<std::extract_value_type_v<Type>>, Type> ||
-                      std::is_same_v<std::shared_ptr<std::extract_value_type_v<Type>>, Type>)
+        using ExtractedType = std::extract_value_type_v<Type>;
+        ExtractedType* pointer = nullptr;
+        if constexpr (std::is_same_v<std::unique_ptr<ExtractedType>, Type> ||
+                      std::is_same_v<std::shared_ptr<ExtractedType>, Type>)
             pointer = Base::GetType()->get();
         else
             pointer = Base::GetType();
         if (pointer == nullptr)
             return std::make_shared<SerializableValueHolder>(Base::GetName(), SerializableValue::CreateNull());
-        return std::make_shared<SerializableProxy<std::extract_value_type_v<Type>>>(pointer, Base::GetName());
+
+        /* Use reinterpret_cast in case of private inheritance, example:
+        struct Settings : private ext::serializable::SerializableObject<Settings>
+        {
+            struct SubSettings : private ext::serializable::SerializableObject<SubSettings> <--
+            {};
+            DECLARE_SERIALIZABLE_FIELD(SubSettings, field);
+        }
+        */
+        if constexpr (std::is_base_of_v<ISerializableCollection, ExtractedType>) 
+            return std::make_shared<SerializableProxy<ExtractedType>>(reinterpret_cast<ISerializableCollection*>(pointer), Base::GetName());
+        else if constexpr (std::is_base_of_v<ISerializableField, ExtractedType>) 
+            return std::make_shared<SerializableProxy<ExtractedType>>(reinterpret_cast<ISerializableField*>(pointer), Base::GetName());
+        else
+        {
+            EXT_EXPECT(false) << "Failed to create SerializableProxy from " << ext::type_name<ExtractedType>();
+            return nullptr;
+        }
     }
 };
 
@@ -463,11 +481,19 @@ struct SerializableFieldInfo : ISerializableFieldInfo
 
 protected:
 // ISerializableFieldInfo
-    [[nodiscard]] std::shared_ptr<ISerializable> GetField(const ISerializable* object) const override
+    [[nodiscard]] std::shared_ptr<ISerializable> GetField(const ISerializable* constObject) const override
     {
-        Type* typePointer = const_cast<Type*>(dynamic_cast<const Type*>(object));
-        EXT_ASSERT(typePointer) << "Cant get type " << ext::type_name<Type>() << " from object, maybe virtual table is missing, remove ATL_NO_VTABLE." 
-            << " Or private inheritance problem.";
+        ISerializable* object = const_cast<ISerializable*>(constObject);
+
+        Type* typePointer = dynamic_cast<Type*>(object);
+        if (!typePointer)
+        {
+            // Case with private inheritance
+            if constexpr (std::is_base_of_v<ISerializable, Type>) {
+                typePointer = reinterpret_cast<Type*>(object);
+            }
+        }
+        EXT_EXPECT(typePointer) << "Can`t get type " << ext::type_name<Type>() << " from object " << constObject->GetName();
 
         std::string trimName = m_name;
         std::string_trim_all(trimName);

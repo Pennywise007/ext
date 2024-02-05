@@ -6,7 +6,8 @@
 
 int main(int argc, char **argv)
 {
-    ::testing::FLAGS_gtest_catch_exceptions = false;
+    if (IsDebuggerPresent())
+        ::testing::FLAGS_gtest_catch_exceptions = false;
 
     ::testing::InitGoogleTest(&argc, argv);
     ::testing::InitGoogleMock(&argc, argv);

@@ -86,10 +86,10 @@ struct TestStruct :  ext::serializable::SerializableObject<TestStruct>, Internal
 // Use case DECLARE_SERIALIZABLE_FIELD_N(long, m_propName, "Pretty name", 105); => long m_propName = long(105);  SerializableObject::RegisterField(this, &MyTestStruct::m_propName, 105);
 // !! You cannot use a constructor for this variable, use REGISTER_SERIALIZABLE_FIELD macro in case of necessity of constructor
 #define DECLARE_SERIALIZABLE_FIELD_N(SerializableName, Type, Name, ...)     \
-    REMOVE_PARENTHESES(Type) Name = [this]()                                \
+    REMOVE_PARENTHESES(Type) Name = [this]() -> REMOVE_PARENTHESES(Type)    \
         {                                                                   \
             REGISTER_SERIALIZABLE_FIELD_N(SerializableName, Name);          \
-            return REMOVE_PARENTHESES(Type) { __VA_ARGS__ };                \
+            return { __VA_ARGS__ };                                         \
         }()
 
 /*

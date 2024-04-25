@@ -70,7 +70,7 @@ struct dependency_injection_fixture : testing::Test
         m_serviceCollection.UnregisterAll();
     }
 
-    ext::ServiceCollection& m_serviceCollection = ext::get_service<ext::ServiceCollection>();
+    ext::ServiceCollection& m_serviceCollection = ext::get_singleton<ext::ServiceCollection>();
 };
 
 TEST_F(dependency_injection_fixture, creating_without_registration)

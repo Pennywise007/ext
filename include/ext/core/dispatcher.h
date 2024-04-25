@@ -162,20 +162,20 @@ protected:
     void Subscribe() const noexcept
     {
         static_assert(ext::mpl::contain_type_v<IEvent, IEvents...>, "Subscribing to an event not included in the event list");
-        get_service<Dispatcher>().Subscribe(GetEventPointer<IEvent>());
+        get_singleton<Dispatcher>().Subscribe(GetEventPointer<IEvent>());
     }
     template <typename IEvent>
     void Unsubscribe(bool checkSubscription = true) const noexcept
     {
         static_assert(ext::mpl::contain_type_v<IEvent, IEvents...>, "Unsubscribing to an event not included in the event list");
-        get_service<Dispatcher>().Unsubscribe(GetEventPointer<IEvent>(), checkSubscription);
+        get_singleton<Dispatcher>().Unsubscribe(GetEventPointer<IEvent>(), checkSubscription);
     }
 
     // Update priority for event subscriber - on raising event this subscriber will receive information first
     template <typename IEvent>
     void SetFirstPriority() const EXT_THROWS(ext::check::CheckFailedException)
     {
-        get_service<Dispatcher>().SetFirstPriority(GetEventPointer<IEvent>());
+        get_singleton<Dispatcher>().SetFirstPriority(GetEventPointer<IEvent>());
     }
 
 private:
@@ -259,7 +259,7 @@ template <typename IEvent, typename Function, typename... Args>
 std::future<void> Dispatcher::SendEventAsync(Function IEvent::* function, Args&&... eventArgs) const noexcept
 {
     auto functionToInvoke = [](Function IEvent::* function, std::decay_t<Args>&&... eventArgs) {
-        get_service<Dispatcher>().SendEvent(function, std::forward<Args>(eventArgs)...);
+        get_singleton<Dispatcher>().SendEvent(function, std::forward<Args>(eventArgs)...);
     };
 
     ext::ThreadInvoker invoker(std::move(functionToInvoke), function, std::forward<Args>(eventArgs)...);
@@ -317,19 +317,19 @@ void Dispatcher::ForEveryRecipient(const std::function<void(IEvent* recipient)>&
 template <typename IEvent, typename Function, typename... Args>
 void send_event(Function IEvent::* function, Args&&... eventArgs) EXT_THROWS(...)
 {
-    get_service<events::Dispatcher>().SendEvent(function, std::forward<Args>(eventArgs)...);
+    get_singleton<events::Dispatcher>().SendEvent(function, std::forward<Args>(eventArgs)...);
 }
 
 template <typename IEvent, typename Function, typename... Args>
 std::future<void> send_event_async(Function IEvent::* function, Args&&... eventArgs) noexcept
 {
-    return get_service<events::Dispatcher>().SendEventAsync(function, std::forward<Args>(eventArgs)...);
+    return get_singleton<events::Dispatcher>().SendEventAsync(function, std::forward<Args>(eventArgs)...);
 }
 
 template <typename IEvent>
 void call_for_every_recipient(const std::function<void(IEvent* recipient)>& callback) EXT_THROWS(...)
 {
-    return get_service<events::Dispatcher>().ForEveryRecipient(callback);
+    return get_singleton<events::Dispatcher>().ForEveryRecipient(callback);
 }
 
 } // namespace ext

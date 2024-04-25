@@ -276,7 +276,7 @@ private:
                 timerId->emplace(::SetTimer(nullptr, NULL, (UINT)kDefTickInterval.count(),
                                  [](HWND, UINT, UINT_PTR, DWORD)
                 {
-                    get_service<TickService>().m_invokedTimer.OnTickTimer();
+                    get_singleton<TickService>().m_invokedTimer.OnTickTimer();
                 }));
             });
             EXT_ASSERT(m_timerId.value_or(0) != 0) << "Timer must be set";
@@ -346,12 +346,12 @@ struct TickSubscriber : public ITickHandler
     /// <param name="tickParam">Parameter passed to the handler on tick, allows you to identify the timer
     /// or pass information to the handler</param>
     void SubscribeTimer(tick_clock::duration tickInterval = TickService::kDefTickInterval, const TickParam& tickParam = 0)
-    { get_service<TickService>().SubscribeAsync(this, tickInterval, tickParam); }
+    { get_singleton<TickService>().SubscribeAsync(this, tickInterval, tickParam); }
 
     /// <summary>Remove async tick timer</summary>
     /// <param name="tickParam">Tick parameter, if null - delete all handler timers.</param>
     void UnsubscribeTimer(const std::optional<TickParam>& tickParam = std::nullopt)
-    { get_service<TickService>().UnsubscribeAsync(this, tickParam); }
+    { get_singleton<TickService>().UnsubscribeAsync(this, tickParam); }
 
 #ifdef __AFX_H__
     /// <summary>Add tick timer, tick function will be called in main UI thread.</summary>
@@ -359,18 +359,18 @@ struct TickSubscriber : public ITickHandler
     /// <param name="tickParam">Parameter passed to the handler on tick, allows you to identify the timer
     /// or pass information to the handler</param>
     void SubscribeInvokedTimer(tick_clock::duration tickInterval = TickService::kDefTickInterval, const TickParam& tickParam = 0)
-    { get_service<TickService>().SubscribeInvoked(this, tickInterval, tickParam); }
+    { get_singleton<TickService>().SubscribeInvoked(this, tickInterval, tickParam); }
 
     /// <summary>Remove main UI thread tick timer</summary>
     /// <param name="tickParam">Tick parameter, if null - delete all handler timers</param>
     void UnsubscribeInvokedTimer(const std::optional<TickParam>& tickParam = std::nullopt)
-    { get_service<TickService>().UnsubscribeInvoked(this, tickParam); }
+    { get_singleton<TickService>().UnsubscribeInvoked(this, tickParam); }
 #endif // __AFX_H__
 
     /// <summary>Checking if this handler has a timer with the given parameter.</summary>
     /// <param name="tickParam">Tick parameter.</param>
     [[nodiscard]] bool IsTimerExist(const TickParam& tickParam)
-    { return get_service<TickService>().IsTimerExist(this, tickParam); }
+    { return get_singleton<TickService>().IsTimerExist(this, tickParam); }
 };
 
 } // namespace ext::tick

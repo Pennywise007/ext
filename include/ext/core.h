@@ -43,15 +43,15 @@ inline void Init()
 #ifdef __AFX_H__
     if (afxCurrentAppName == NULL) // avoid double initialization
         EXT_EXPECT(AfxWinInit(::GetModuleHandle(NULL), NULL, ::GetCommandLine(), 0)) << L"Failed to initalize afx";
-    ext::get_service<ext::invoke::MethodInvoker>().Init();
+    ext::get_singleton<ext::invoke::MethodInvoker>().Init();
 #endif
 
     // initializing some core services so that they are the last to be destroyed
     EXT_IGNORE_RESULT(ext::get_tracer());
     EXT_IGNORE_RESULT(ext::thread::manager());
-    EXT_IGNORE_RESULT(ext::get_service<ext::events::Dispatcher>());
+    EXT_IGNORE_RESULT(ext::get_singleton<ext::events::Dispatcher>());
 #ifdef __AFX_H__
-    EXT_IGNORE_RESULT(ext::get_service<ext::tick::TickService>());
+    EXT_IGNORE_RESULT(ext::get_singleton<ext::tick::TickService>());
 #endif
 }
 

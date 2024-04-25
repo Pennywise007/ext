@@ -88,7 +88,7 @@ struct CreatedObjectExample : ext::ServiceProviderHolder
     ext::lazy_interface<InterfaceExample> m_interfaceLazyTwo;
 };
 
-ext::ServiceCollection& serviceCollection = ext::get_service<ext::ServiceCollection>();
+ext::ServiceCollection& serviceCollection = ext::get_singleton<ext::ServiceCollection>();
 serviceCollection.RegisterScoped<InterfaceImplementationExample, InterfaceExample>();
 
 const std::shared_ptr<CreatedObjectExample> object = ext::CreateObject<CreatedObjectExample>(serviceCollection.BuildServiceProvider());

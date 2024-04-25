@@ -308,7 +308,7 @@ protected:
 
         if constexpr (is_registered_serializable_object_v<ExtractedType>)
         {
-            auto& descriptor = ext::get_service<SerializableObjectDescriptor<ExtractedType>>();
+            auto& descriptor = ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>();
             auto serializable = descriptor.GetSerializable(*pointer, Base::GetName());
             return std::make_shared<SerializableProxy<ExtractedType>>(serializable, Base::GetName());
         }
@@ -568,7 +568,7 @@ protected:
     [[nodiscard]] size_t CountFields() const override
     {
         if constexpr (is_registered_serializable_object_v<BaseType>)
-            return ext::get_service<SerializableObjectDescriptor<BaseType>>().GetFieldsCount();
+            return ext::get_singleton<SerializableObjectDescriptor<BaseType>>().GetFieldsCount();
         else
             return 1;        
     }
@@ -576,14 +576,14 @@ protected:
     [[nodiscard]] std::shared_ptr<ISerializable> GetField(const size_t& index, void* objectPointer) const override
     {
         EXT_ASSERT(index < CountFields());
-        BaseType* object = ext::get_service<SerializableObjectDescriptor<Type>>().
+        BaseType* object = ext::get_singleton<SerializableObjectDescriptor<Type>>().
             ConvertToType<BaseType>(reinterpret_cast<Type*>(objectPointer));
 
         if constexpr (is_registered_serializable_object_v<BaseType>)
-            return ext::get_service<SerializableObjectDescriptor<BaseType>>().GetSerializable(*object)->Get(index);
+            return ext::get_singleton<SerializableObjectDescriptor<BaseType>>().GetSerializable(*object)->Get(index);
         else
         {
-            auto* ser = ext::get_service<SerializableObjectDescriptor<BaseType>>().ConvertToType<ISerializable>(object);
+            auto* ser = ext::get_singleton<SerializableObjectDescriptor<BaseType>>().ConvertToType<ISerializable>(object);
             return get_as_serializable<BaseType>(ser->GetName(), object);
         }
     }

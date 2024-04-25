@@ -114,7 +114,7 @@ inline void MethodInvoker::CallAsync(CallFunction&& func) EXT_THROWS()
 
 [[nodiscard]] inline bool MethodInvoker::IsMainThread()
 {
-    return get_service<MethodInvoker>().m_windowThreadId == ::GetCurrentThreadId();
+    return get_singleton<MethodInvoker>().m_windowThreadId == ::GetCurrentThreadId();
 }
 
 inline void MethodInvoker::CreateMainThreadWindow()
@@ -200,12 +200,12 @@ inline DWORD MethodInvoker::GetMainThreadId()
 
 inline void InvokeMethod(::ext::invoke::MethodInvoker::CallFunction&& function)
 {
-    get_service<::ext::invoke::MethodInvoker>().CallSync(std::forward<::ext::invoke::MethodInvoker::CallFunction>(function));
+    get_singleton<::ext::invoke::MethodInvoker>().CallSync(std::forward<::ext::invoke::MethodInvoker::CallFunction>(function));
 }
 
 inline void InvokeMethodAsync(std::function<void()>&& function)
 {
-    get_service<::ext::invoke::MethodInvoker>().CallAsync(std::forward<::ext::invoke::MethodInvoker::CallFunction>(function));
+    get_singleton<::ext::invoke::MethodInvoker>().CallAsync(std::forward<::ext::invoke::MethodInvoker::CallFunction>(function));
 }
 
 } // namespace ext

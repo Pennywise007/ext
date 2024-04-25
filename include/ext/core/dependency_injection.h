@@ -37,7 +37,7 @@ struct CreatedObjectExample : ext::ServiceProviderHolder
     ext::lazy_interface<IInterfaceExample> m_interfaceLazyTwo;
 };
 
-ext::ServiceCollection& serviceCollection = ext::get_service<ext::ServiceCollection>();
+ext::ServiceCollection& serviceCollection = ext::get_singleton<ext::ServiceCollection>();
 serviceCollection.RegisterScoped<InterfaceImplementationExample, IInterfaceExample>();
 
 const std::shared_ptr<CreatedObjectExample> object = ext::CreateObject<CreatedObjectExample>(serviceCollection.BuildServiceProvider());
@@ -185,7 +185,7 @@ private:
 };
 
 // Service collection singleton, allow to register interfaces and their implementations
-// Can be used as singleton and obtained by ext::get_service<ext::ServiceCollection>()
+// Can be used as singleton and obtained by ext::get_singleton<ext::ServiceCollection>()
 class ServiceCollection : ext::NonCopyable
 {
 public:

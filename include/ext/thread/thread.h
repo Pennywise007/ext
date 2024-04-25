@@ -326,7 +326,7 @@ public:
 
 [[nodiscard]] inline ext::thread::ThreadsManager& thread::manager()
 {
-    return ext::get_service<ThreadsManager>();
+    return ext::get_singleton<ThreadsManager>();
 }
 
 template<class _Function, class... _Args>

@@ -41,8 +41,8 @@ struct Singleton final
 
             struct MainSingleton
             {
-                MainSingleton() { get_service<OtherSingleton>(); }
-                ~MainSingleton() { get_service<OtherSingleton>(); }
+                MainSingleton() { get_singleton<OtherSingleton>(); }
+                ~MainSingleton() { get_singleton<OtherSingleton>(); }
             };
 
             During destroying services OtherSingleton will be destroyed first and when we try to get it in the
@@ -81,13 +81,6 @@ private:
         T object;
     };
 };
-
-// get singleton function
-template<class T>
-[[nodiscard]] static T& get_service()
-{
-    return Singleton<T>::Instance();
-}
 
 template<class T>
 [[nodiscard]] static T& get_singleton()

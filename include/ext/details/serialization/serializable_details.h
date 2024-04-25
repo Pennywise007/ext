@@ -5,10 +5,12 @@
 #include <type_traits>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <memory>
 #include <optional>
 #include <string>
 #include <set>
+#include <unordered_set>
 
 #include <ext/core/defines.h>
 #include <ext/core/check.h>
@@ -30,6 +32,8 @@ struct is_map : std::false_type {};
 template<class _Kty, class _Ty, class _Pr, class _Alloc>
 struct is_map<std::map<_Kty, _Ty, _Pr, _Alloc>> : std::true_type {};
 template<class _Kty, class _Ty, class _Pr, class _Alloc>
+struct is_map<std::unordered_map<_Kty, _Ty, _Pr, _Alloc>> : std::true_type {};
+template<class _Kty, class _Ty, class _Pr, class _Alloc>
 struct is_map<std::multimap<_Kty, _Ty, _Pr, _Alloc>> : std::true_type {};
 template<class T>
 inline constexpr bool is_map_v = is_map<T>::value;
@@ -41,6 +45,8 @@ template<class _Kty, class _Pr, class _Alloc>
 struct is_set<std::set<_Kty, _Pr, _Alloc>> : std::true_type {};
 template<class _Kty, class _Pr, class _Alloc>
 struct is_set<std::multiset<_Kty, _Pr, _Alloc>> : std::true_type {};
+template<class _Kty, class _Pr, class _Alloc>
+struct is_set<std::unordered_set<_Kty, _Pr, _Alloc>> : std::true_type {};
 template<class T>
 inline constexpr bool is_set_v = is_set<T>::value;
 
@@ -372,47 +378,68 @@ protected:
     {
         MapType* container = Base::GetType();
         container->clear();
-        for (const auto& child : deserializableTree->ChildNodes)
-        {
-            EXT_EXPECT(child->Name == "Map pair");
 
-            decltype(Base::GetType()->emplace(typename MapType::value_type())) emplaceResult;
-            if constexpr (is_serializable_v<typename MapType::key_type>)
-                emplaceResult = container->emplace(create_default_value<typename MapType::key_type>(), create_default_value<typename MapType::mapped_type>());
-            else
+        if constexpr (is_serializable_v<typename MapType::key_type>)
+        {
+            m_serializableValues.resize(deserializableTree->ChildNodes.size());
+        }
+        else
+        {
+            for (const auto& child : deserializableTree->ChildNodes)
             {
+                EXT_EXPECT(child->Name == "Map pair");
+
                 const auto& keyChild = child->GetChild("Key");
                 EXT_ASSERT(keyChild);
-                emplaceResult = container->emplace(deserialize_value<typename MapType::key_type>(*keyChild->Value), create_default_value<typename MapType::mapped_type>());
-            }
+                auto emplaceResult = container->emplace(deserialize_value<typename MapType::key_type>(*keyChild->Value), create_default_value<typename MapType::mapped_type>());
 
-            typename MapType::iterator insertedIter;
-            if constexpr (std::is_same_v<decltype(emplaceResult), typename MapType::iterator>) // std:::map and multimap emplace got different result type
-                insertedIter = std::move(emplaceResult);
-            else
-            {
-                if (!emplaceResult.second)
+                typename MapType::iterator insertedIter;
+                if constexpr (std::is_same_v<decltype(emplaceResult), typename MapType::iterator>) // std:::map and multimap emplace got different result type
+                    insertedIter = std::move(emplaceResult);
+                else
                 {
-                    EXT_ASSERT(false) << "Failed to emplace, Type changed?";
-                    return;
+                    if (!emplaceResult.second)
+                    {
+                        EXT_ASSERT(false) << "Failed to emplace, Type changed?";
+                        return;
+                    }
+                    insertedIter = std::move(emplaceResult.first);
                 }
-                insertedIter = std::move(emplaceResult.first);
-            }
 
-            if constexpr (!is_serializable_v<typename MapType::mapped_type>)
-            {
-                const auto& valueChild = child->GetChild("Value");
-                EXT_EXPECT(valueChild);
-                EXT_EXPECT(valueChild->Value.has_value());
-                insertedIter->second = deserialize_value<typename MapType::mapped_type>(*valueChild->Value);
+                if constexpr (!is_serializable_v<typename MapType::mapped_type>)
+                {
+                    const auto& valueChild = child->GetChild("Value");
+                    EXT_EXPECT(valueChild);
+                    EXT_EXPECT(valueChild->Value.has_value());
+                    insertedIter->second = deserialize_value<typename MapType::mapped_type>(*valueChild->Value);
+                }
             }
         }
     }
 
 // ISerializableCollection
-    [[nodiscard]] size_t Size() const noexcept override { return Base::GetType()->size(); }
+    [[nodiscard]] size_t Size() const noexcept override { return m_serializableValues.size() + Base::GetType()->size(); }
     [[nodiscard]] std::shared_ptr<ISerializable> Get(const size_t& index) const override
     {
+        if constexpr (is_serializable_v<typename MapType::key_type>)
+        {
+            if (!m_serializableValues.empty())
+            {
+                if (index >= m_serializableValues.size()) {
+                    EXT_DUMP_IF(true) << "Trying to get value during deserialization which is not allocated";
+                    return nullptr; 
+                }
+                
+                auto& values = m_serializableValues[index];
+
+                auto collection = std::make_shared<SerializableCollectionImpl>("Map pair");
+                collection->AddField(get_serializable("Key", &values.first));
+                collection->AddField(get_as_serializable("Value", &const_cast<typename MapType::mapped_type&>(values.second)));
+
+                return collection;
+            }
+        }
+
         MapType* container = Base::GetType();
         if (index >= container->size()) { EXT_DUMP_IF(true); return nullptr; }
 
@@ -427,6 +454,29 @@ protected:
         collection->AddField(get_as_serializable("Value", &it->second));
         return collection;
     }
+
+    // Called before collection deserialization
+    void OnDeserializationStart() override
+    {
+        m_serializableValues.clear();
+    }
+    // Called after collection deserialization
+    void OnDeserializationEnd() override
+    {
+        if constexpr (is_serializable_v<typename MapType::key_type>)
+        {
+            for (auto&& [key, value] : m_serializableValues)
+            {
+                Base::GetType()->emplace(std::move(key), std::move(value));
+            }
+            m_serializableValues.clear();
+        }
+    }
+
+private:
+    // Array where we store all objects during deserialization of the serializable MapType::key_type
+    // We store them here because we can't resize map with default values  
+    std::vector<std::pair<typename MapType::key_type, typename MapType::mapped_type>> m_serializableValues;
 };
 
 // Special class for serializing/deserializing std::set/std::multiset types
@@ -441,11 +491,14 @@ protected:
     {
         SetType* container = Base::GetType();
         container->clear();
-        for (const auto& child : deserializableTree->ChildNodes)
+
+        if constexpr (is_serializable_v<typename SetType::key_type>)
         {
-            if constexpr (is_serializable_v<typename SetType::value_type>)
-                container->emplace(create_default_value<typename SetType::value_type>());
-            else
+            m_serializableValues.resize(deserializableTree->ChildNodes.size());
+        }
+        else
+        {
+            for (const auto& child : deserializableTree->ChildNodes)
             {
                 EXT_EXPECT(child->Name == "Value") << "Expect set node name Value";
                 EXT_EXPECT(child->Value.has_value()) << "Expect set node with value not empty";
@@ -454,19 +507,52 @@ protected:
         }
     }
 // ISerializableCollection
-    [[nodiscard]] size_t Size() const noexcept override { return Base::GetType()->size(); }
+    [[nodiscard]] size_t Size() const noexcept override { return m_serializableValues.size() + Base::GetType()->size(); }
     [[nodiscard]] std::shared_ptr<ISerializable> Get(const size_t& index) const override
     {
+        if constexpr (is_serializable_v<typename SetType::key_type>)
+        {
+            if (!m_serializableValues.empty())
+            {
+                if (index >= m_serializableValues.size()) {
+                    EXT_DUMP_IF(true) << "Trying to get value during deserialization which is not allocated";
+                    return nullptr; 
+                }
+                return get_serializable("Value", &m_serializableValues[index]);
+            }
+        }
+
         SetType* container = Base::GetType();
         if (index >= container->size()) { EXT_DUMP_IF(true); return nullptr; }
 
         auto it = std::next(container->begin(), index);
-        if constexpr (is_serializable_v<typename SetType::value_type>)
+        if constexpr (is_serializable_v<typename SetType::key_type>)
             return get_serializable("Value", &*it);
         else
             // if set types if not serializable - store string value presentation as index name with empty value
             return std::make_shared<SerializableValueHolder>("Value", serialize_value(*it));
     }
+    // Called before collection deserialization
+    void OnDeserializationStart() override
+    {
+        m_serializableValues.clear();
+    }
+    // Called after collection deserialization
+    void OnDeserializationEnd() override
+    {
+        if constexpr (is_serializable_v<typename SetType::key_type>)
+        {
+            for (const auto& deserializedValue : m_serializableValues)
+            {
+                Base::GetType()->emplace(std::move(deserializedValue));
+            }
+            m_serializableValues.clear();
+        }
+    }
+private:
+    // Array where we store all objects during deserialization of the serializable SetType::key_type
+    // We store them here because we can't resize set with default values
+    std::vector<typename SetType::key_type> m_serializableValues;
 };
 
 // Base class for collection of objects std::vector/list etc.
@@ -606,6 +692,7 @@ void SerializableObjectDescriptor<Type>::RegisterSerializableBaseClasses()
     {
         using BaseType = std::remove_pointer_t<decltype(type)>;
 
+        static_assert(!std::is_same_v<BaseType, Type>, "Trying to register itself");
         static_assert(details::is_based_on<BaseType, Type>, "Trying to register not a base class");
         static_assert(details::is_serializable_v<BaseType>, "Non serializable base type, did you register it with REGISTER_SERIALIZABLE_OBJECT?");
 

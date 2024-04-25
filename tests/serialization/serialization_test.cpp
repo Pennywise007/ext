@@ -383,3 +383,89 @@ TEST(serialization_test, collection_as_a_field_with_private_inheritance)
     DeserializeObject(Factory::TextDeserializer(data), deserializationResult);
     EXPECT_EQ(object, deserializationResult);
 }
+
+struct MappedSerializableType
+{
+    MappedSerializableType() = default;
+    MappedSerializableType(int val) { value = val; }
+    int operator<(const MappedSerializableType& other) const { return std::to_wstring(value) < std::to_wstring(other.value); }
+    bool operator==(const MappedSerializableType& other) const { return value == other.value; }
+
+    REGISTER_SERIALIZABLE_OBJECT();
+    DECLARE_SERIALIZABLE_FIELD(long, value, 0);
+};
+
+template <>
+struct std::hash<MappedSerializableType>
+{
+    std::size_t operator()(const MappedSerializableType& k) const
+    {
+        return std::hash<string>()(std::to_string(k.value));
+    }
+};
+
+struct MappedSerializableTypeChecker
+{
+    REGISTER_SERIALIZABLE_OBJECT();
+    DECLARE_SERIALIZABLE_FIELD(std::set<MappedSerializableType>, set, { 1, 2, 3});
+    DECLARE_SERIALIZABLE_FIELD(std::unordered_set<MappedSerializableType>, unordered_set, { 4, 5, 6});
+    DECLARE_SERIALIZABLE_FIELD(std::multiset<MappedSerializableType>, multiset, { 7, 8, 9});
+    DECLARE_SERIALIZABLE_FIELD(std::set<std::shared_ptr<MappedSerializableType>>, set_shared_ptr, { std::make_shared<MappedSerializableType>(10), std::make_shared<MappedSerializableType>(11), std::make_shared<MappedSerializableType>(12)});
+    DECLARE_SERIALIZABLE_FIELD((std::map<MappedSerializableType, int>), map, { {1, 4}, {2, 5}, {3, 6}});
+    DECLARE_SERIALIZABLE_FIELD((std::unordered_map<MappedSerializableType, int>), unordered_map, { {4, 7}, {5, 8}, {6, 9}});
+    DECLARE_SERIALIZABLE_FIELD((std::multimap<MappedSerializableType, int>), multimap, { {7, 10}, {8, 11}, {9, 12}});
+    DECLARE_SERIALIZABLE_FIELD((std::map<std::shared_ptr<MappedSerializableType>, int>), map_shared_ptr, { {std::make_shared<MappedSerializableType>(10), 13}, {std::make_shared<MappedSerializableType>(11), 14}, {std::make_shared<MappedSerializableType>(12), 15}});
+};
+
+TEST(serialization_deserialization_test, mapped_serializable_checker)
+{
+    MappedSerializableTypeChecker object;
+    std::wstring text;
+
+    ASSERT_TRUE(SerializeObject(Factory::TextSerializer(text), object));
+
+    MappedSerializableTypeChecker result;
+    result.set.clear();
+    result.unordered_set.clear();
+    result.multiset.clear();
+    result.set_shared_ptr.clear();
+    result.map.clear();
+    result.unordered_map.clear();
+    result.multimap.clear();
+    result.map_shared_ptr.clear();
+    ASSERT_TRUE(DeserializeObject(Factory::TextDeserializer(text), result));
+    EXPECT_EQ(object.set, result.set);
+    EXPECT_EQ(object.unordered_set, result.unordered_set);
+    EXPECT_EQ(object.multiset, result.multiset);
+    EXPECT_EQ(object.map, result.map);
+    EXPECT_EQ(object.unordered_map, result.unordered_map);
+    EXPECT_EQ(object.multimap, result.multimap);
+
+    ASSERT_EQ(object.set_shared_ptr.size(), result.set_shared_ptr.size());
+    {
+        std::set<MappedSerializableType> expected;
+        std::set<MappedSerializableType> resultValues;
+
+        auto itL = object.set_shared_ptr.begin(), itR = result.set_shared_ptr.begin();
+        for (auto endL = object.set_shared_ptr.end(); itL != endL; ++itL, ++itR)
+        {
+            expected.emplace(*itR->get());
+            resultValues.emplace(*itL->get());
+        }
+        EXPECT_EQ(expected, resultValues);
+    }
+
+    EXPECT_EQ(object.map_shared_ptr.size(), result.map_shared_ptr.size());
+    {
+        std::map<MappedSerializableType, int> expected;
+        std::map<MappedSerializableType, int> resultValues;
+
+        auto itL = object.map_shared_ptr.begin(), itR = result.map_shared_ptr.begin();
+        for (auto endL = object.map_shared_ptr.end(); itL != endL; ++itL, ++itR)
+        {
+            expected.emplace(*itR->first, itR->second);
+            resultValues.emplace(*itL->first, itL->second);
+        }
+        EXPECT_EQ(expected, resultValues);
+    }
+}

@@ -57,21 +57,19 @@ struct Factory
     [[nodiscard]] static std::unique_ptr<IDeserializer> TextDeserializer(const std::wstring& inputText) EXT_THROWS();
 };
 
-// Serialization executor class, serialize/deserialize object via ISerializer/IDeserializer interfaces
-struct Executor
-{
-    /// <summary>Serialize object.</summary>
-    /// <param name="serializer">Serialization interface, @see Factory.</param>
-    /// <param name="object">Serializable object.</param>
-    /// <returns>True if serialization successfully, may throw exception.</returns>
-    static bool SerializeObject(const std::unique_ptr<ISerializer>& serializer, const ISerializable* object) EXT_THROWS();
+/// <summary>Serialize object.</summary>
+/// <param name="serializer">Serialization interface, @see Factory.</param>
+/// <param name="object">Serializable object.</param>
+/// <returns>True if serialization successfully, may throw exception.</returns>
+template <class Type>
+static bool SerializeObject(const std::unique_ptr<ISerializer>& serializer, const Type& object) EXT_THROWS();
 
-    /// <summary>Deserialize object.</summary>
-    /// <param name="deserializer">Deserialization interface, @see Factory.</param>
-    /// <param name="object">Serializable object.</param>
-    /// <returns>True if deserialization successfully, may throw exception.</returns>
-    static bool DeserializeObject(const std::unique_ptr<IDeserializer>& deserializer, ISerializable* object) EXT_THROWS();
-};
+/// <summary>Deserialize object.</summary>
+/// <param name="deserializer">Deserialization interface, @see Factory.</param>
+/// <param name="object">Serializable object.</param>
+/// <returns>True if deserialization successfully, may throw exception.</returns>
+template <class Type>
+static bool DeserializeObject(const std::unique_ptr<IDeserializer>& deserializer, Type& object) EXT_THROWS();
 
 // Visitor class by fields and collections of the object being serialized
 // Used to unify iteration over serializable objects

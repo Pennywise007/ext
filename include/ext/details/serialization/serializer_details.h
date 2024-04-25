@@ -232,14 +232,31 @@ inline bool Visitor::UpdateObjectType()
     return true;
 }
 
-inline bool Executor::SerializeObject(const std::unique_ptr<ISerializer>& serializer, const ISerializable* object)
+template <class Type>
+inline bool SerializeObject(const std::unique_ptr<ISerializer>& serializer, const Type& object)
 {
-    EXT_REQUIRE(serializer && object) << "didn't pass what to serialize";
+    static_assert(ext::serializable::details::is_serializable_v<Type>, "Type not serializable, maybe you forgot to add REGISTER_SERIALIZABLE_OBJECT?");
+
+    EXT_REQUIRE(serializer) << "No serializer passed";
+
+    std::shared_ptr<ISerializableCollection> objectCollection;
+    const ISerializable* serializableObject;
+    if constexpr (ext::serializable::is_registered_serializable_object_v<Type>)
+    {
+        objectCollection = ext::get_singleton<SerializableObjectDescriptor<Type>>().GetSerializable(const_cast<Type&>(object));
+        serializableObject = objectCollection.get();
+    }
+    else
+    {
+        // To avoid problems with private inheritance will use C++ magic
+        serializableObject = reinterpret_cast<const ISerializable*>(&object);
+    }
+    EXT_EXPECT(serializableObject) << "Can't find serializable description for " << ext::type_name<Type>();
 
     std::shared_ptr<SerializableNode> serializationTreeRoot;
     std::shared_ptr<SerializableNode> currentNode;
 
-    Visitor objectsVisitor(object);
+    Visitor objectsVisitor(serializableObject);
     do
     {
         switch (objectsVisitor.GetCurrentObjectType())
@@ -249,7 +266,7 @@ inline bool Executor::SerializeObject(const std::unique_ptr<ISerializer>& serial
             if (!currentNode)
             {
                 EXT_ASSERT(!serializationTreeRoot);
-                serializationTreeRoot = std::make_shared<SerializableNode>(object->GetName());
+                serializationTreeRoot = std::make_shared<SerializableNode>(serializableObject->GetName());
                 currentNode = serializationTreeRoot;
             }
             else
@@ -281,7 +298,7 @@ inline bool Executor::SerializeObject(const std::unique_ptr<ISerializer>& serial
             if (!currentNode)
             {
                 EXT_ASSERT(!serializationTreeRoot);
-                serializationTreeRoot = std::make_shared<SerializableNode>(object->GetName());
+                serializationTreeRoot = std::make_shared<SerializableNode>(serializableObject->GetName());
                 currentNode = serializationTreeRoot;
             }
             else
@@ -303,18 +320,36 @@ inline bool Executor::SerializeObject(const std::unique_ptr<ISerializer>& serial
     return serializer->Serialize(serializationTreeRoot);
 }
 
-inline bool Executor::DeserializeObject(const std::unique_ptr<serializer::IDeserializer>& deserializer, ISerializable* object)
+template <class Type>
+inline bool DeserializeObject(const std::unique_ptr<serializer::IDeserializer>& deserializer, Type& object)
 {
-    EXT_REQUIRE(deserializer && object) << "didn't pass what to deserialize";;
+    static_assert(ext::serializable::details::is_serializable_v<Type>, "Type not serializable, maybe you forgot to add REGISTER_SERIALIZABLE_OBJECT?");
+    
+    EXT_REQUIRE(deserializer) << "No deserializer passed";
+
+    std::shared_ptr<ISerializableCollection> objectCollection;
+    ISerializable* deserializableObject;
+    if constexpr (ext::serializable::is_registered_serializable_object_v<Type>)
+    {
+        objectCollection = ext::get_singleton<SerializableObjectDescriptor<Type>>().GetSerializable(object);
+        deserializableObject = objectCollection.get();
+    }
+    else
+    {
+        // To avoid problems with private inheritance will use C++ magic
+        deserializableObject = reinterpret_cast<ISerializable*>(&object);
+    }
+
+    EXT_EXPECT(deserializableObject) << "Can't find deserializable description for " << ext::type_name<Type>();
 
     std::shared_ptr<SerializableNode> deserializationTreeRoot;
     if (!deserializer->Deserialize(deserializationTreeRoot))
         return false;
 
-    object->PrepareToDeserialize(deserializationTreeRoot);
+    deserializableObject->PrepareToDeserialize(deserializationTreeRoot);
 
     std::shared_ptr<SerializableNode> currentNode;
-    Visitor objectsVisitor(object);
+    Visitor objectsVisitor(deserializableObject);
 
     do
     {

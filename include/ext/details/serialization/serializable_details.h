@@ -68,9 +68,12 @@ inline constexpr bool is_array_v = is_array<T>::value;
 template<class Base, class T>
 inline constexpr bool is_based_on = std::is_base_of_v<Base, std::remove_pointer_t<std::extract_value_type_v<T>>>;
 template<class T>
-inline constexpr bool is_serializable_v = is_based_on<ISerializable, T>;
+inline constexpr bool is_iserializable_v = is_based_on<ISerializable, T>;
+// Check if class inherited from ISerializable or registered in SerializableObjectDescriptor
+template<class T>
+inline constexpr bool is_serializable_v = is_iserializable_v<T> || is_registered_serializable_object_v<T>;
 
-// declare check reserve and get member function
+// Declare check reserve and get member function
 DECLARE_CHECK_FUNCTION(reserve);
 
 template <class Type>
@@ -89,6 +92,55 @@ ValueType create_default_value()
         return {};
     }
 }
+
+// Wrapper around Type object to convert it to the ISerializableCollection to create ability to iterate over fields
+template <class Type>
+struct SerializableObject : ISerializableCollection
+{
+    SerializableObject(Type& object,
+                       const std::string& name,
+                       const std::list<std::shared_ptr<details::ISerializableFieldInfo>>& fields,
+                       const std::list<std::shared_ptr<details::ISerializableBaseInfo>>& baseSerializableClasses)
+    : m_object(object)
+    , m_name(name)
+    , m_fields(fields)
+    , m_baseSerializableClasses(baseSerializableClasses)
+    {}
+
+private:
+// ISerializable
+    [[nodiscard]] const char* GetName() const noexcept override { return m_name.c_str(); }
+// ISerializableCollection
+    [[nodiscard]] size_t Size() const noexcept override
+    {
+        size_t result = 0;
+        for (const auto& base : m_baseSerializableClasses)
+        {
+            result += base->CountFields();
+        } 
+        return result + m_fields.size(); 
+    }
+    [[nodiscard]] std::shared_ptr<ISerializable> Get(const size_t& requestedIndex) const override
+    {
+        size_t index = requestedIndex;
+        for (const auto& base : m_baseSerializableClasses)
+        {
+            auto baseClassFields = base->CountFields();
+            if (index < baseClassFields)
+                return base->GetField(index, &m_object);
+            index -= baseClassFields;
+        }
+
+        EXT_ASSERT(index < m_fields.size());
+        return std::next(m_fields.begin(), index)->get()->GetField(&m_object);
+    }
+
+private:
+    Type& m_object;
+    const std::string m_name;
+    const std::list<std::shared_ptr<details::ISerializableFieldInfo>> m_fields;
+    const std::list<std::shared_ptr<details::ISerializableBaseInfo>> m_baseSerializableClasses;
+};
 
 // Base class for hold info about serializable field
 template <typename ISerializableType, typename Type>
@@ -149,10 +201,13 @@ protected:
 
 // Proxy class for ISerializableCollection, used for base classes
 template <class Type>
-struct SerializableProxy<Type, std::enable_if_t<is_based_on<ISerializableCollection, Type>>> : ISerializableCollection
+struct SerializableProxy<Type, std::enable_if_t<is_based_on<ISerializableCollection, Type> || is_registered_serializable_object_v<Type>>> : ISerializableCollection
 {
     SerializableProxy(ISerializableCollection* collectionPointer, std::optional<std::string> name = std::nullopt)
        : m_name(std::move(name)), m_collection(collectionPointer) {}
+    // used for is_registered_serializable_object_v
+    SerializableProxy(const std::shared_ptr<ISerializableCollection>& collectionPointer, std::optional<std::string> name = std::nullopt)
+       : m_name(std::move(name)), m_collection(collectionPointer.get()), m_collectionHolder(collectionPointer) {}
 
 protected:
 // ISerializable
@@ -169,6 +224,7 @@ protected:
 
     const std::optional<std::string> m_name;
     ISerializableCollection* m_collection;
+    const std::shared_ptr<ISerializableCollection> m_collectionHolder;
 };
 
 template <class Type>
@@ -180,17 +236,19 @@ protected:
 // ISerializable
     void PrepareToDeserialize(std::shared_ptr<SerializableNode>& serializableTree) EXT_THROWS() override
     {
+        using ExtractedType = std::extract_value_type_v<Type>;
         Base::GetType()->reset();
         if (!serializableTree->ChildNodes.empty())
         {
-            if (is_based_on<ISerializableCollection, std::extract_value_type_v<Type>> ||
-                std::dynamic_pointer_cast<ISerializableCollection>(get_as_serializable<std::extract_value_type_v<Type>>(Base::GetName(), nullptr)))
-                Base::GetType()->emplace(create_default_value<std::extract_value_type_v<Type>>());
+            if (is_registered_serializable_object_v<ExtractedType> ||
+                is_based_on<ISerializableCollection, ExtractedType> ||
+                std::dynamic_pointer_cast<ISerializableCollection>(get_as_serializable<ExtractedType>(Base::GetName(), nullptr)))
+                Base::GetType()->emplace(create_default_value<ExtractedType>());
             else
                 EXT_ASSERT(false);
         }
         else if (serializableTree->Value.value_or(SerializableValue::CreateNull()).Type != SerializableValue::ValueType::eNull)
-            Base::GetType()->emplace(create_default_value<std::extract_value_type_v<Type>>());
+            Base::GetType()->emplace(create_default_value<ExtractedType>());
     }
 // ISerializableOptional
     [[nodiscard]] std::shared_ptr<ISerializable> Get() const override
@@ -215,27 +273,21 @@ protected:
         if constexpr (std::is_same_v<std::unique_ptr<RealType>, Type> ||
                       std::is_same_v<std::shared_ptr<RealType>, Type>)
         {
-            if constexpr (is_based_on<ISerializableCollection, Type>)
-            {
-                if (!serializableTree->ChildNodes.empty())
-                {
-                    if constexpr (std::is_abstract_v<RealType>)
-                        EXT_EXPECT(*Base::GetType()) << "Object should be created in constructor!";
-                    else
-                        *Base::GetType() = create_default_value<Type>();
-                    Base::GetType()->get()->PrepareToDeserialize(serializableTree);
-                }
-                else
-                    *Base::GetType() = nullptr;
+            bool tryCreateDefault = false;
+            if constexpr (is_based_on<ISerializableCollection, RealType> || is_registered_serializable_object_v<RealType>)  // TODO it was Type
+                tryCreateDefault = !serializableTree->ChildNodes.empty();
+            else
+                tryCreateDefault = serializableTree->Value.value_or(SerializableValue::CreateNull()).Type != SerializableValue::ValueType::eNull;
 
-            }
-            else if (serializableTree->Value.value_or(SerializableValue::CreateNull()).Type != SerializableValue::ValueType::eNull)
+            if (tryCreateDefault)
             {
                 if constexpr (std::is_abstract_v<RealType>)
-                    EXT_EXPECT(*Base::GetType()) << "Object should be created in constructor!";
+                    EXT_EXPECT(*Base::GetType()) << "Object " << Base::GetName() << " should be created in constructor!";
                 else
                     *Base::GetType() = create_default_value<Type>();
-                Base::GetType()->get()->PrepareToDeserialize(serializableTree);
+
+                if constexpr (!is_registered_serializable_object_v<RealType>)
+                    Base::GetType()->get()->PrepareToDeserialize(serializableTree);
             }
             else
                 *Base::GetType() = nullptr;
@@ -254,15 +306,21 @@ protected:
         if (pointer == nullptr)
             return std::make_shared<SerializableValueHolder>(Base::GetName(), SerializableValue::CreateNull());
 
-        /* Use reinterpret_cast in case of private inheritance, example:
-        struct Settings : private ext::serializable::SerializableObject<Settings>
+        if constexpr (is_registered_serializable_object_v<ExtractedType>)
         {
-            struct SubSettings : private ext::serializable::SerializableObject<SubSettings> <--
+            auto& descriptor = ext::get_service<SerializableObjectDescriptor<ExtractedType>>();
+            auto serializable = descriptor.GetSerializable(*pointer, Base::GetName());
+            return std::make_shared<SerializableProxy<ExtractedType>>(serializable, Base::GetName());
+        }
+        /* Use reinterpret_cast in case of private inheritance, example:
+        struct Settings
+        {
+            struct SubSettings : private ISerializableCollection <--
             {};
             DECLARE_SERIALIZABLE_FIELD(SubSettings, field);
         }
         */
-        if constexpr (std::is_base_of_v<ISerializableCollection, ExtractedType>) 
+        else if constexpr (std::is_base_of_v<ISerializableCollection, ExtractedType>) 
             return std::make_shared<SerializableProxy<ExtractedType>>(reinterpret_cast<ISerializableCollection*>(pointer), Base::GetName());
         else if constexpr (std::is_base_of_v<ISerializableField, ExtractedType>) 
             return std::make_shared<SerializableProxy<ExtractedType>>(reinterpret_cast<ISerializableField*>(pointer), Base::GetName());
@@ -277,7 +335,8 @@ protected:
 template <class Type>
 std::shared_ptr<ISerializable> get_serializable(const std::string& name, const Type* value)
 {
-    static_assert(is_serializable_v<Type>, "Type is not serializable!");
+    static_assert(is_serializable_v<Type>, "Type is not serializable");
+
     return std::make_shared<SerializableValueProxy<Type>>(name, const_cast<Type*>(value));
 }
 
@@ -481,19 +540,10 @@ struct SerializableFieldInfo : ISerializableFieldInfo
 
 protected:
 // ISerializableFieldInfo
-    [[nodiscard]] std::shared_ptr<ISerializable> GetField(const ISerializable* constObject) const override
+    [[nodiscard]] std::shared_ptr<ISerializable> GetField(void* objectPointer) const override
     {
-        ISerializable* object = const_cast<ISerializable*>(constObject);
-
-        Type* typePointer = dynamic_cast<Type*>(object);
-        if (!typePointer)
-        {
-            // Case with private inheritance
-            if constexpr (std::is_base_of_v<ISerializable, Type>) {
-                typePointer = reinterpret_cast<Type*>(object);
-            }
-        }
-        EXT_EXPECT(typePointer) << "Can`t get type " << ext::type_name<Type>() << " from object " << constObject->GetName();
+        Type* typePointer = reinterpret_cast<Type*>(objectPointer);
+        EXT_EXPECT(typePointer) << "Can`t get type " << ext::type_name<Type>();
 
         std::string trimName = m_name;
         std::string_trim_all(trimName);
@@ -507,29 +557,87 @@ protected:
     Field Type::* m_field;
 };
 
+template <class Type, typename BaseType>
+struct SerializableBaseInfo : ISerializableBaseInfo
+{
+    static_assert(is_based_on<BaseType, Type>);
+    static_assert(is_serializable_v<BaseType>);
+
+protected:
+// ISerializableBaseInfo
+    [[nodiscard]] size_t CountFields() const override
+    {
+        if constexpr (is_registered_serializable_object_v<BaseType>)
+            return ext::get_service<SerializableObjectDescriptor<BaseType>>().GetFieldsCount();
+        else
+            return 1;        
+    }
+
+    [[nodiscard]] std::shared_ptr<ISerializable> GetField(const size_t& index, void* objectPointer) const override
+    {
+        EXT_ASSERT(index < CountFields());
+        BaseType* object = ext::get_service<SerializableObjectDescriptor<Type>>().
+            ConvertToType<BaseType>(reinterpret_cast<Type*>(objectPointer));
+
+        if constexpr (is_registered_serializable_object_v<BaseType>)
+            return ext::get_service<SerializableObjectDescriptor<BaseType>>().GetSerializable(*object)->Get(index);
+        else
+        {
+            auto* ser = ext::get_service<SerializableObjectDescriptor<BaseType>>().ConvertToType<ISerializable>(object);
+            return get_as_serializable<BaseType>(ser->GetName(), object);
+        }
+    }
+};
+
 } // namespace details
 
-template<class Type, const char* TypeName, class ICollectionInterface>
+template<class Type>
 template <class Field>
-void SerializableObject<Type, TypeName, ICollectionInterface>::RegisterField(const char* name, Field Type::* field)
+void SerializableObjectDescriptor<Type>::RegisterField(const char* name, Field Type::* field)
 {
     m_fields.emplace_back(std::make_shared<details::SerializableFieldInfo<Type, Field>>(name, field));
 }
 
-template<class Type, const char* TypeName, class ICollectionInterface>
+template<class Type>
 template<class ...Classes>
-void SerializableObject<Type, TypeName, ICollectionInterface>::RegisterSerializableBaseClasses()
+void SerializableObjectDescriptor<Type>::RegisterSerializableBaseClasses()
 {
-    Type* currentClass = dynamic_cast<Type*>(this);
-    EXT_ASSERT(currentClass);
-
     ext::mpl::list<Classes...>::ForEachType([&](auto* type)
     {
         using BaseType = std::remove_pointer_t<decltype(type)>;
 
-        auto* base = static_cast<BaseType*>(currentClass);
-        m_baseSerializableClasses.emplace_back(std::make_shared<details::SerializableProxy<BaseType>>(base));
+        static_assert(details::is_based_on<BaseType, Type>, "Trying to register not a base class");
+        static_assert(details::is_serializable_v<BaseType>, "Non serializable base type, did you register it with REGISTER_SERIALIZABLE_OBJECT?");
+
+        m_baseSerializableClasses.emplace_back(std::make_shared<details::SerializableBaseInfo<Type, BaseType>>());
     });
+}
+
+template<class Type>
+[[nodiscard]] size_t SerializableObjectDescriptor<Type>::GetFieldsCount() const
+{
+    size_t result = 0;
+    for (const auto& base : m_baseSerializableClasses)
+    {
+        result += base->CountFields();
+    }
+    return result + m_fields.size();
+}
+
+template<class Type>
+[[nodiscard]] std::shared_ptr<ISerializableCollection> SerializableObjectDescriptor<Type>::GetSerializable(Type& object, const char* customName)
+{
+    if (customName == nullptr)
+        customName = m_name;
+    return std::make_shared<details::SerializableObject<Type>>(
+        object, customName != nullptr ? customName : ext::type_name<Type>(), m_fields, m_baseSerializableClasses);
+}
+
+template<class Type>
+template<class ConvertedType>
+[[nodiscard]] ConvertedType* SerializableObjectDescriptor<Type>::ConvertToType(Type* object)
+{
+    return static_cast<ConvertedType*>(object);
 }
 
 } // namespace ext::serializable

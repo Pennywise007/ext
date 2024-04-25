@@ -8,8 +8,9 @@
 
     Usage example:
 
-struct InternalStruct : ext::serializable::SerializableObject<InternalStruct, "Pretty name">
+struct InternalStruct
 {
+    REGISTER_SERIALIZABLE_OBJECT();
     DECLARE_SERIALIZABLE_FIELD(long, value);
     DECLARE_SERIALIZABLE_FIELD(std::list<int>, valueList);
 };
@@ -21,9 +22,9 @@ struct CustomField : ISerializableField
     virtual void DeserializeValue(const SerializableValue& value) { EXT_EXPECT(value == L"test"); }
 };
 
-struct TestStruct :  ext::serializable::SerializableObject<TestStruct>, InternalStruct
+struct TestStruct : InternalStruct
 {
-    REGISTER_SERIALIZABLE_BASE(InternalStruct);
+    REGISTER_SERIALIZABLE_OBJECT(InternalStruct);
 
     DECLARE_SERIALIZABLE_FIELD(long, valueLong, 2);
     DECLARE_SERIALIZABLE_FIELD(int, valueInt);
@@ -38,13 +39,13 @@ struct TestStruct :  ext::serializable::SerializableObject<TestStruct>, Internal
     {
         REGISTER_SERIALIZABLE_FIELD(m_listOfParams); // or use DECLARE_SERIALIZABLE_FIELD macro
         using namespace ext::serializer;
-        Executor::DeserializeObject(Factory::XMLDeserializer(L"C:\\Test.xml"), testStruct);
+        DeserializeObject(Factory::XMLDeserializer(L"C:\\Test.xml"), testStruct);
     }
 
     ~MyTestStruct()
     {
         using namespace ext::serializer;
-        Executor::SerializeObject(Factory::XMLSerializer(L"C:\\Test.xml"), testStruct);
+        SerializeObject(Factory::XMLSerializer(L"C:\\Test.xml"), testStruct);
     }
 };
 
@@ -58,77 +59,77 @@ struct TestStruct :  ext::serializable::SerializableObject<TestStruct>, Internal
 
 #include <ext/core/defines.h>
 #include <ext/core/check.h>
+#include <ext/core/singleton.h>
 
 #include <ext/serialization/serializable_value.h>
 
-#include <ext/types/utils.h>
+#include <ext/std/type_traits.h>
 
-/*
-* Register serializable field of current class, current class must be inherited from SerializableObject
-* Calls SerializableObject:RegisterField function, return object with same type and constructed with __VA_ARGS__ parameters
-*/
-#define REGISTER_SERIALIZABLE_FIELD_N(name, object)                         \
-    using CurrentType = std::remove_pointer_t<decltype(this)>;              \
-    SerializableObjectType::RegisterField(name, &CurrentType::object)
+#include <ext/utils/call_once.h>
 
-#define REGISTER_SERIALIZABLE_FIELD(object)                                 \
+// Register serializable object and it's based classes
+#define REGISTER_SERIALIZABLE_OBJECT(/*Serializable base classes list*/...)                     \
+    REGISTER_SERIALIZABLE_OBJECT_N(nullptr, __VA_ARGS__)
+
+// Register serializable object, will register object name and based classes
+#define REGISTER_SERIALIZABLE_OBJECT_N(SerializableName, /*Serializable base classes list*/...) \
+    /* Make helper function our class friend to allow serialization of the private fields */    \
+    template <class __SerializableClass__>                                                      \
+    friend struct ::ext::serializable::has___serializable_object_registration_field;            \
+    /* To avoid problems with private fields/inheritance we will use SerializableObjectDescriptor::ConvertToType */  \
+    template <class __SerializableClass__>                                                      \
+    friend class SerializableObjectDescriptor;                                                  \
+    /* Special flag to mark that this struct can be serialized, see is_registered_serializable_object_v */  \
+    const bool __serializable_object_registration = [this]() -> bool                            \
+        {                                                                                       \
+            CALL_ONCE({                                                                         \
+                using CurrentType = std::remove_reference_t<decltype(*this)>;                   \
+                auto& __info = ext::get_singleton<SerializableObjectDescriptor<CurrentType>>(); \
+                __info.SetName(SerializableName);                                               \
+                __info.RegisterSerializableBaseClasses<__VA_ARGS__>();                          \
+            })                                                                                  \
+            return true;                                                                        \
+        }()
+
+// Declaring a serializable field and registering it in global serializable objects register
+// Use case DECLARE_SERIALIZABLE_FIELD(long, m_propName); => long m_propName = long(); REGISTER_SERIALIZABLE_FIELD(m_propName);
+// Use case DECLARE_SERIALIZABLE_FIELD(long, m_propName, 105); => long m_propName = long(105); REGISTER_SERIALIZABLE_FIELD(m_propName);
+// !! You mustn't use a constructor for this variable, use REGISTER_SERIALIZABLE_FIELD macro in case of necessity of constructor
+#define DECLARE_SERIALIZABLE_FIELD(Type, Name, ...)                                             \
+    DECLARE_SERIALIZABLE_FIELD_N(Type, Name, STRINGINIZE(Name), __VA_ARGS__)
+
+// Declaring a serializable field with a special serializable name and registering it in global serializable objects register
+// Use case DECLARE_SERIALIZABLE_FIELD(long, m_propName, "Pretty name"); => long m_propName = long(); REGISTER_SERIALIZABLE_FIELD_N("Pretty name", m_propName);
+// Use case DECLARE_SERIALIZABLE_FIELD(long, m_propName, "Pretty name", 105); => long m_propName = long(105); REGISTER_SERIALIZABLE_FIELD_N("Pretty name", m_propName);
+// !! You mustn't use a constructor for this variable, use REGISTER_SERIALIZABLE_FIELD macro in case of necessity of constructor
+#define DECLARE_SERIALIZABLE_FIELD_N(Type, Name, SerializableName, ...)                         \
+    REMOVE_PARENTHESES(Type) Name = [this]() -> REMOVE_PARENTHESES(Type)                        \
+        {                                                                                       \
+            REGISTER_SERIALIZABLE_FIELD_N(SerializableName, Name);                              \
+            return { __VA_ARGS__ };                                                             \
+        }()
+
+// Register serializable field of current class in global serializable objects register
+#define REGISTER_SERIALIZABLE_FIELD(object)                                                     \
     REGISTER_SERIALIZABLE_FIELD_N(STRINGINIZE(object), object)
 
-// Declaring a serializable field and registering it in a SerializableObject base class
-// Use case DECLARE_SERIALIZABLE_FIELD(long, m_propName); => long m_propName = long();  SerializableObject::RegisterField(this, &MyTestStruct::m_propName);
-// Use case DECLARE_SERIALIZABLE_FIELD(long, m_propName, 105); => long m_propName = long(105);  SerializableObject::RegisterField(this, &MyTestStruct::m_propName, 105);
-// !! You cannot use a constructor for this variable, use REGISTER_SERIALIZABLE_FIELD macro in case of necessity of constructor
-#define DECLARE_SERIALIZABLE_FIELD(Type, Name, ...)                         \
-    DECLARE_SERIALIZABLE_FIELD_N(STRINGINIZE(Name), Type, Name, __VA_ARGS__)
-
-// Declaring a serializable field with a special serializable name and registering it in a SerializableObject base class
-// Use case DECLARE_SERIALIZABLE_FIELD_N(long, m_propName, "Pretty name"); => long m_propName = long();  SerializableObject::RegisterField(this, &MyTestStruct::m_propName);
-// Use case DECLARE_SERIALIZABLE_FIELD_N(long, m_propName, "Pretty name", 105); => long m_propName = long(105);  SerializableObject::RegisterField(this, &MyTestStruct::m_propName, 105);
-// !! You cannot use a constructor for this variable, use REGISTER_SERIALIZABLE_FIELD macro in case of necessity of constructor
-#define DECLARE_SERIALIZABLE_FIELD_N(SerializableName, Type, Name, ...)     \
-    REMOVE_PARENTHESES(Type) Name = [this]() -> REMOVE_PARENTHESES(Type)    \
-        {                                                                   \
-            REGISTER_SERIALIZABLE_FIELD_N(SerializableName, Name);          \
-            return { __VA_ARGS__ };                                         \
-        }()
-
-/*
-* Declare operator ISerializable* to avoid ambiguous conversion to ISerializable from current and base objects
-* Register base class as base field to current class, you can call AddSerializableBase in constructor
-*/
-#define REGISTER_SERIALIZABLE_BASE(...)                                                                                     \
-    operator ISerializable*() { return static_cast<SerializableObjectType*>(this); }     \
-    const bool ___BaseClassRegistration = [this]()                                                                          \
-        {                                                                                                                   \
-            SerializableObjectType::RegisterSerializableBaseClasses<__VA_ARGS__>();                                         \
-            return true;                                                                                                    \
-        }()
+// Register serializable field of current class in global serializable objects register with pretty name
+#define REGISTER_SERIALIZABLE_FIELD_N(SerializableName, object)                                 \
+    CALL_ONCE({                                                                                 \
+            using CurrentType = std::remove_reference_t<decltype(*this)>;                       \
+            auto& __info = ext::get_singleton<SerializableObjectDescriptor<CurrentType>>();     \
+            __info.RegisterField(SerializableName, &CurrentType::object);                       \
+        })
 
 namespace ext::serializable {
 
-// Serialization tree, allow to iterate over serializable fields, @see also ext::serializer::Visitor
-struct SerializableNode
-{
-    std::string Name;
-    const std::weak_ptr<SerializableNode> Parent;
+// Helper to check if class has __serializable_object_registration field 
+DECLARE_CHECK_FIELD_EXISTS(__serializable_object_registration);
+// Check if class has __serializable_object_registration field
+template<class T>
+inline constexpr bool is_registered_serializable_object_v = has___serializable_object_registration_field_v<std::remove_pointer_t<std::extract_value_type_v<T>>>;
 
-    std::optional<SerializableValue> Value;
-    std::list<std::shared_ptr<SerializableNode>> ChildNodes;
-
-    SerializableNode(std::string name, std::shared_ptr<SerializableNode> parentNode = nullptr) noexcept
-        : Name(std::move(name)), Parent(parentNode)
-    {}
-    [[nodiscard]] std::shared_ptr<SerializableNode> GetChild(const std::string& name, const size_t& indexAmongTheSameNames = 0) const noexcept
-    {
-        auto searchIt = ChildNodes.begin(), end = ChildNodes.end();
-        for (size_t i = 0; i <= indexAmongTheSameNames && searchIt != end; ++i)
-        {
-            searchIt = std::find_if(i == 0 ? searchIt : std::next(searchIt), end, [&name](const auto& node) { return node->Name == name; });
-        }
-        EXT_ASSERT(searchIt != end) << "Can`t find " << name.c_str() << " in child nodes " << Parent.lock() ? Parent.lock()->Name : "";
-        return searchIt != end ? *searchIt : nullptr;
-    }
-};
+struct SerializableNode;
 
 // Common internal interface for serializable objects, use ISerializableField or ISerializableCollection for your objects
 struct ISerializable
@@ -178,52 +179,75 @@ struct ISerializableOptional : ISerializable
 };
 
 namespace details {
-
+// Field information, used to get field value from object
 struct ISerializableFieldInfo
 {
     virtual ~ISerializableFieldInfo() = default;
-    [[nodiscard]] virtual std::shared_ptr<ISerializable> GetField(const ISerializable* object) const = 0;
+    [[nodiscard]] virtual std::shared_ptr<ISerializable> GetField(void* objectPointer) const = 0;
+};
+
+// Serializable object base information
+struct ISerializableBaseInfo
+{
+    virtual ~ISerializableBaseInfo() = default;
+    [[nodiscard]] virtual size_t CountFields() const = 0;
+    [[nodiscard]] virtual std::shared_ptr<ISerializable> GetField(const size_t& index, void* objectPointer) const = 0;
 };
 } // namespace details
 
 /*
-* Base class for class with serializable fields, register field by RegisterField function or DECLARE_SERIALIZABLE_FIELD macros.
+* Global register for serializable objects fields with descriptors, use ext::get_singleton<Object>() to get it.
 */
-template <class Type, const char* TypeName = nullptr, class ICollectionInterface = ISerializableCollection>
-struct SerializableObject : ICollectionInterface
+template <class Type>
+class SerializableObjectDescriptor
 {
-    static_assert(std::is_base_of_v<ISerializableCollection, ICollectionInterface>, "Collection should be derived from ISerializableCollection");
-protected:
-    typedef SerializableObject<Type, TypeName, ICollectionInterface> SerializableObjectType;
+    friend ext::Singleton<SerializableObjectDescriptor<Type>>;
 
-    template <class... Classes>
-    void RegisterSerializableBaseClasses();
-
-#if (_MSC_FULL_VER < 192027508) // fix problem with on 141 toolset with inheritance
 public:
-#endif
+    // Set custom serialization name for object
+    void SetName(const char* name) { m_name = name; }
+    // Register objects field for serialization
     template <class Field>
     void RegisterField(const char* name, Field Type::* field);
+    // Register object base classes which will need to be serialized
+    template <class... Classes>
+    void RegisterSerializableBaseClasses();
+    // Get object serializable fields count
+    [[nodiscard]] size_t GetFieldsCount() const;
+    // Get serializable collection with all registered fields
+    [[nodiscard]] std::shared_ptr<ISerializableCollection> GetSerializable(Type& object, const char* customName = nullptr);
+    // Conversion object function, allows to avoid private inheritance problems
+    template <class ConvertedType>
+    [[nodiscard]] ConvertedType* ConvertToType(Type* pointer);
 
 private:
-// ISerializable
-    [[nodiscard]] const char* GetName() const noexcept override { return m_name; }
-// ISerializableCollection
-    [[nodiscard]] size_t Size() const noexcept override { return m_baseSerializableClasses.size() + m_fields.size(); }
-    [[nodiscard]] std::shared_ptr<ISerializable> Get(const size_t& index) const override
-    {
-        if (index < m_baseSerializableClasses.size())
-            return *std::next(m_baseSerializableClasses.begin(), index);
-        if (index - m_baseSerializableClasses.size() >= m_fields.size())
-            return nullptr;
-        return std::next(m_fields.begin(), index - m_baseSerializableClasses.size())->get()->GetField(this);
-    }
-
-private:
-    std::list<std::shared_ptr<ISerializable>> m_baseSerializableClasses;
+    std::list<std::shared_ptr<details::ISerializableBaseInfo>> m_baseSerializableClasses;
     std::list<std::shared_ptr<details::ISerializableFieldInfo>> m_fields;
+    const char* m_name = nullptr;
+};
 
-    const char* m_name = TypeName != nullptr ? TypeName : ext::type_name<Type>();
+// Serialization tree, allow to iterate over serializable fields, @see also ext::serializer::Visitor
+struct SerializableNode
+{
+    std::string Name;
+    const std::weak_ptr<SerializableNode> Parent;
+
+    std::optional<SerializableValue> Value;
+    std::list<std::shared_ptr<SerializableNode>> ChildNodes;
+
+    SerializableNode(std::string name, std::shared_ptr<SerializableNode> parentNode = nullptr) noexcept
+        : Name(std::move(name)), Parent(parentNode)
+    {}
+    [[nodiscard]] std::shared_ptr<SerializableNode> GetChild(const std::string& name, const size_t& indexAmongTheSameNames = 0) const noexcept
+    {
+        auto searchIt = ChildNodes.begin(), end = ChildNodes.end();
+        for (size_t i = 0; i <= indexAmongTheSameNames && searchIt != end; ++i)
+        {
+            searchIt = std::find_if(i == 0 ? searchIt : std::next(searchIt), end, [&name](const auto& node) { return node->Name == name; });
+        }
+        EXT_ASSERT(searchIt != end) << "Can`t find " << name.c_str() << " in child nodes " << Parent.lock() ? Parent.lock()->Name : "";
+        return searchIt != end ? *searchIt : nullptr;
+    }
 };
 
 } // namespace ext::serializable

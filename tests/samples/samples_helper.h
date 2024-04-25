@@ -37,7 +37,7 @@ inline void expect_equal_to_sample(const std::wstring& text, const char* resourc
 
     auto currentText = text;
     currentText.erase(std::remove(currentText.begin(), currentText.end(), L'\r'), currentText.end());
-    EXPECT_STREQ(std::narrow(currentText).c_str(), sampleText.c_str()) << "Content unmatched with sample file " << resource_file_name;
+    EXPECT_STREQ(sampleText.c_str(), std::narrow(currentText).c_str()) << "Content unmatched with sample file " << resource_file_name;
 }
 
 // compare file with resource

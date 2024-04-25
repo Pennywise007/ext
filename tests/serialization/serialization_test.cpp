@@ -41,18 +41,34 @@ struct ISerializableInterface : ISerializableCollection
     virtual void changeValue() = 0;
 };
 
-struct SerializableInterfaceImpl : SerializableObject<SerializableInterfaceImpl, nullptr, ISerializableInterface>
+struct SerializableInterfaceImpl : ISerializableInterface
 {
+private:
+// ISerializable
+    [[nodiscard]] const char* GetName() const noexcept override { return ext::type_name<SerializableInterfaceImpl>(); }
+// ISerializableCollection
+    // Collection size
+    [[nodiscard]] virtual size_t Size() const noexcept override { return 1;}
+    // Get collection element by index
+    [[nodiscard]] virtual std::shared_ptr<ISerializable> Get(const size_t& index) const override
+    {
+        EXPECT_EQ(0, index);
+        return details::get_as_serializable("flagTest", &const_cast<bool&>(flagTest));
+    }
+
+public:
     void changeValue() override final
     {
         flagTest = false;
     }
-
-    DECLARE_SERIALIZABLE_FIELD(bool, flagTest, true);
+    
+    bool flagTest = true;
 };
 
-struct BaseTypes : SerializableObject<BaseTypes, BaseTypeName>
+struct BaseTypes
 {
+    REGISTER_SERIALIZABLE_OBJECT_N(BaseTypeName);
+
     DECLARE_SERIALIZABLE_FIELD(long, value, 0);
     DECLARE_SERIALIZABLE_FIELD(std::string, text);
 
@@ -117,17 +133,18 @@ struct SerializableField : ISerializableField
 {
     [[nodiscard]] const char* GetName() const noexcept override { return "Name"; }
     [[nodiscard]] SerializableValue SerializeValue() const override { return L"test"; }
-    void DeserializeValue(const SerializableValue& value) override { EXT_EXPECT(value == L"test"); }
+    void DeserializeValue(const SerializableValue& value) override { EXPECT_STREQ(L"test", value.c_str()); }
 };
 
-struct SerializableTypes : SerializableObject<SerializableTypes, SerializableTypesName>, virtual BaseTypes, virtual SerializableField
+struct SerializableTypes : BaseTypes, SerializableField, SerializableInterfaceImpl
 {
-    typedef SerializableObject<SerializableTypes, SerializableTypesName> SerializableObjectType;
+    REGISTER_SERIALIZABLE_OBJECT_N(SerializableTypesName, BaseTypes, SerializableField, SerializableInterfaceImpl);
 
-    REGISTER_SERIALIZABLE_BASE(BaseTypes, SerializableField);
-
-    DECLARE_SERIALIZABLE_FIELD(std::shared_ptr<ISerializableInterface>, sharedSerializableInterface, std::make_shared<SerializableInterfaceImpl>());
+    DECLARE_SERIALIZABLE_FIELD(std::shared_ptr<ISerializableInterface>, sharedSerializableInterface, std::make_unique<SerializableInterfaceImpl>());
     DECLARE_SERIALIZABLE_FIELD(std::unique_ptr<ISerializableInterface>, uniqueSerializableInterface, std::make_unique<SerializableInterfaceImpl>());
+    DECLARE_SERIALIZABLE_FIELD(std::optional<SerializableInterfaceImpl>, optionalSerializableInterface);
+    DECLARE_SERIALIZABLE_FIELD(SerializableInterfaceImpl, serializableInterface);
+
     DECLARE_SERIALIZABLE_FIELD(SerializableField, serializableObjectField);
 
     DECLARE_SERIALIZABLE_FIELD(BaseTypes, baseTypesField);
@@ -148,19 +165,23 @@ struct SerializableTypes : SerializableObject<SerializableTypes, SerializableTyp
 
     DECLARE_SERIALIZABLE_FIELD(std::vector<std::string>, strings);
     DECLARE_SERIALIZABLE_FIELD(std::list<std::wstring>, wstrings);
-    DECLARE_SERIALIZABLE_FIELD_N("My flag name", bool, oneFlag, true);
+    DECLARE_SERIALIZABLE_FIELD_N(bool, oneFlag, "My flag name", true);
 
     std::map<int, long> flags2 = [this]()
     {
-        SerializableObjectType::RegisterField("flags name", &SerializableTypes::flags2);
+        REGISTER_SERIALIZABLE_FIELD_N("flags name", flags2);
         return std::map<int, long>{};
     }();
 
     void SetFieldValues() override
     {
         BaseTypes::SetFieldValues();
+        SerializableInterfaceImpl::changeValue();
+
         sharedSerializableInterface->changeValue();
         uniqueSerializableInterface->changeValue();
+        serializableInterface.changeValue();
+        optionalSerializableInterface.emplace(serializableInterface);
 
         baseTypesField.SetFieldValues();
 
@@ -191,9 +212,11 @@ struct SerializableTypes : SerializableObject<SerializableTypes, SerializableTyp
 TEST(serialization_test, text_default)
 {
     SerializableTypes testStruct;
+    testStruct.sharedSerializableInterface = nullptr;
+    testStruct.uniqueSerializableInterface = nullptr;
 
     std::wstring defaultText;
-    ASSERT_TRUE(Executor::SerializeObject(Factory::TextSerializer(defaultText), testStruct));
+    ASSERT_TRUE(SerializeObject(Factory::TextSerializer(defaultText), testStruct));
     test::samples::expect_equal_to_sample(defaultText, kSampleTextDefault);
 }
 
@@ -203,41 +226,43 @@ TEST(serialization_test, text_modified)
     testStruct.SetFieldValues();
 
     std::wstring textAfterModification;
-    ASSERT_TRUE(Executor::SerializeObject(Factory::TextSerializer(textAfterModification), testStruct));
+    ASSERT_TRUE(SerializeObject(Factory::TextSerializer(textAfterModification), testStruct));
     test::samples::expect_equal_to_sample(textAfterModification, kSampleTextModified);
 }
 
 TEST(deserialization_test, text_default)
 {
-    const auto defaultStructText = std::widen(test::samples::load_sample_file(kSampleTextDefault));
+    const auto expectedText = std::widen(test::samples::load_sample_file(kSampleTextDefault));
 
     SerializableTypes testStruct;
-    ASSERT_TRUE(Executor::DeserializeObject(Factory::TextDeserializer(defaultStructText), testStruct));
+    ASSERT_TRUE(DeserializeObject(Factory::TextDeserializer(expectedText), testStruct));
 
     std::wstring textAfterDeserialization;
-    ASSERT_TRUE(Executor::SerializeObject(Factory::TextSerializer(textAfterDeserialization), testStruct));
+    ASSERT_TRUE(SerializeObject(Factory::TextSerializer(textAfterDeserialization), testStruct));
 
-    EXPECT_STREQ(textAfterDeserialization.c_str(), defaultStructText.c_str());
+    EXPECT_STREQ(expectedText.c_str(), textAfterDeserialization.c_str());
 }
 
 TEST(deserialization_test, text_modified)
 {
-    const auto modifiedStructText = std::widen(test::samples::load_sample_file(kSampleTextModified));
+    const auto expectedText = std::widen(test::samples::load_sample_file(kSampleTextModified));
     
     SerializableTypes testStruct;
-    ASSERT_TRUE(Executor::DeserializeObject(Factory::TextDeserializer(modifiedStructText), testStruct));
+    ASSERT_TRUE(DeserializeObject(Factory::TextDeserializer(expectedText), testStruct));
    
     std::wstring textAfterDeserialization;
-    ASSERT_TRUE(Executor::SerializeObject(Factory::TextSerializer(textAfterDeserialization), testStruct));
+    ASSERT_TRUE(SerializeObject(Factory::TextSerializer(textAfterDeserialization), testStruct));
 
-    EXPECT_STREQ(textAfterDeserialization.c_str(), modifiedStructText.c_str());
+    EXPECT_STREQ(expectedText.c_str(), textAfterDeserialization.c_str());
 }
 
 TEST(serialization_test, xml_default)
 {
     SerializableTypes testStruct;
+    testStruct.sharedSerializableInterface = nullptr;
+    testStruct.uniqueSerializableInterface = nullptr;
 
-    ASSERT_TRUE(Executor::SerializeObject(Factory::XMLSerializer(kTestXmlFilePath), testStruct));
+    ASSERT_TRUE(SerializeObject(Factory::XMLSerializer(kTestXmlFilePath), testStruct));
     test::samples::expect_equal_to_sample(kTestXmlFilePath, kSampleXMLDefault);
 }
 
@@ -246,7 +271,7 @@ TEST(serialization_test, xml_modified)
     SerializableTypes testStruct;
     testStruct.SetFieldValues();
 
-    ASSERT_TRUE(Executor::SerializeObject(Factory::XMLSerializer(kTestXmlFilePath), testStruct));
+    ASSERT_TRUE(SerializeObject(Factory::XMLSerializer(kTestXmlFilePath), testStruct));
     test::samples::expect_equal_to_sample(kTestXmlFilePath, kSampleXMLModified);
 }
 
@@ -255,8 +280,8 @@ TEST(deserialization_test, xml_default)
     const auto defaultStructFile = test::samples::sample_file_path(kSampleXMLDefault);
 
     SerializableTypes testStruct;
-    ASSERT_TRUE(Executor::DeserializeObject(Factory::XMLDeserializer(defaultStructFile), testStruct));
-    ASSERT_TRUE(Executor::SerializeObject(Factory::XMLSerializer(kTestXmlFilePath), testStruct));
+    ASSERT_TRUE(DeserializeObject(Factory::XMLDeserializer(defaultStructFile), testStruct));
+    ASSERT_TRUE(SerializeObject(Factory::XMLSerializer(kTestXmlFilePath), testStruct));
 
     test::samples::expect_equal_to_sample(kTestXmlFilePath, kSampleXMLDefault);
 }
@@ -266,16 +291,17 @@ TEST(deserialization_test, xml_modified)
     const auto modifiedStructText = test::samples::sample_file_path(kSampleXMLModified);
     
     SerializableTypes testStruct;
-    ASSERT_TRUE(Executor::DeserializeObject(Factory::XMLDeserializer(modifiedStructText), testStruct));
-    ASSERT_TRUE(Executor::SerializeObject(Factory::XMLSerializer(kTestXmlFilePath), testStruct));
+    ASSERT_TRUE(DeserializeObject(Factory::XMLDeserializer(modifiedStructText), testStruct));
+    ASSERT_TRUE(SerializeObject(Factory::XMLSerializer(kTestXmlFilePath), testStruct));
 
     test::samples::expect_equal_to_sample(kTestXmlFilePath, kSampleXMLModified);
 }
 
-struct Settings : ext::serializable::SerializableObject<Settings>
+struct Settings
 {
-    struct User : ext::serializable::SerializableObject<User>
+    struct User
     {
+        REGISTER_SERIALIZABLE_OBJECT();
         DECLARE_SERIALIZABLE_FIELD(std::int64_t, id);
         DECLARE_SERIALIZABLE_FIELD(std::string, firstName);
         DECLARE_SERIALIZABLE_FIELD(std::string, userName);
@@ -285,7 +311,8 @@ struct Settings : ext::serializable::SerializableObject<Settings>
             return id == other.id && firstName == other.firstName && userName == other.userName;
         }
     };
-    
+
+    REGISTER_SERIALIZABLE_OBJECT();
     DECLARE_SERIALIZABLE_FIELD(std::wstring, token);
     DECLARE_SERIALIZABLE_FIELD(std::wstring, password);
     DECLARE_SERIALIZABLE_FIELD(std::list<User>, registeredUsers);
@@ -301,36 +328,58 @@ TEST(serialization_test, serialization_custom)
     initialSettings.registeredUsers.resize(1);
     initialSettings.registeredUsers.back().id = 123;
 
-    ASSERT_TRUE(Executor::SerializeObject(Factory::TextSerializer(text), reinterpret_cast<const ISerializable*>(&initialSettings)));
+    ASSERT_TRUE(SerializeObject(Factory::TextSerializer(text), initialSettings));
 
     Settings result; 
-    ASSERT_TRUE(Executor::DeserializeObject(Factory::TextDeserializer(text), reinterpret_cast<ISerializable*>(&result)));
+    ASSERT_TRUE(DeserializeObject(Factory::TextDeserializer(text), result));
     EXPECT_EQ(initialSettings.token, result.token);
     EXPECT_EQ(initialSettings.password, result.password);
     EXPECT_EQ(initialSettings.registeredUsers, result.registeredUsers);
 }
 
-struct PrivateInheritance : ext::serializable::SerializableObject<PrivateInheritance>
+class GlobalObject : SerializableInterfaceImpl
 {
-    struct CollectionWithPrivateInheritance : private ext::serializable::SerializableObject<CollectionWithPrivateInheritance>
+    class PrivateBaseObject
     {
-        DECLARE_SERIALIZABLE_FIELD(int, val);
+    protected:
+        REGISTER_SERIALIZABLE_OBJECT();
+        DECLARE_SERIALIZABLE_FIELD(int, baseObjectVal, 0);
     };
-    DECLARE_SERIALIZABLE_FIELD(CollectionWithPrivateInheritance, collection);
+    class PrivateObject : PrivateBaseObject
+    {
+        REGISTER_SERIALIZABLE_OBJECT(PrivateBaseObject);
+        DECLARE_SERIALIZABLE_FIELD(int, privateObjectVal, 0);
+
+    public:
+        bool operator==(const PrivateObject& other) const { return privateObjectVal == other.privateObjectVal && baseObjectVal == other.baseObjectVal; }
+        void Change() { privateObjectVal = -100; baseObjectVal = -1; }
+    };
+
+    REGISTER_SERIALIZABLE_OBJECT(SerializableInterfaceImpl);
+    DECLARE_SERIALIZABLE_FIELD(PrivateObject, collection);
+
+public:
+    bool operator==(const GlobalObject& other) const { return collection == other.collection && flagTest == other.flagTest; }
+    void Change()
+    {
+        collection.Change();
+        SerializableInterfaceImpl::changeValue();
+    }
 };
 
 TEST(serialization_test, collection_as_a_field_with_private_inheritance)
 {
-    PrivateInheritance settings;
-    settings.collection.val = 2;
+    GlobalObject object;
 
     std::wstring data;
-    Executor::SerializeObject(Factory::TextSerializer(data), &settings);
+    SerializeObject(Factory::TextSerializer(data), object);
+    EXPECT_STREQ(L"\"class GlobalObject\": {\n    \"struct SerializableInterfaceImpl\": {\n        \"flagTest\": true\n    },\n    \"collection\": {\n        \"baseObjectVal\": 0,\n        \"privateObjectVal\": 0\n    }\n}\n", data.c_str());
 
-    ASSERT_STREQ(data.c_str(), L"\"struct PrivateInheritance\": {\n    \"collection\": {\n        \"val\": 2\n    }\n}\n");
+    object.Change();
+    SerializeObject(Factory::TextSerializer(data), object);
+    EXPECT_STREQ(L"\"class GlobalObject\": {\n    \"struct SerializableInterfaceImpl\": {\n        \"flagTest\": false\n    },\n    \"collection\": {\n        \"baseObjectVal\": -1,\n        \"privateObjectVal\": -100\n    }\n}\n", data.c_str());
 
-    PrivateInheritance settingsResult;
-    Executor::DeserializeObject(Factory::TextDeserializer(data), &settingsResult);
-
-    ASSERT_EQ(settings.collection.val, settingsResult.collection.val);
+    GlobalObject deserializationResult;
+    DeserializeObject(Factory::TextDeserializer(data), deserializationResult);
+    EXPECT_EQ(object, deserializationResult);
 }

@@ -89,4 +89,10 @@ template<class T>
     return Singleton<T>::Instance();
 }
 
+template<class T>
+[[nodiscard]] static T& get_singleton()
+{
+    return Singleton<T>::Instance();
+}
+
 } // namespace ext

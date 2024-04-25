@@ -1,37 +1,38 @@
 "SerializableTypes": {
-    "BaseTypes": {
-        "value": 0,
-        "text": "",
-        "valueMap": {
-        },
-        "valueMultimap": {
-        },
-        "valueList": {
-        },
-        "valueVector": {
-        },
-        "valueSet": {
-        },
-        "valueMultiSet": {
-        },
-        "path": "\"\"",
-        "optional": null,
-        "optionalPair": null,
-        "vectorOptional": {
-        },
-        "pair": {
-            "First": 0,
-            "Second": false
-        },
-        "listPair": {
-        },
-        "testField": true
+    "value": 0,
+    "text": "",
+    "valueMap": {
     },
+    "valueMultimap": {
+    },
+    "valueList": {
+    },
+    "valueVector": {
+    },
+    "valueSet": {
+    },
+    "valueMultiSet": {
+    },
+    "path": "\"\"",
+    "optional": null,
+    "optionalPair": null,
+    "vectorOptional": {
+    },
+    "pair": {
+        "First": 0,
+        "Second": false
+    },
+    "listPair": {
+    },
+    "testField": true,
     "Name": "test",
-    "sharedSerializableInterface": {
+    "struct SerializableInterfaceImpl": {
         "flagTest": true
     },
-    "uniqueSerializableInterface": {
+    "sharedSerializableInterface": null,
+    "uniqueSerializableInterface": null,
+    "optionalSerializableInterface": null,
+    "serializableInterface": {
         "flagTest": true
     },
     "serializableObjectField": "test",

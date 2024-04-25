@@ -1,30 +1,31 @@
 <?xml version="1.0"?>
 <Collection Name="SerializableTypes">
-    <Collection Name="BaseTypes">
-        <Field Name="value" Value="0" Type="6" />
-        <Field Name="text" Value="" Type="1" />
-        <Collection Name="valueMap" />
-        <Collection Name="valueMultimap" />
-        <Collection Name="valueList" />
-        <Collection Name="valueVector" />
-        <Collection Name="valueSet" />
-        <Collection Name="valueMultiSet" />
-        <Field Name="path" Value="&quot;&quot;" Type="1" />
-        <Field Name="optional" Value="null" Type="0" />
-        <Field Name="optionalPair" Value="null" Type="0" />
-        <Collection Name="vectorOptional" />
-        <Collection Name="pair">
-            <Field Name="First" Value="0" Type="5" />
-            <Field Name="Second" Value="false" Type="2" />
-        </Collection>
-        <Collection Name="listPair" />
-        <Field Name="testField" Value="true" Type="2" />
+    <Field Name="value" Value="0" Type="6" />
+    <Field Name="text" Value="" Type="1" />
+    <Collection Name="valueMap" />
+    <Collection Name="valueMultimap" />
+    <Collection Name="valueList" />
+    <Collection Name="valueVector" />
+    <Collection Name="valueSet" />
+    <Collection Name="valueMultiSet" />
+    <Field Name="path" Value="&quot;&quot;" Type="1" />
+    <Field Name="optional" Value="null" Type="0" />
+    <Field Name="optionalPair" Value="null" Type="0" />
+    <Collection Name="vectorOptional" />
+    <Collection Name="pair">
+        <Field Name="First" Value="0" Type="5" />
+        <Field Name="Second" Value="false" Type="2" />
     </Collection>
+    <Collection Name="listPair" />
+    <Field Name="testField" Value="true" Type="2" />
     <Field Name="Name" Value="test" Type="1" />
-    <Collection Name="sharedSerializableInterface">
+    <Collection Name="struct SerializableInterfaceImpl">
         <Field Name="flagTest" Value="true" Type="2" />
     </Collection>
-    <Collection Name="uniqueSerializableInterface">
+    <Field Name="sharedSerializableInterface" Value="null" Type="0" />
+    <Field Name="uniqueSerializableInterface" Value="null" Type="0" />
+    <Field Name="optionalSerializableInterface" Value="null" Type="0" />
+    <Collection Name="serializableInterface">
         <Field Name="flagTest" Value="true" Type="2" />
     </Collection>
     <Field Name="serializableObjectField" Value="test" Type="1" />

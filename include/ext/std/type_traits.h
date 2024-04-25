@@ -32,16 +32,33 @@ struct extract_value_type<X<U>> { typedef U value_type; };
 template<class U>
 using extract_value_type_v = typename extract_value_type<U>::value_type;
 
-// Declare has function checker, example
-// DECLARE_CHECK_FUNCTION(reserve);
-// if constexpr (has_reserve_function_v<std::vector<int>>) ...
+// Declare checker for function name, checks if object has function by name
+// Example:
+//      DECLARE_CHECK_FUNCTION(reserve);
+//      static_assert(has_reserve_function_v<std::vector<int>>);
 #define DECLARE_CHECK_FUNCTION(FunctionName)                        \
 template<typename Class, class = std::void_t<>>                     \
-struct has_ ##FunctionName##_function : std::false_type {};         \
+struct has_##FunctionName##_function : std::false_type {};          \
 template<typename Class>                                            \
 struct has_##FunctionName##_function<Class, std::enable_if_t<std::is_member_function_pointer_v<decltype(&Class::FunctionName)>>> : std::true_type {}; \
 template<class T>                                                   \
 inline constexpr bool has_##FunctionName##_function_v = has_##FunctionName##_function<T>::value
 
+// Declare checker for field existing, checks if object has field by name
+// Example:
+//      struct A { bool someField; };
+//      DECLARE_CHECK_FIELD_EXISTS(someField);
+//      static_assert(has_someField_field_v<A>);
+#define DECLARE_CHECK_FIELD_EXISTS(FieldName)                       \
+template<typename T>                                                \
+struct has_##FieldName##_field {                                    \
+    template<typename U, typename = decltype(std::declval<U>().FieldName)>  \
+    static std::true_type test(int);                                \
+    template<typename>                                              \
+    static std::false_type test(...);                               \
+    static constexpr bool value = decltype(test<T>(0))::value;      \
+};                                                                  \
+template<class T>                                                   \
+inline constexpr bool has_##FieldName##_field_v = has_##FieldName##_field<T>::value
 
 } // namespace std

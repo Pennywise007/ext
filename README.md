@@ -63,37 +63,34 @@ Serialization objects to/from text, xml
 #include <ext/serialization/iserializable.h>
 
 using namespace ext::serializable;
+using namespace ext::serializer;
 
-struct InternalStruct : SerializableObject<InternalStruct, "Pretty name">
+struct Settings
 {
-    DECLARE_SERIALIZABLE_FIELD((long) value);
-    DECLARE_SERIALIZABLE_FIELD((std::list<int>) valueList);
-};
-
-struct TestStruct : SerializableObject<TestStruct>
-{
-    REGISTER_SERIALIZABLE_BASE(InternalStruct);
-
-    DECLARE_SERIALIZABLE_FIELD(long, valueLong, 2);
-    DECLARE_SERIALIZABLE_FIELD(int, valueInt);
-    DECLARE_SERIALIZABLE_FIELD(std::vector<bool>, boolVector, { true, false });
-
-    DECLARE_SERIALIZABLE_FIELD(CustomField, field);
-    DECLARE_SERIALIZABLE_FIELD(InternalStruct, internalStruct);
-
-    std::list<int> m_listOfParams;
-
-    MyTestStruct()
+    struct User
     {
-        REGISTER_SERIALIZABLE_FIELD(m_listOfParams); // or use DECLARE_SERIALIZABLE_FIELD macro
+        REGISTER_SERIALIZABLE_OBJECT();
 
-        Executor::DeserializeObject(Factory::TextDeserializer(L"C:\\Test.xml"), testStruct);
-    }
+        DECLARE_SERIALIZABLE_FIELD(std::int64_t, id);
+        DECLARE_SERIALIZABLE_FIELD(std::string, firstName);
+        DECLARE_SERIALIZABLE_FIELD(std::string, userName);
+    };
+    
+    REGISTER_SERIALIZABLE_OBJECT_N("My settings");
+    DECLARE_SERIALIZABLE_FIELD(std::wstring, token);
+    DECLARE_SERIALIZABLE_FIELD(std::wstring, password);
+    DECLARE_SERIALIZABLE_FIELD(std::list<User>, registeredUsers);
 
-    ~MyTestStruct()
-    {
-        Executor::SerializeObject(Factory::TextSerializer(L"C:\\Test.xml"), testStruct);
-    }
+	Settings(){
+        std::wstring text;
+		if (!DeserializeObject(Factory::TextDeserializer(text), *this))
+			...
+	}
+	~Settings() {
+        std::wstring text;
+		if (!SerializeObject(Factory::TextSerializer(text), *this))
+			...
+	}
 };
 
 ```

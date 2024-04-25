@@ -8,31 +8,32 @@ Usage example:
 #include <ext/serialization/iserializable.h>
 
 using namespace ext::serializable;
+using namespace ext::serializer;
 
-struct Settings : SerializableObject<Settings>
+struct Settings
 {
-    struct User : SerializableObject<User>
+    struct User
     {
+        REGISTER_SERIALIZABLE_OBJECT();
+
         DECLARE_SERIALIZABLE_FIELD(std::int64_t, id);
         DECLARE_SERIALIZABLE_FIELD(std::string, firstName);
         DECLARE_SERIALIZABLE_FIELD(std::string, userName);
-
-        bool operator==(const User& other) const
-        {
-            return id == other.id && firstName == other.firstName && userName == other.userName;
-        }
     };
     
+    REGISTER_SERIALIZABLE_OBJECT_N("My settings");
     DECLARE_SERIALIZABLE_FIELD(std::wstring, token);
     DECLARE_SERIALIZABLE_FIELD(std::wstring, password);
     DECLARE_SERIALIZABLE_FIELD(std::list<User>, registeredUsers);
 
 	Settings(){
-		if (!Executor::DeserializeObject(Factory::XMLDeserializer("settings.xml"), this))
+        std::wstring text;
+		if (!DeserializeObject(Factory::TextDeserializer(text), *this))
 			...
 	}
 	~Settings() {
-		if (!Executor::SerializeObject(Factory::XMLDeserializer("settings.xml"), this))
+        std::wstring text;
+		if (!SerializeObject(Factory::TextSerializer(text), *this))
 			...
 	}
 };

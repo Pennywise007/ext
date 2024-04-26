@@ -243,7 +243,7 @@ inline bool SerializeObject(const std::unique_ptr<ISerializer>& serializer, cons
     const ISerializable* serializableObject;
     if constexpr (ext::serializable::is_registered_serializable_object_v<Type>)
     {
-        objectCollection = ext::get_singleton<SerializableObjectDescriptor<Type>>().GetSerializable(const_cast<Type&>(object));
+        objectCollection = ext::get_singleton<ext::serializable::SerializableObjectDescriptor<Type>>().GetSerializable(const_cast<Type&>(object));
         serializableObject = objectCollection.get();
     }
     else
@@ -331,7 +331,7 @@ inline bool DeserializeObject(const std::unique_ptr<serializer::IDeserializer>& 
     ISerializable* deserializableObject;
     if constexpr (ext::serializable::is_registered_serializable_object_v<Type>)
     {
-        objectCollection = ext::get_singleton<SerializableObjectDescriptor<Type>>().GetSerializable(object);
+        objectCollection = ext::get_singleton<ext::serializable::SerializableObjectDescriptor<Type>>().GetSerializable(object);
         deserializableObject = objectCollection.get();
     }
     else

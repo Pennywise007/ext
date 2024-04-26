@@ -78,13 +78,13 @@ struct TestStruct : InternalStruct
     friend struct ::ext::serializable::has___serializable_object_registration_field;            \
     /* To avoid problems with private fields/inheritance we will use SerializableObjectDescriptor::ConvertToType */  \
     template <class __SerializableClass__>                                                      \
-    friend class SerializableObjectDescriptor;                                                  \
+    friend class ext::serializable::SerializableObjectDescriptor;                               \
     /* Special flag to mark that this struct can be serialized, see is_registered_serializable_object_v */  \
-    const bool __serializable_object_registration = [this]() -> bool                            \
+    bool __serializable_object_registration = [this]() -> bool                                  \
         {                                                                                       \
             CALL_ONCE({                                                                         \
                 using CurrentType = std::remove_reference_t<decltype(*this)>;                   \
-                auto& __info = ext::get_singleton<SerializableObjectDescriptor<CurrentType>>(); \
+                auto& __info = ext::get_singleton<ext::serializable::SerializableObjectDescriptor<CurrentType>>(); \
                 __info.SetName(SerializableName);                                               \
                 __info.RegisterSerializableBaseClasses<__VA_ARGS__>();                          \
             })                                                                                  \
@@ -117,7 +117,9 @@ struct TestStruct : InternalStruct
 #define REGISTER_SERIALIZABLE_FIELD_N(SerializableName, object)                                 \
     CALL_ONCE({                                                                                 \
             using CurrentType = std::remove_reference_t<decltype(*this)>;                       \
-            auto& __info = ext::get_singleton<SerializableObjectDescriptor<CurrentType>>();     \
+            static_assert(ext::serializable::is_registered_serializable_object_v<CurrentType>,  \
+                "Trying to register field on non registered object, maybe you forget to add REGISTER_SERIALIZABLE_OBJECT?");    \
+            auto& __info = ext::get_singleton<ext::serializable::SerializableObjectDescriptor<CurrentType>>();                  \
             __info.RegisterField(SerializableName, &CurrentType::object);                       \
         })
 

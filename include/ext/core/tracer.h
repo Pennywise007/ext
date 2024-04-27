@@ -185,7 +185,7 @@ private:
         res.resize(len);
 
         if (settings_.Extensions.test(Settings::Extensions::eDateWithMilliseconds))
-            res += "." + std::to_string(std::chrono::duration_cast<milliseconds>(now.time_since_epoch()).count() % 1000);
+            res += std::string_sprintf(".%03lld", std::chrono::duration_cast<milliseconds>(now.time_since_epoch()).count() % 1000);
         return res + "\t";
     }
 

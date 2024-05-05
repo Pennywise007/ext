@@ -1,5 +1,21 @@
 #ifdef __AFX_H__
 
+/*
+Allows to execute code in main UI thread.
+
+Example:
+
+ext::InvokeMethod([&]() {
+        MessageBox(L"Error", L"", MB_OK);
+        EndDialog(501);
+    });
+
+ext::InvokeMethodAsync([&]() {
+        MessageBox(L"Error", L"", MB_OK);
+        EndDialog(501);
+    });
+*/
+
 #pragma once
 
 #include <afxwin.h>

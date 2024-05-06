@@ -251,7 +251,7 @@ private:
         if (!text_.has_value())
             return;
         const auto& outputText = text_.value();
-        EXT_TRACE_LEVEL(traceLevel) << std::narrow(outputText).c_str() << (outputText.empty() ? "" : " ") << suffix;
+        EXT_TRACE_LEVEL(traceLevel) << outputText.c_str() << (outputText.empty() ? "" : " ") << suffix;
     }
 
 private:

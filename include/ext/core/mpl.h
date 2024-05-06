@@ -99,7 +99,7 @@ struct list : std::tuple<T...>
     // Get count of elements
     [[nodiscard]] constexpr static auto Count()
     {
-        return std::tuple_size_v<std::tuple<T*...>>;
+        return std::tuple_size_v<std::tuple<std::remove_reference_t<T>*...>>;
     }
 
     // Get element from list

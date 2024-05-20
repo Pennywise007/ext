@@ -101,7 +101,7 @@ public:
 
     [[nodiscard]] uint32_t running_tasks_count() const noexcept;
 
-    // interrupt and remove all tasks from queue, after this action thread pool is in inconsistent state
+    // interrupt and remove all tasks from queue
     void interrupt_and_remove_all_tasks();
 
 private:

@@ -179,7 +179,9 @@ private:
         void OnTickTimer()
         {
             bool changed = false;
-            std::scoped_lock lock(m_handlersMutex);
+
+            m_handlersMutex.lock();
+            EXT_DEFER(m_handlersMutex.unlock());
             for (size_t index = 0; index < m_handlers.size();)
             {
                 auto handler = std::next(m_handlers.begin(), index);

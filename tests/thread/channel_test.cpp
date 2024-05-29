@@ -87,6 +87,31 @@ TEST(channel_test, check_multithreading)
     thread.join();
 }
 
+TEST(channel_test, check_resetting)
+{
+    ext::Channel<int> channel(1);
+    channel.add(1);
+    channel.close();
+    EXPECT_EQ(1, *channel.get());
+
+    EXPECT_THROW(channel.add(), std::bad_function_call);
+    EXPECT_FALSE(channel.get().has_value());
+
+    channel.reset();
+    channel.add(2);
+    EXPECT_EQ(2, *channel.get());
+    channel.close();
+
+    EXPECT_THROW(channel.add(), std::bad_function_call);
+    EXPECT_FALSE(channel.get().has_value());
+
+    channel.reset();
+    channel.add(4);
+    channel.reset();
+    channel.add(5);
+    EXPECT_EQ(5, *channel.get());
+}
+
 TEST(channel_test, check_throwing_exceptions)
 {
     ext::Channel<int> channel;
@@ -96,4 +121,3 @@ TEST(channel_test, check_throwing_exceptions)
     channel.close();
     EXPECT_THROW(channel.add(), std::bad_function_call);
 }
-

@@ -94,13 +94,6 @@ public:
         : m_max_size(size)
     {}
 
-    void close() {
-        std::lock_guard<std::mutex> lock(m_queue_mutex);
-        m_closed = true;
-        m_queue_not_full.notify_all();
-        m_queue_not_empty.notify_all();
-    }
-
     template <typename ...Args>
     void add(Args&& ...args) EXT_THROWS(std::bad_function_call) {
         std::unique_lock<std::mutex> lock(m_queue_mutex);
@@ -128,6 +121,19 @@ public:
         m_queue.pop();
         m_queue_not_full.notify_one();
         return result;
+    }
+
+    void close() {
+        std::lock_guard<std::mutex> lock(m_queue_mutex);
+        m_closed = true;
+        m_queue_not_full.notify_all();
+        m_queue_not_empty.notify_all();
+    }
+
+    void reset() {
+        std::lock_guard<std::mutex> lock(m_queue_mutex);
+        m_closed = false;
+        m_queue = {};
     }
 
     [[nodiscard]] iterator begin() { return ChannelIterator(this, get()); }

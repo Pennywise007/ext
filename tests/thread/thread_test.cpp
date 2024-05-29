@@ -300,3 +300,47 @@ TEST(thread_test, check_stop_token)
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
     join_thread_and_check(myThread, false);
 }
+
+TEST(thread_test, sleep_for_1_millisecond)
+{
+    auto start = std::chrono::high_resolution_clock::now();
+    ext::this_thread::sleep_for(std::chrono::milliseconds(1));
+    auto end = std::chrono::high_resolution_clock::now();
+    ASSERT_LE(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count(), 2);
+}
+
+TEST(thread_test, sleep_for_1_second)
+{
+    auto start = std::chrono::high_resolution_clock::now();
+    ext::this_thread::sleep_for(std::chrono::seconds(1));
+    auto end = std::chrono::high_resolution_clock::now();
+    ASSERT_EQ(std::chrono::duration_cast<std::chrono::seconds>(end - start).count(), 1);
+}
+
+TEST(thread_test, sleep_for_1_millisecond_in_thread)
+{
+    std::chrono::milliseconds delta(0);
+    ext::thread myThread(thread_function, [&delta]()
+                        {
+                            auto start = std::chrono::high_resolution_clock::now();
+                            ext::this_thread::sleep_for(std::chrono::milliseconds(1));
+                            auto end = std::chrono::high_resolution_clock::now();
+                            delta = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+                         });
+    myThread.join();
+    ASSERT_LE(delta.count(), 2);
+}
+
+TEST(thread_test, interruptible_sleep_for_1_millisecond_in_thread)
+{
+    std::chrono::milliseconds delta(0);
+    ext::thread myThread(thread_function, [&delta]()
+                        {
+                            auto start = std::chrono::high_resolution_clock::now();
+                            ext::this_thread::interruptible_sleep_for(std::chrono::milliseconds(1));
+                            auto end = std::chrono::high_resolution_clock::now();
+                            delta = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+                        });
+    myThread.join();
+    ASSERT_LE(delta.count(), 3);
+}

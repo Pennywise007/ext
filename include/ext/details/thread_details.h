@@ -1,5 +1,7 @@
 #pragma once
 
+#include "sleep.h"
+
 #include <thread>
 #include <type_traits>
 
@@ -82,7 +84,7 @@ public:
     }
     static void MaxWait() noexcept
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        ext::thread_details::sleep_for(1);
     }
 
 private:

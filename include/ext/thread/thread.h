@@ -74,6 +74,11 @@ void interruptible_sleep_until(const std::chrono::time_point<_Clock, _Duration>&
 // Sleep for time duration, if the thread is interrupted, throws an exception
 template <class _Rep, class _Period>
 void interruptible_sleep_for(const std::chrono::duration<_Rep, _Period>& timeDuration) EXT_THROWS(ext::thread::thread_interrupted());
+// Sleep untill time point
+template <class _Clock, class _Duration>
+void sleep_until(const std::chrono::time_point<_Clock, _Duration>& absoluteTime);
+// Sleep for time duration
+inline void sleep_for(const std::chrono::milliseconds& timeDuration);
 
 } // namespace this_thread
 
@@ -194,8 +199,8 @@ private:
     friend ext::stop_token this_thread::get_stop_token() noexcept;
     friend bool this_thread::interruption_requested() noexcept;
 
-    template <class _Clock, class _Duration>
-    friend void this_thread::interruptible_sleep_until(const std::chrono::time_point<_Clock, _Duration>& absoluteTime) EXT_THROWS(ext::thread::thread_interrupted());
+    template <class _Rep, class _Period>
+    friend void this_thread::interruptible_sleep_for(const std::chrono::duration<_Rep, _Period>& duration) EXT_THROWS(ext::thread::thread_interrupted());
 
     friend void core::Init();
 
@@ -434,16 +439,20 @@ void interruptible_sleep_until(const std::chrono::time_point<_Clock, _Duration>&
 #if _HAS_CXX20
     static_assert(std::chrono::is_clock_v<_Clock>, "Clock type required");
 #endif // _HAS_CXX20
+    ext::this_thread::interruptible_sleep_for(timePoint - _Clock::now());
+}
 
+template <class _Rep, class _Period>
+void interruptible_sleep_for(const std::chrono::duration<_Rep, _Period>& duration) EXT_THROWS(ext::thread::thread_interrupted())
+{
     if (const auto interruptionEvent = ::ext::thread::manager().GetInterruptionEvent(ext::this_thread::get_id()))
     {
-        const auto _Now = _Clock::now();
-        if (timePoint <= _Now)
+        if (duration.count() < 0)
             return;
 
         try
         {
-            if (!interruptionEvent->Wait(timePoint - _Now))
+            if (!interruptionEvent->Wait(duration))
                 return;
         }
         catch (...)
@@ -453,13 +462,21 @@ void interruptible_sleep_until(const std::chrono::time_point<_Clock, _Duration>&
         throw ext::thread::thread_interrupted();
     }
 
-    std::this_thread::sleep_until(timePoint);
+    ext::this_thread::sleep_for(duration);
 }
 
-template <class _Rep, class _Period>
-void interruptible_sleep_for(const std::chrono::duration<_Rep, _Period>& duration) EXT_THROWS(ext::thread::thread_interrupted())
+template <class _Clock, class _Duration>
+void sleep_until(const std::chrono::time_point<_Clock, _Duration>& timePoint)
 {
-    interruptible_sleep_until(std::_To_absolute_time_custom(duration));
+#if _HAS_CXX20
+    static_assert(std::chrono::is_clock_v<_Clock>, "Clock type required");
+#endif // _HAS_CXX20
+    ext::this_thread::sleep_for(timePoint - _Clock::now());
+}
+
+inline void sleep_for(const std::chrono::milliseconds& duration)
+{
+    ext::thread_details::sleep_for(duration.count());
 }
 
 } // namespace this_thread

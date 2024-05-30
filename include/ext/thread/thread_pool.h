@@ -336,10 +336,10 @@ inline void thread_pool::worker()
                 return;
 
             taskToExecute = std::move(m_queueTasks.front());
+            ++m_countExecutingTasks;
             m_queueTasks.pop_front();
         }
 
-        ++m_countExecutingTasks;
         taskToExecute->task();
         if (m_onTaskDone)
             m_onTaskDone(taskToExecute->taskId);

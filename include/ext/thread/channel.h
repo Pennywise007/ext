@@ -107,7 +107,7 @@ public:
         m_queue.emplace(std::forward<Args>(args)...);
         m_queue_not_empty.notify_one();
     }
-    
+
     [[nodiscard]] std::optional<T> get() noexcept
     {
         std::unique_lock<std::mutex> lock(m_queue_mutex);

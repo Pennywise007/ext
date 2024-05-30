@@ -219,7 +219,7 @@ inline void InvokeMethod(::ext::invoke::MethodInvoker::CallFunction&& function)
     get_singleton<::ext::invoke::MethodInvoker>().CallSync(std::forward<::ext::invoke::MethodInvoker::CallFunction>(function));
 }
 
-inline void InvokeMethodAsync(std::function<void()>&& function)
+inline void InvokeMethodAsync(::ext::invoke::MethodInvoker::CallFunction&& function)
 {
     get_singleton<::ext::invoke::MethodInvoker>().CallAsync(std::forward<::ext::invoke::MethodInvoker::CallFunction>(function));
 }

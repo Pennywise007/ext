@@ -5,6 +5,7 @@
 */
 
 #include <string.h>
+#include <map>
 
 #include <ext/core/defines.h>
 #include <ext/core/check.h>
@@ -59,6 +60,30 @@ struct Visitor::CollectionInfo
     std::shared_ptr<ISerializableCollection> collectionHolder;
     size_t sizeOfCollection;
     size_t currentIndexInsideCollection;
+
+    size_t NumberChildsWithSameNameBeforeIndex(const char* name, size_t index)
+    {
+        if (m_childsByNames.size() != sizeOfCollection)
+        {
+            m_childsByNames.clear();
+            for (size_t i = 0; i < sizeOfCollection; ++i)
+            {
+                if (const auto object = collection->Get(i); object)
+                {
+                    m_childsByNames.emplace(std::pair(object->GetName(), i));
+                }
+            }
+        }
+        size_t res = 0;
+        auto range = m_childsByNames.equal_range(name);
+        for (auto i = range.first; i != range.second && i->second < index; ++i)
+        {
+            ++res;
+        }
+        return res;
+    }
+private:
+    std::multimap<std::string, size_t> m_childsByNames;
 };
 
 inline Visitor::Visitor(const ISerializable* object) : m_currentSerializableObject(object)
@@ -82,14 +107,7 @@ inline size_t Visitor::GetIndexAmongIdenticalNames(bool bCollectionStart)
         if (bCollectionStart)
             ++collectionInfoIt;
 
-        for (size_t index = 0; index < collectionInfoIt->currentIndexInsideCollection; ++index)
-        {
-            if (const auto object = collectionInfoIt->collection->Get(index); object)
-            {
-                if (strcmp(object->GetName(), curObjectName) == 0)
-                    ++counter;
-            }
-        }
+        counter = collectionInfoIt->NumberChildsWithSameNameBeforeIndex(curObjectName, collectionInfoIt->currentIndexInsideCollection);
     }
 
     return counter;
@@ -271,8 +289,7 @@ inline bool SerializeObject(const std::unique_ptr<ISerializer>& serializer, cons
             }
             else
             {
-                currentNode->ChildNodes.emplace_back(std::make_shared<SerializableNode>(objectsVisitor.GetCurrentObject()->GetName(), currentNode));
-                currentNode = currentNode->ChildNodes.back();
+                currentNode = currentNode->AddChild(objectsVisitor.GetCurrentObject()->GetName(), currentNode);
             }
 
             const auto* collection = dynamic_cast<const ISerializableCollection*>(objectsVisitor.GetCurrentObject());
@@ -303,8 +320,7 @@ inline bool SerializeObject(const std::unique_ptr<ISerializer>& serializer, cons
             }
             else
             {
-                currentNode->ChildNodes.emplace_back(std::make_shared<SerializableNode>(field->GetName(), currentNode));
-                currentNode->ChildNodes.back()->Value = field->SerializeValue();
+                currentNode->AddChild(field->GetName(), currentNode)->Value = field->SerializeValue();
             }
         }
         break;

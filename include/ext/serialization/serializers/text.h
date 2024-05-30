@@ -207,7 +207,7 @@ inline void SerializerText::GetFieldInfoOnCurrentBracesLevel(std::wstring_view& 
 
     while (!textInsideBraces.empty())
     {
-        std::shared_ptr<SerializableNode> node = currentNode->ChildNodes.emplace_back(std::make_shared<SerializableNode>(GetFieldName(textInsideBraces), currentNode));
+        std::shared_ptr<SerializableNode> node = currentNode->AddChild(GetFieldName(textInsideBraces), currentNode);
 
         // Find field value
         if (textInsideBraces.front() == L'{')

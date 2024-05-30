@@ -125,7 +125,7 @@ inline bool SerializerXML::Deserialize(std::shared_ptr<SerializableNode>& deseri
 
             if (auto nextNode = currentNode.next_sibling())
             {
-                currentTreeNode = currentTreeNode->ChildNodes.emplace_back(std::make_shared<SerializableNode>("Temp", currentTreeNode));
+                currentTreeNode = currentTreeNode->AddChild("Temp", currentTreeNode);
                 currentNode = std::move(nextNode);
                 break;
             }
@@ -155,7 +155,7 @@ inline bool SerializerXML::Deserialize(std::shared_ptr<SerializableNode>& deseri
             if (const auto firstChild = currentNode.first_child())
             {
                 currentNode = firstChild;
-                currentTreeNode = currentTreeNode->ChildNodes.emplace_back(std::make_shared<SerializableNode>("Temp", currentTreeNode));
+                currentTreeNode = currentTreeNode->AddChild("Temp", currentTreeNode);
             }
             else
                 goToNextNode();

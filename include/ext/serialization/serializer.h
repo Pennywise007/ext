@@ -170,7 +170,7 @@ struct TreeSerializer
     {
         std::shared_ptr<SerializableNode> currentNode = serializationTreeRoot;
         std::stack<std::pair<size_t, size_t>> childLevelInfo;
-        childLevelInfo.push(std::make_pair(currentNode->ChildNodes.size(), 0));
+        childLevelInfo.push(std::make_pair(currentNode->CountChilds(), 0));
 
         while (currentNode)
         {
@@ -180,7 +180,7 @@ struct TreeSerializer
             {
                 serializer->WriteCollectionStart(currentNode->Name, childLevelInfo.size() - 1);
 
-                if (currentNode->ChildNodes.empty())
+                if (!currentNode->HasChilds())
                 {
                     const auto prevNode = currentNode;
                     const bool nextNodeExist = GoToNextChild(childLevelInfo, currentNode);
@@ -206,9 +206,9 @@ private:
     // Find child element inside current node child collection
     static void GoToChild(std::stack<std::pair<size_t, size_t>>& childLevelInfo, std::shared_ptr<SerializableNode>& currentNode, const size_t& index)
     {
-        childLevelInfo.push(std::make_pair(currentNode->ChildNodes.size(), 0));
+        childLevelInfo.push(std::make_pair(currentNode->CountChilds(), 0));
         EXT_ASSERT(index < childLevelInfo.top().first) << "Iterate over list size";
-        currentNode = *std::next(currentNode->ChildNodes.begin(), index);
+        currentNode = currentNode->GetChild(index);
     }
 
     // Try to go to next child on current child level
@@ -218,7 +218,7 @@ private:
         if (!parentNode || ++childLevelInfo.top().second >= childLevelInfo.top().first)
             return false;
 
-        currentNode = *std::next(parentNode->ChildNodes.begin(), childLevelInfo.top().second);
+        currentNode = parentNode->GetChild(childLevelInfo.top().second);
         return true;
     }
 

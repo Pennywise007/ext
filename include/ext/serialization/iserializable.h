@@ -54,6 +54,7 @@ struct TestStruct : InternalStruct
 #include <algorithm>
 #include <list>
 #include <type_traits>
+#include <map>
 #include <memory>
 #include <optional>
 
@@ -235,21 +236,51 @@ struct SerializableNode
     const std::weak_ptr<SerializableNode> Parent;
 
     std::optional<SerializableValue> Value;
-    std::list<std::shared_ptr<SerializableNode>> ChildNodes;
 
     SerializableNode(std::string name, std::shared_ptr<SerializableNode> parentNode = nullptr) noexcept
         : Name(std::move(name)), Parent(parentNode)
     {}
-    [[nodiscard]] std::shared_ptr<SerializableNode> GetChild(const std::string& name, const size_t& indexAmongTheSameNames = 0) const noexcept
+
+    std::shared_ptr<SerializableNode> AddChild(const std::string& name, const std::shared_ptr<SerializableNode>&parentNode)
     {
-        auto searchIt = ChildNodes.begin(), end = ChildNodes.end();
-        for (size_t i = 0; i <= indexAmongTheSameNames && searchIt != end; ++i)
-        {
-            searchIt = std::find_if(i == 0 ? searchIt : std::next(searchIt), end, [&name](const auto& node) { return node->Name == name; });
-        }
-        EXT_ASSERT(searchIt != end) << "Can`t find " << name.c_str() << " in child nodes " << Parent.lock() ? Parent.lock()->Name : "";
-        return searchIt != end ? *searchIt : nullptr;
+        return m_childNodes.emplace_back(std::make_shared<SerializableNode>(name, parentNode));
     }
+    [[nodiscard]] std::shared_ptr<SerializableNode> GetChild(const std::string& name, const size_t& indexAmongTheSameNames = 0) noexcept
+    {
+        if (m_childNodesByNames.size() != m_childNodes.size())
+        {
+            m_childNodesByNames.clear();
+            for (const auto& child : m_childNodes)
+            {
+                m_childNodesByNames.emplace(std::pair(child->Name, child));
+            }
+        }
+        auto range = m_childNodesByNames.equal_range(name);
+        if (size_t(std::distance(range.first, range.second)) <= indexAmongTheSameNames)
+        {
+            EXT_ASSERT(false) << "Can`t find " << name.c_str() << " in child nodes " << Parent.lock() ? Parent.lock()->Name : "";
+            return nullptr;
+        }
+
+        return std::next(range.first, indexAmongTheSameNames)->second;
+    }
+    [[nodiscard]] std::shared_ptr<SerializableNode> GetChild(size_t index) const
+    {
+        EXT_ASSERT(index < m_childNodes.size());
+        return *std::next(m_childNodes.begin(), index);
+    }
+    [[nodiscard]] bool HasChilds() const
+    {
+        return !m_childNodes.empty();
+    }
+    [[nodiscard]] size_t CountChilds() const
+    {
+        return m_childNodes.size();
+    }
+
+private:
+    std::list<std::shared_ptr<SerializableNode>> m_childNodes;
+    std::multimap<std::string, std::shared_ptr<SerializableNode>> m_childNodesByNames;
 };
 
 } // namespace ext::serializable

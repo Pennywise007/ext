@@ -244,7 +244,7 @@ protected:
     {
         using ExtractedType = std::extract_value_type_v<Type>;
         Base::GetType()->reset();
-        if (!serializableTree->ChildNodes.empty())
+        if (serializableTree->HasChilds())
         {
             if (is_registered_serializable_object_v<ExtractedType> ||
                 is_based_on<ISerializableCollection, ExtractedType> ||
@@ -281,7 +281,7 @@ protected:
         {
             bool tryCreateDefault = false;
             if constexpr (is_based_on<ISerializableCollection, RealType> || is_registered_serializable_object_v<RealType>)  // TODO it was Type
-                tryCreateDefault = !serializableTree->ChildNodes.empty();
+                tryCreateDefault = serializableTree->HasChilds();
             else
                 tryCreateDefault = serializableTree->Value.value_or(SerializableValue::CreateNull()).Type != SerializableValue::ValueType::eNull;
 
@@ -381,12 +381,13 @@ protected:
 
         if constexpr (is_serializable_v<typename MapType::key_type>)
         {
-            m_serializableValues.resize(deserializableTree->ChildNodes.size());
+            m_serializableValues.resize(deserializableTree->CountChilds());
         }
         else
         {
-            for (const auto& child : deserializableTree->ChildNodes)
+            for (size_t i = 0, size = deserializableTree->CountChilds(); i < size; ++i)
             {
+                auto child = deserializableTree->GetChild(i);
                 EXT_EXPECT(child->Name == "Map pair");
 
                 const auto& keyChild = child->GetChild("Key");
@@ -494,12 +495,13 @@ protected:
 
         if constexpr (is_serializable_v<typename SetType::key_type>)
         {
-            m_serializableValues.resize(deserializableTree->ChildNodes.size());
+            m_serializableValues.resize(deserializableTree->CountChilds());
         }
         else
         {
-            for (const auto& child : deserializableTree->ChildNodes)
+            for (size_t i = 0, size = deserializableTree->CountChilds(); i < size; ++i)
             {
+                auto child = deserializableTree->GetChild(i);
                 EXT_EXPECT(child->Name == "Value") << "Expect set node name Value";
                 EXT_EXPECT(child->Value.has_value()) << "Expect set node with value not empty";
                 container->emplace(deserialize_value<typename SetType::key_type>(*child->Value));
@@ -568,8 +570,8 @@ protected:
         ArrayType* array = Base::GetType();
         array->clear();
         if constexpr (has_reserve_function_v<ArrayType>)
-            array->reserve(deserializableTree->ChildNodes.size());
-        for (auto count = deserializableTree->ChildNodes.size(); count != 0; --count)
+            array->reserve(deserializableTree->CountChilds());
+        for (auto count = deserializableTree->CountChilds(); count != 0; --count)
             array->emplace_back(create_default_value<typename ArrayType::value_type>());
     }
 // ISerializableCollection

@@ -11,6 +11,12 @@
 
 #include <ext/core/defines.h>
 
+#if defined(__GNUC__) // linux
+#define _Printf_format_string_
+#else
+#include <sal.h> // _Printf_format_string_
+#endif
+
 namespace std {
 
 template <typename CharType>
@@ -187,20 +193,21 @@ template <typename... Args>
 }
 
 #else // not c++ 20
-template <typename... Args>
-[[nodiscard]] std::string string_sprintf(const char* format, Args&&... args) EXT_THROWS()
+[[nodiscard]] inline std::string string_sprintf(_Printf_format_string_ const char* format, ...) EXT_THROWS()
 {
-    const int size_s = std::snprintf(nullptr, 0, format, std::forward<Args>(args)...) + 1; // + '\0'
+    va_list _ArgList;
+    va_start(_ArgList, format);
+    const int size_s = vsnprintf(nullptr, 0, format, _ArgList) + 1; // + '\0'
     if (size_s <= 0) { assert(false); throw std::runtime_error("Error during formatting."); }
     const auto size = static_cast<size_t>(size_s);
     std::string string(size, {});
-    std::snprintf(string.data(), size, format, std::forward<Args>(args)...);
+    vsnprintf(string.data(), size, format, _ArgList);
     string.pop_back(); // - '\0'
+    va_end(_ArgList);
     return string;
 }
 
-template <typename... Args>
-[[nodiscard]] std::wstring string_swprintf(const wchar_t* format, Args&&... args) EXT_THROWS()
+[[nodiscard]] inline std::wstring string_swprintf(_Printf_format_string_ const wchar_t* format, ...) EXT_THROWS()
 {
 #if defined(__GNUC__) // linux
     // swprintf doesn't work properly on linux, we will use string_sprintf
@@ -220,12 +227,15 @@ template <typename... Args>
     }
     return widen(string_sprintf(narrow(formatStr).c_str(), std::forward<Args>(args)...));
 #else
-    const int size_s = std::swprintf(nullptr, 0, format, std::forward<Args>(args)...) + 1; // + '\0'
+    va_list _ArgList;
+    va_start(_ArgList, format);
+    const int size_s = _vswprintf_c_l(nullptr, 0, format, NULL, _ArgList) + 1; // + '\0'
     if (size_s <= 0) { assert(false); throw std::runtime_error("Error during formatting."); }
     const auto size = static_cast<size_t>(size_s);
     std::wstring string(size, {});
-    std::swprintf(string.data(), size, format, std::forward<Args>(args)...);
+    _vswprintf_c_l(string.data(), size, format, NULL, _ArgList);
     string.pop_back(); // - '\0'
+    va_end(_ArgList);
     return string;
 #endif
 }

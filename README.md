@@ -1,6 +1,31 @@
 # ext library
 Header only C++17 extensions library
 
+# Build
+
+<details><summary>CMake build and run tests</summary>
+
+```ps
+mkdir build && cd build
+cmake .. -DEXT_BUILD_TESTS=ON
+cmake --build . --parallel
+# On windows
+.\tests\Debug\ext_tests.exe
+# On linux
+./tests/ext_tests
+```
+
+</details>
+
+<details><summary>Bazel build and run tests</summary>
+
+```ps
+bazel build //...
+bazel test //...
+```
+
+</details>
+
 # Dependency injection
 Usage simple with .Net [Microsoft.Extensions.DependencyInjection](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection/)
 <details><summary>Example</summary>
@@ -415,20 +440,3 @@ static_assert(33 == my_map.get_value(22));
 - [Auto setter on scope change](https://github.com/Pennywise007/ext/blob/main/include/ext/scope/auto_setter.h)
 - [Defer (GO analog)](https://github.com/Pennywise007/ext/blob/main/include/ext/scope/defer.h)
 - [Object holder](https://github.com/Pennywise007/ext/blob/main/include/ext/scope/on_exit.h#L70)
-
-# Build
-
-<details><summary>CMake build and run tests</summary>
-
-```ps
-mkdir build
-cd build
-cmake .. -DEXT_BUILD_TESTS=ON
-cmake --build . --parallel
-# On windows
-.\tests\Debug\ext_tests.exe
-# On linux
-./tests/ext_tests
-```
-
-</details>

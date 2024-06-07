@@ -48,12 +48,13 @@ struct constexpr_string {
     }
 
     template<std::size_t N2>
-    constexpr constexpr_string<N+N2-1> operator+(const constexpr_string<N2>& str) const {
+    constexpr constexpr_string<N+N2-1> operator+(const constexpr_string<N2>& str) const
+    {
         char resultText[N+N2-1] {};
-        for (int i = 0; i < N - 1; ++i) {
+        for (size_t i = 0; i < N - 1; ++i) {
             resultText[i] = value_[i];
         }
-        for (int i = 0; i < N2; ++i) {
+        for (size_t i = 0; i < N2; ++i) {
             resultText[N + i - 1] = str.value_[i];
         }
         return resultText;

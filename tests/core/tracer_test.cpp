@@ -121,9 +121,10 @@ TEST_F(TestFixture, tracing_date)
         localtime_r(&localTime, &traceTm);
 #endif
 
-        EXPECT_EQ(5, std::sscanf(text.c_str(), "%d:%d:%d\t%s\t%s",
+        EXPECT_EQ(5, sscanf_s(text.c_str(), "%d:%d:%d\t%s\t%s",
             &traceTm.tm_hour, &traceTm.tm_min, &traceTm.tm_sec,
-            level, traceText));
+            level, (unsigned int)sizeof(level),
+            traceText, (unsigned int)sizeof(traceText)));
         std::time_t traceTime = std::mktime(&traceTm);
 
         EXPECT_STREQ("Trace", traceText);
@@ -154,9 +155,11 @@ TEST_F(TestFixture, default_tracing)
         localtime_r(&localTime, &traceTm);
 #endif
 
-        EXPECT_EQ(7, std::sscanf(text.c_str(), "%d:%d:%d.%d\t%s\t%s\t%s",
+        EXPECT_EQ(7, sscanf_s(text.c_str(), "%d:%d:%d.%d\t%s\t%s\t%s",
             &traceTm.tm_hour, &traceTm.tm_min, &traceTm.tm_sec, &miliseconds,
-            threadId, level, traceText));
+            threadId, (unsigned int)sizeof(threadId),
+            level, (unsigned int)sizeof(level),
+            traceText, (unsigned int)sizeof(traceText)));
         std::time_t traceTime = std::mktime(&traceTm);
 
         EXPECT_STREQ("Text", traceText);

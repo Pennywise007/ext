@@ -20,6 +20,15 @@ TEST(constexpr_string_test, text_and_size) {
     static_assert(emptyText.size() == 0);
 }
 
+TEST(constexpr_string_test, empty_strings) {
+    constexpr constexpr_string emptyText = "";
+    constexpr constexpr_string nonEmptyText = "test";
+
+    static_assert(emptyText + nonEmptyText == std::string_view("test"));
+    static_assert(nonEmptyText + emptyText == std::string_view("test"));
+    static_assert(emptyText + emptyText == std::string_view(""));
+}
+
 TEST(constexpr_string_test, chars) {
     static_assert(textFirst[0] == 't');
     static_assert(textFirst[1] == 'e');

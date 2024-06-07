@@ -8,6 +8,7 @@
 #include <locale>
 #include <string>
 #include <sstream>
+#include <stdarg.h>
 
 #include <ext/core/defines.h>
 
@@ -197,13 +198,18 @@ template <typename... Args>
 {
     va_list _ArgList;
     va_start(_ArgList, format);
-    const int size_s = vsnprintf(nullptr, 0, format, _ArgList) + 1; // + '\0'
+    const int size_s = std::vsnprintf(nullptr, 0, format, _ArgList) + 1; // + '\0'
+    va_end(_ArgList);
+
     if (size_s <= 0) { assert(false); throw std::runtime_error("Error during formatting."); }
     const auto size = static_cast<size_t>(size_s);
     std::string string(size, {});
-    vsnprintf(string.data(), size, format, _ArgList);
-    string.pop_back(); // - '\0'
+
+    va_start(_ArgList, format);
+    std::vsnprintf(string.data(), size, format, _ArgList);
     va_end(_ArgList);
+
+    string.pop_back(); // - '\0'
     return string;
 }
 
@@ -225,17 +231,38 @@ template <typename... Args>
             }
         }
     }
-    return widen(string_sprintf(narrow(formatStr).c_str(), std::forward<Args>(args)...));
+    auto formatBuffer = narrow(formatStr);
+
+    va_list _ArgList;
+    va_start(_ArgList, format);
+    const int size_s = std::vsnprintf(nullptr, 0, formatBuffer.c_str(), _ArgList) + 1; // + '\0'
+    va_end(_ArgList);
+
+    if (size_s <= 0) { assert(false); throw std::runtime_error("Error during formatting."); }
+    const auto size = static_cast<size_t>(size_s);
+    std::string string(size, {});
+
+    va_start(_ArgList, format);
+    std::vsnprintf(string.data(), size, formatBuffer.c_str(), _ArgList);
+    va_end(_ArgList);
+
+    string.pop_back(); // - '\0'
+    return widen(string);
 #else
     va_list _ArgList;
     va_start(_ArgList, format);
     const int size_s = _vswprintf_c_l(nullptr, 0, format, NULL, _ArgList) + 1; // + '\0'
+    va_end(_ArgList);
+    
     if (size_s <= 0) { assert(false); throw std::runtime_error("Error during formatting."); }
     const auto size = static_cast<size_t>(size_s);
     std::wstring string(size, {});
+
+    va_start(_ArgList, format);
     _vswprintf_c_l(string.data(), size, format, NULL, _ArgList);
-    string.pop_back(); // - '\0'
     va_end(_ArgList);
+    
+    string.pop_back(); // - '\0'
     return string;
 #endif
 }

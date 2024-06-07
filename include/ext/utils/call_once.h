@@ -19,7 +19,7 @@ struct CallOnceGuard
 // Examples:
 //
 // CALL_ONCE(val = 9);
-// CALL_ONCE(( val = 9; val2 = 3; ));
-#define CALL_ONCE(expr)                                                 \
+// CALL_ONCE({ val = 9; val2 = 3; });
+#define CALL_ONCE(...)                                                  \
     if (!ext::call_once::CallOnceGuard<__COUNTER__>::CanCall()) {}      \
-    else { REMOVE_PARENTHESES(expr); }
+    else { __VA_ARGS__; }

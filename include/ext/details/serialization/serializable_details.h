@@ -645,7 +645,7 @@ protected:
     Field Type::* m_field;
 };
 
-template <class Type, typename BaseType>
+template <class Type, class BaseType>
 struct SerializableBaseInfo : ISerializableBaseInfo
 {
     static_assert(is_based_on<BaseType, Type>);
@@ -665,13 +665,14 @@ protected:
     {
         EXT_ASSERT(index < CountFields());
         BaseType* object = ext::get_singleton<SerializableObjectDescriptor<Type>>().
-            ConvertToType<BaseType>(reinterpret_cast<Type*>(objectPointer));
+            template ConvertToType<BaseType>(reinterpret_cast<Type*>(objectPointer));
 
+        const SerializableObjectDescriptor<BaseType>& baseDescriptor = ext::get_singleton<SerializableObjectDescriptor<BaseType>>();
         if constexpr (is_registered_serializable_object_v<BaseType>)
-            return ext::get_singleton<SerializableObjectDescriptor<BaseType>>().GetSerializable(*object)->Get(index);
+            return baseDescriptor.GetSerializable(*object)->Get(index);
         else
         {
-            auto* ser = ext::get_singleton<SerializableObjectDescriptor<BaseType>>().ConvertToType<ISerializable>(object);
+            auto* ser = baseDescriptor.template ConvertToType<ext::serializable::ISerializable>(object);
             return get_as_serializable<BaseType>(ser->GetName(), object);
         }
     }
@@ -714,7 +715,7 @@ template<class Type>
 }
 
 template<class Type>
-[[nodiscard]] std::shared_ptr<ISerializableCollection> SerializableObjectDescriptor<Type>::GetSerializable(Type& object, const char* customName)
+[[nodiscard]] std::shared_ptr<ISerializableCollection> SerializableObjectDescriptor<Type>::GetSerializable(Type& object, const char* customName) const
 {
     if (customName == nullptr)
         customName = m_name;
@@ -724,7 +725,7 @@ template<class Type>
 
 template<class Type>
 template<class ConvertedType>
-[[nodiscard]] ConvertedType* SerializableObjectDescriptor<Type>::ConvertToType(Type* object)
+[[nodiscard]] ConvertedType* SerializableObjectDescriptor<Type>::ConvertToType(Type* object) const
 {
     return static_cast<ConvertedType*>(object);
 }

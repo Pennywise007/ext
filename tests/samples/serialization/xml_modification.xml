@@ -57,7 +57,7 @@
     </Collection>
     <Field Name="testField" Value="true" Type="2" />
     <Field Name="Name" Value="test" Type="1" />
-    <Collection Name="struct SerializableInterfaceImpl">
+    <Collection Name="SerializableInterfaceImpl">
         <Field Name="flagTest" Value="false" Type="2" />
     </Collection>
     <Collection Name="sharedSerializableInterface">

@@ -56,7 +56,7 @@
     },
     "testField": true,
     "Name": "test",
-    "struct SerializableInterfaceImpl": {
+    "SerializableInterfaceImpl": {
         "flagTest": false
     },
     "sharedSerializableInterface": {

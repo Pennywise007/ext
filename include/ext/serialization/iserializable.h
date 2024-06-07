@@ -218,10 +218,10 @@ public:
     // Get object serializable fields count
     [[nodiscard]] size_t GetFieldsCount() const;
     // Get serializable collection with all registered fields
-    [[nodiscard]] std::shared_ptr<ISerializableCollection> GetSerializable(Type& object, const char* customName = nullptr);
+    [[nodiscard]] std::shared_ptr<ISerializableCollection> GetSerializable(Type& object, const char* customName = nullptr) const;
     // Conversion object function, allows to avoid private inheritance problems
     template <class ConvertedType>
-    [[nodiscard]] ConvertedType* ConvertToType(Type* pointer);
+    [[nodiscard]] ConvertedType* ConvertToType(Type* pointer) const;
 
 private:
     std::list<std::shared_ptr<details::ISerializableBaseInfo>> m_baseSerializableClasses;

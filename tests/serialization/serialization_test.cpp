@@ -373,11 +373,11 @@ TEST(serialization_test, collection_as_a_field_with_private_inheritance)
 
     std::wstring data;
     SerializeObject(Factory::TextSerializer(data), object);
-    EXPECT_STREQ(L"\"class GlobalObject\": {\n    \"struct SerializableInterfaceImpl\": {\n        \"flagTest\": true\n    },\n    \"collection\": {\n        \"baseObjectVal\": 0,\n        \"privateObjectVal\": 0\n    }\n}\n", data.c_str());
+    EXPECT_STREQ(L"\"GlobalObject\": {\n    \"SerializableInterfaceImpl\": {\n        \"flagTest\": true\n    },\n    \"collection\": {\n        \"baseObjectVal\": 0,\n        \"privateObjectVal\": 0\n    }\n}\n", data.c_str());
 
     object.Change();
     SerializeObject(Factory::TextSerializer(data), object);
-    EXPECT_STREQ(L"\"class GlobalObject\": {\n    \"struct SerializableInterfaceImpl\": {\n        \"flagTest\": false\n    },\n    \"collection\": {\n        \"baseObjectVal\": -1,\n        \"privateObjectVal\": -100\n    }\n}\n", data.c_str());
+    EXPECT_STREQ(L"\"GlobalObject\": {\n    \"SerializableInterfaceImpl\": {\n        \"flagTest\": false\n    },\n    \"collection\": {\n        \"baseObjectVal\": -1,\n        \"privateObjectVal\": -100\n    }\n}\n", data.c_str());
 
     GlobalObject deserializationResult;
     DeserializeObject(Factory::TextDeserializer(data), deserializationResult);

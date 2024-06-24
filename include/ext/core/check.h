@@ -13,7 +13,7 @@ namespace ext::check {
 
 struct CheckFailedException : ::ext::exception
 {
-    explicit CheckFailedException(source_location&& source, const char* expression) noexcept
+    explicit CheckFailedException(std::source_location&& source, const char* expression) noexcept
         : exception(std::move(source), "", "CheckFailedException")
         , m_expression(expression)
     {}
@@ -28,8 +28,8 @@ struct CheckFailedException : ::ext::exception
 
 } // namespace ext::check
 
-// Checks expression via check function, if check failes - throw exception
-// Example:  EXT_CHECK_RESULT(val, _result == 0, ::ext::check::CheckFailedException(__FILE__, __LINE__, "Failed")) << "Text";
+// Checks expression via check function, if check fails - throw exception
+// Example:  EXT_CHECK_RESULT(val, _result == 0, ::ext::check::CheckFailedException(std::source_location::current(), "Failed")) << "Text";
 #define EXT_CHECK_RESULT(expr, check_func, exception)                       \
     for (auto &&__result = (expr); !(check_func);)                          \
         throw exception
@@ -37,7 +37,7 @@ struct CheckFailedException : ::ext::exception
 // Checks boolean expression, in case of fail - throw CheckFailedException
 // Example:  EXT_CHECK(val == true) << "Check failed";
 #define EXT_CHECK(bool_expression)      \
-    EXT_CHECK_RESULT(bool_expression, !!(__result), ::ext::check::CheckFailedException(EXT_SRC_LOCATION, #bool_expression))
+    EXT_CHECK_RESULT(bool_expression, !!(__result), ::ext::check::CheckFailedException(std::source_location::current(), #bool_expression))
 
 /*
 Checks expression via check function, if check fails:
@@ -45,7 +45,7 @@ Checks expression via check function, if check fails:
 * throw exception
 
 Example:
-EXT_EXPECT_RESULT(val, _result == 0, ::ext::check::CheckFailedException(__FILE__, __LINE__, "Value check failed")) << "Check failed";
+EXT_EXPECT_RESULT(val, _result == 0, ::ext::check::CheckFailedException(std::source_location::current(), "Value check failed")) << "Check failed";
 */
 #define EXT_EXPECT_RESULT(expr, check_func, exception)                              \
     for (auto &&__result = (expr); !(check_func);)                                  \
@@ -66,7 +66,7 @@ Example:
 EXT_EXPECT(val == true) << "Check failed";
 */
 #define EXT_EXPECT(bool_expression)     \
-    EXT_EXPECT_RESULT(bool_expression, !!(__result), ::ext::check::CheckFailedException(EXT_SRC_LOCATION, #bool_expression))
+    EXT_EXPECT_RESULT(bool_expression, !!(__result), ::ext::check::CheckFailedException(std::source_location::current(), #bool_expression))
 
 /*
 Checks boolean expression or HRESULT in DEBUG, if check fails:

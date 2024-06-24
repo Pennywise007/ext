@@ -11,7 +11,7 @@ catch (...)
 {	
 	try
 	{
-		std::throw_with_nested(ext::exception(EXT_SRC_LOCATION, "Job failed")); 
+		std::throw_with_nested(ext::exception(std::source_location::current(), "Job failed")); 
 	}
 	catch (...)
 	{

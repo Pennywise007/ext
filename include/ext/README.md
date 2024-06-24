@@ -250,7 +250,7 @@ Can be called for scope call function check. Trace start and end scope with the 
 </details>
 
 # Check code execution and handling errors
-<details><summary>Allows to add simple checks inside executing code and manage ezxceptions</summary>
+<details><summary>Allows to add simple checks inside executing code and manage exceptions</summary>
 
 ```c++
 #include <ext/core/check.h>
@@ -260,7 +260,7 @@ Can be called for scope call function check. Trace start and end scope with the 
 **EXT_CHECK**(bool_expression) << "Text";
 ```c++
 if (!bool_expression)
-	throw ::ext::check::CheckFailedException(EXT_SRC_LOCATION, #bool_expression "Text"));
+	throw ::ext::check::CheckFailedException(std::source_location::current(), #bool_expression "Text");
 ```
 
 **EXT_EXPECT** - if expression is false:
@@ -275,7 +275,7 @@ if (!bool_expression)
 		DebugBreak();                                                   
 	else                                                                
 		EXT_DUMP_CREATE();
-	throw ::ext::check::CheckFailedException(EXT_SRC_LOCATION, #bool_expression "Text"));
+	throw ::ext::check::CheckFailedException(std::source_location::current(), #bool_expression "Text");
 }
 ```
 
@@ -313,7 +313,7 @@ catch (...)
 {	
 	try
 	{
-		std::throw_with_nested(ext::exception(EXT_SRC_LOCATION, "Job failed")); 
+		std::throw_with_nested(ext::exception(std::source_location::current(), "Job failed")); 
 	}
 	catch (...)
 	{
@@ -389,7 +389,7 @@ Compile time extension for strings, allow to combine and check text in compile t
 ```c++
 #include <ext/constexpr/map.h>
 
-constexpr ext::constexpr_map my_map = {{std::pair{11, 10}, {std::pair{22, 33}}}};
+constexpr ext::constexpr_map my_map = {std::pair{11, 10}, {std::pair{22, 33}}};
 static_assert(my_map.size() == 2);
 
 static_assert(10 == my_map.get_value(11));

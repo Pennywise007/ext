@@ -1,5 +1,5 @@
 # Check code execution and handling errors
-<details><summary>Allows to add simple checks inside executing code and manage ezxceptions</summary>
+<details><summary>Allows to add simple checks inside executing code and manage exceptions</summary>
 
 ```c++
 #include <ext/core/check.h>
@@ -9,7 +9,7 @@
 **EXT_CHECK**(bool_expression) << "Text";
 ```c++
 if (!bool_expression)
-	throw ::ext::check::CheckFailedException(EXT_SRC_LOCATION, #bool_expression "Text"));
+	throw ::ext::check::CheckFailedException(std::source_location::current(), #bool_expression "Text");
 ```
 
 **EXT_EXPECT** - if expression is false:
@@ -24,7 +24,7 @@ if (!bool_expression)
 		DebugBreak();                                                   
 	else                                                                
 		EXT_DUMP_CREATE();
-	throw ::ext::check::CheckFailedException(EXT_SRC_LOCATION, #bool_expression "Text"));
+	throw ::ext::check::CheckFailedException(std::source_location::current(), #bool_expression "Text");
 }
 ```
 

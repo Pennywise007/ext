@@ -46,8 +46,8 @@ namespace result {
 
 struct CheckResultFailedException : ::ext::exception
 {
-    explicit CheckResultFailedException(ext::source_location&& srcLocation, ::ext::ResultCodes result) noexcept
-        : exception(std:move(srcLocation), "", "CheckResultFailedException")
+    explicit CheckResultFailedException(std::source_location&& srcLocation, ::ext::ResultCodes result) noexcept
+        : exception(std::move(srcLocation), "", "CheckResultFailedException")
         , m_result(result)
     {}
 
@@ -107,7 +107,7 @@ inline ResultCodes ManageExceptionResultCode(const CharType* prefixText) noexcep
 // Checks ext::result expression, in case of fail - throw CheckResultFailedException
 // Example:  EXT_CHECK_SUCCEEDED(ext::ResultCode) << "Check failed";
 #define EXT_CHECK_SUCCEEDED(expr)       \
-    EXT_CHECK_RESULT(expr, EXT_SUCCEEDED(_result), ::ext::result::CheckResultFailedException(EXT_SRC_LOCATION, _result))
+    EXT_CHECK_RESULT(expr, EXT_SUCCEEDED(_result), ::ext::result::CheckResultFailedException(std::source_location::current(), _result))
 
 /*
 Checks ext::result expression,  if check failes:
@@ -118,7 +118,7 @@ Example:
 EXT_EXPECT_SUCCEEDED(ext::result) << "Check failed";
 */
 #define EXT_EXPECT_SUCCEEDED(expr)      \
-    EXT_EXPECT_RESULT(expr, EXT_SUCCEEDED(_result), ::ext::result::CheckResultFailedException(EXT_SRC_LOCATION, _result))
+    EXT_EXPECT_RESULT(expr, EXT_SUCCEEDED(_result), ::ext::result::CheckResultFailedException(std::source_location::current(), _result))
 
 inline constexpr [[nodiscard]] bool EXT_FAILED(const ext::ResultCodes res) noexcept    { return (res < 0); }
 inline constexpr [[nodiscard]] bool EXT_SUCCEEDED(const ext::ResultCodes res) noexcept { return (res >= 0); }

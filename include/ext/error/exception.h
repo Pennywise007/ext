@@ -15,7 +15,7 @@ catch (...)
 {
     try
     {
-        std::throw_with_nested(ext::exception(EXT_SRC_LOCATION, "Job failed"));
+        std::throw_with_nested(ext::exception(std::source_location::current(), "Job failed"));
     }
     catch (...)
     {
@@ -36,42 +36,15 @@ catch (...)
 
 #include <ext/core/defines.h>
 #include <ext/core/tracer.h>
+#include <ext/std/source_location.h>
 #include <ext/std/string.h>
 #include <ext/std/type_traits.h>
 
 namespace ext {
 
-// todo: remove source_location when c++20 will be available
-class source_location
-{
-public:
-    constexpr source_location() noexcept = default;
-
-    constexpr source_location(const char* file, int line) noexcept
-        : m_fileName(file)
-        , m_fileLine(line)
-    {}
-
-    std::string to_string() const noexcept
-    {
-        return std::string_sprintf("\'%s\'(%d)", m_fileName, m_fileLine);
-    }
-
-    constexpr bool exist() const noexcept
-    {
-        return m_fileName != nullptr;
-    }
-
-private:
-    const char* m_fileName = nullptr;
-    const int m_fileLine = 0;
-};
-
-#define EXT_SRC_LOCATION ext::source_location(__FILE__, __LINE__)
-
 struct exception : std::exception
 {
-    explicit exception(source_location&& source, const char* description = "", const char* exceptionType = "Exception") noexcept
+    explicit exception(std::source_location&& source, const char* description = "", const char* exceptionType = "Exception") noexcept
         : m_exceptionType(exceptionType)
         , m_description(description)
         , m_source(std::move(source))
@@ -100,7 +73,7 @@ struct exception : std::exception
 
         std::string text = std::string_sprintf("%s %s%s", m_description.c_str(), m_exceptionType, externalText.c_str());
         if (m_source.has_value())
-            text += " At " + m_source->to_string() + ".";
+            text += " At " + std::string_sprintf("\'%s\'(%u)", m_source->file_name(), m_source->line()) + ".";
         std::string_trim_all(text);
         return text;
     }
@@ -129,7 +102,7 @@ private:
     const char* m_exceptionType;
     std::string m_description;
 
-    std::optional<source_location> m_source;
+    std::optional<std::source_location> m_source;
 };
 
 /*

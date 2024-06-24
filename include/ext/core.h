@@ -27,7 +27,7 @@ struct numbers_formatter : std::numpunct<T>
 // initialization for ext library(not necessary, but useful)
 inline void Init()
 {
-    // for Russian output in concole
+    // for Russian output in console
     setlocale(LC_ALL, "Russian");
 
     // install all languages support in stream 

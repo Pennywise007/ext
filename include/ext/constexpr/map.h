@@ -4,7 +4,7 @@
 Implementation of the map which can be used in a compile time.
 Example:
 
-    constexpr ext::constexpr_map my_map = {{std::pair{11, 10}, {std::pair{22, 33}}}};
+    constexpr ext::constexpr_map my_map = {std::pair{11, 10}, {std::pair{22, 33}}};
     static_assert(my_map.size() == 2);
 
     static_assert(10 == my_map.get_value(11));
@@ -73,7 +73,11 @@ struct constexpr_map : std::array<std::pair<Key, Value>, Size>
     template <typename _Up>
     [[nodiscard]] constexpr Value get_value_or(const Key& key, _Up&& notFoundValue) const noexcept(std::is_nothrow_move_constructible_v<Value>)
     {
-        return get_value_or<_Up, 0>(key, std::forward<_Up>(notFoundValue));
+        static_assert(std::is_move_constructible_v<Value>);
+        static_assert(std::is_convertible_v<_Up&&, Value>);
+
+        auto it = find_key_index(key);
+        return it.valid() ? get_value(it) : std::forward<_Up>(notFoundValue);
     }
 
     // Get key by value, throws out_of_range exception if value not found
@@ -84,76 +88,74 @@ struct constexpr_map : std::array<std::pair<Key, Value>, Size>
     template <typename _Up>
     [[nodiscard]] constexpr Key get_key_or(const Value& value, _Up&& notFoundValue) const noexcept(std::is_nothrow_move_constructible_v<Key>)
     {
-        return get_key_or<_Up, 0>(value, std::forward<_Up>(notFoundValue));
-    }
-
-    // Checks if duplicate keys exist
-    [[nodiscard]] constexpr bool contain_duplicate_keys() const noexcept { return contain_duplicate_keys<0>(); }
-
-    // Find key index in array, if not found - returns kNotFoundIndex
-    [[nodiscard]] constexpr search_index find_key_index(const Key& key) const noexcept { return find_key_index<0>(key); }
-    // Find value index in array, if not found - returns kNotFoundIndex
-    [[nodiscard]] constexpr search_index find_value_index(const Value& value) const noexcept { return find_value_index<0>(value); }
-
- private:
-    template <std::size_t StartSearchIndex>
-    [[nodiscard]] constexpr bool contain_duplicate_keys() const noexcept
-    {
-        if constexpr (StartSearchIndex >= Size)
-            return false;
-        else
-            return find_key_index<StartSearchIndex + 1>(BaseArray::operator[](StartSearchIndex).first).valid()
-                        ? true
-                        : contain_duplicate_keys<StartSearchIndex + 1>();
-    }
-
-    template <typename _Up, std::size_t StartSearchIndex>
-    [[nodiscard]] constexpr Value get_value_or(const Key& key, _Up&& notFoundValue) const noexcept(std::is_nothrow_move_constructible_v<Value>)
-    {
         static_assert(std::is_move_constructible_v<Value>);
         static_assert(std::is_convertible_v<_Up&&, Value>);
 
-        if constexpr (StartSearchIndex >= Size)
-            return Value(std::forward<_Up>(notFoundValue));
-        else
-            return (BaseArray::operator[](StartSearchIndex).first == key)
-                    ? BaseArray::operator[](StartSearchIndex).second
-                    : get_value_or<_Up, StartSearchIndex + 1>(key, std::forward<_Up>(notFoundValue));
+        auto it = find_value_index(value);
+        return it.valid() ? get_key(it) : std::forward<_Up>(notFoundValue);
     }
 
-    template <typename _Up, std::size_t StartSearchIndex>
-    [[nodiscard]] constexpr Key get_key_or(const Value& value, _Up&& notFoundValue) const noexcept(std::is_nothrow_move_constructible_v<Key>)
+    // Checks if duplicate keys exist
+    [[nodiscard]] constexpr bool contain_duplicate_keys() const noexcept 
     {
-        static_assert(std::is_move_constructible_v<Key>);
-        static_assert(std::is_convertible_v<_Up&&, Key>);
-
-        if constexpr (StartSearchIndex >= Size)
-            return Value(std::forward<_Up>(notFoundValue));
-        else
-            return (BaseArray::operator[](StartSearchIndex).second == value)
-                    ? BaseArray::operator[](StartSearchIndex).first
-                    : get_key_or<_Up, StartSearchIndex + 1>(value, std::forward<_Up>(notFoundValue));
+        for (size_t i = 0; i < Size; ++i)
+        {
+            for (size_t j = i + 1; j < Size; ++j)
+            {
+                if (BaseArray::operator[](i).first == BaseArray::operator[](j).first)
+                    return true;
+            }
+        }
+        return false; 
     }
 
-    template <std::size_t StartSearchIndex>
+    // Checks if duplicate values exist
+    [[nodiscard]] constexpr bool contain_duplicate_values() const noexcept 
+    {
+        for (size_t i = 0; i < Size; ++i)
+        {
+            for (size_t j = i + 1; j < Size; ++j)
+            {
+                if (BaseArray::operator[](i).second == BaseArray::operator[](j).second)
+                    return true;
+            }
+        }
+        return false; 
+    }
+
+    // Find key index in array, if not found - returns kNotFoundIndex
     [[nodiscard]] constexpr search_index find_key_index(const Key& key) const noexcept
     {
-        if constexpr (StartSearchIndex >= Size)
-            return search_index::not_found_index();
-        else
-            return (BaseArray::operator[](StartSearchIndex).first == key)
-                ? search_index(StartSearchIndex)
-                : find_key_index<StartSearchIndex + 1>(key);
+        for (size_t i = 0; i < Size; ++i)
+        {
+            if (BaseArray::operator[](i).first == key)
+                return search_index(i);
+        }
+        return search_index::not_found_index();
+    }
+    // Find value index in array, if not found - returns kNotFoundIndex
+    [[nodiscard]] constexpr search_index find_value_index(const Value& value) const noexcept
+    {
+        for (size_t i = 0; i < Size; ++i)
+        {
+            if (BaseArray::operator[](i).second == value)
+                return search_index(i);
+        }
+        return search_index::not_found_index();
     }
 
-    template <std::size_t StartSearchIndex>
-    [[nodiscard]] constexpr search_index find_value_index(const Value& value) const noexcept {
-        if constexpr (StartSearchIndex >= Size)
-            return search_index::not_found_index();
-        else
-            return (BaseArray::operator[](StartSearchIndex).second == value)
-                ? search_index(StartSearchIndex)
-                : find_value_index<StartSearchIndex + 1>(value);
+ private:
+    [[nodiscard]] constexpr static bool contain_duplicate_keys(const BaseArray& array) noexcept 
+    {
+        for (size_t i = 0; i < Size; ++i)
+        {
+            for (size_t j = i + 1; j < Size; ++j)
+            {
+                if (array.operator[](i).first == array.operator[](j).first)
+                    return true;
+            }
+        }
+        return false;
     }
 
     template <std::size_t... Is>

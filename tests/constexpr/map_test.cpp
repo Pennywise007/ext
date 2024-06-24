@@ -109,11 +109,13 @@ TEST(constexpr_map_test, get_key_or) {
 }
 
 TEST(constexpr_map_test, contains_duplicate_keys) {
-    constexpr ext::constexpr_map arrayWithoutDuplicateKeys = {{std::pair{1, 2}, std::pair{2, 3}}};
-    constexpr ext::constexpr_map arrayWithDuplicateKeys = {{std::pair{1, 2}, std::pair{1, 3}}};
+    constexpr ext::constexpr_map arrayWithoutDuplicateValues = {{std::pair{1, 2}, std::pair{2, 3}}};
+    constexpr ext::constexpr_map arrayWithDuplicateKeys = {{std::pair{1, 2}, std::pair{1, 2}}};
 
-    static_assert(!arrayWithoutDuplicateKeys.contain_duplicate_keys());
+    static_assert(!arrayWithoutDuplicateValues.contain_duplicate_keys());
+    static_assert(!arrayWithoutDuplicateValues.contain_duplicate_values());
     static_assert(arrayWithDuplicateKeys.contain_duplicate_keys());
+    static_assert(arrayWithDuplicateKeys.contain_duplicate_values());
 }
 
 TEST(constexpr_map_test, find_key_index) {

@@ -25,7 +25,6 @@
     "listPair": {
     },
     "testField": true,
-    "Name": "test",
     "SerializableInterfaceImpl": {
         "flagTest": true
     },

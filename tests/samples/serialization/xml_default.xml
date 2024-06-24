@@ -18,7 +18,6 @@
     </Collection>
     <Collection Name="listPair" />
     <Field Name="testField" Value="true" Type="2" />
-    <Field Name="Name" Value="test" Type="1" />
     <Collection Name="SerializableInterfaceImpl">
         <Field Name="flagTest" Value="true" Type="2" />
     </Collection>

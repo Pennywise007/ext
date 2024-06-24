@@ -22,6 +22,7 @@
 #include <ext/std/string.h>
 
 #include <ext/types/utils.h>
+#include <ext/utils/reflection.h>
 
 namespace ext::serializable {
 namespace details {
@@ -79,9 +80,6 @@ inline constexpr bool is_iserializable_v = is_based_on<ISerializable, T>;
 template<class T>
 inline constexpr bool is_serializable_v = is_iserializable_v<T> || is_registered_serializable_object_v<T>;
 
-// Declare check reserve and get member function
-DECLARE_CHECK_FUNCTION(reserve);
-
 template <class Type>
 std::shared_ptr<ISerializable> get_as_serializable(const std::string& name, Type* type);
 
@@ -97,6 +95,78 @@ ValueType create_default_value()
         static_assert(!std::is_pointer_v<ValueType>, "Can`t create default value for ordinary pointer!");
         return {};
     }
+}
+
+template <class Type>
+void call_on_serialization_start(Type* pointer)
+{
+    if (pointer == nullptr)
+        return;
+
+    using ExtractedType = std::extract_value_type_v<Type>;
+    if constexpr (is_registered_serializable_object_v<ExtractedType>)
+        ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>().CallOnSerializationStart(pointer);
+    else if constexpr (details::is_iserializable_v<ExtractedType>)
+    {
+        if constexpr (HAS_FUNCTION(ExtractedType, OnSerializationStart))
+            pointer->OnSerializationStart();
+    }
+    else
+        static_assert(std::is_same_v<void, ExtractedType>, "Unknown object to call serialization start");
+}
+
+template <class Type>
+void call_on_serialization_end(Type *pointer)
+{
+    if (pointer == nullptr)
+        return;
+
+    using ExtractedType = std::extract_value_type_v<Type>;
+    if constexpr (is_registered_serializable_object_v<ExtractedType>)
+        ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>().CallOnSerializationEnd(pointer);
+    else if constexpr (details::is_iserializable_v<ExtractedType>)
+    {
+        if constexpr (HAS_FUNCTION(ExtractedType, OnSerializationEnd))
+            pointer->OnSerializationEnd();
+    }
+    else
+        static_assert(std::is_same_v<void, ExtractedType>, "Unknown object to call serialization end");
+}
+
+template <class Type>
+void call_on_deserialization_start(Type *pointer, std::shared_ptr<SerializableNode>& serializableTree)
+{
+    if (pointer == nullptr)
+        return;
+
+    using ExtractedType = std::extract_value_type_v<Type>;
+    if constexpr (is_registered_serializable_object_v<ExtractedType>)
+        ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>().CallOnDeserializationStart(pointer, serializableTree);
+    else if constexpr (details::is_iserializable_v<ExtractedType>)
+    {
+        if constexpr (HAS_FUNCTION(ExtractedType, OnDeserializationStart))
+            pointer->OnDeserializationStart(serializableTree);
+    }
+    else
+        static_assert(std::is_same_v<void, ExtractedType>, "Unknown object to call serialization end");
+}
+
+template <class Type>
+void call_on_deserialization_end(Type *pointer)
+{
+    if (pointer == nullptr)
+        return;
+
+    using ExtractedType = std::extract_value_type_v<Type>;
+    if constexpr (is_registered_serializable_object_v<ExtractedType>)
+        ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>().CallOnDeserializationEnd(pointer);
+    else if constexpr (details::is_iserializable_v<ExtractedType>)
+    {
+        if constexpr (HAS_FUNCTION(ExtractedType, OnDeserializationEnd))
+            pointer->OnDeserializationEnd();
+    }
+    else
+        static_assert(std::is_same_v<void, ExtractedType>, "Unknown object to call serialization end");
 }
 
 // Wrapper around Type object to convert it to the ISerializableCollection to create ability to iterate over fields
@@ -116,6 +186,13 @@ struct SerializableObject : ISerializableCollection
 private:
 // ISerializable
     [[nodiscard]] const char* GetName() const noexcept override { return m_name.c_str(); }
+    void OnSerializationStart() override { call_on_serialization_start(&m_object); }
+    void OnSerializationEnd() override { call_on_serialization_end(&m_object); }
+    void OnDeserializationStart(std::shared_ptr<SerializableNode>& serializableTree) override {
+        call_on_deserialization_start(&m_object, serializableTree);
+    }
+    void OnDeserializationEnd() override { call_on_deserialization_end(&m_object); }
+
 // ISerializableCollection
     [[nodiscard]] size_t Size() const noexcept override
     {
@@ -196,7 +273,10 @@ protected:
         EXT_DUMP_IF(!m_field);
         return m_field ? m_field->GetName() : nullptr;
     }
-    void PrepareToDeserialize(std::shared_ptr<SerializableNode>& deserializableTree) EXT_THROWS() override { EXT_EXPECT(m_field); m_field->PrepareToDeserialize(deserializableTree); }
+    void OnSerializationStart() EXT_THROWS() override { EXT_EXPECT(m_field); m_field->OnSerializationStart(); }
+    void OnSerializationEnd() EXT_THROWS() override { EXT_EXPECT(m_field); m_field->OnSerializationEnd(); }
+    void OnDeserializationStart(std::shared_ptr<SerializableNode>& deserializableTree) override { EXT_EXPECT(m_field); m_field->OnDeserializationStart(deserializableTree); }
+    void OnDeserializationEnd() EXT_THROWS() override { EXT_EXPECT(m_field); m_field->OnDeserializationEnd(); }
 // ISerializableField
     [[nodiscard]] SerializableValue SerializeValue() const override { EXT_EXPECT(m_field); return m_field->SerializeValue(); }
     void DeserializeValue(const SerializableValue& value) override { EXT_EXPECT(m_field); m_field->DeserializeValue(value); }
@@ -223,7 +303,11 @@ protected:
         EXT_DUMP_IF(!m_collection);
         return m_collection ? m_collection->GetName() : nullptr;
     }
-    void PrepareToDeserialize(std::shared_ptr<SerializableNode>& deserializableTree) EXT_THROWS() override { EXT_EXPECT(m_collection); m_collection->PrepareToDeserialize(deserializableTree); }
+    
+    void OnSerializationStart() EXT_THROWS() override { EXT_EXPECT(m_collection); m_collection->OnSerializationStart(); }
+    void OnSerializationEnd() EXT_THROWS() override { EXT_EXPECT(m_collection); m_collection->OnSerializationEnd(); }
+    void OnDeserializationStart(std::shared_ptr<SerializableNode>& deserializableTree) override { EXT_EXPECT(m_collection); m_collection->OnDeserializationStart(deserializableTree); }
+    void OnDeserializationEnd() EXT_THROWS() override { EXT_EXPECT(m_collection); m_collection->OnDeserializationEnd(); }
 // ISerializableCollection
     [[nodiscard]] size_t Size() const noexcept override { EXT_DUMP_IF(!m_collection); return m_collection ? m_collection->Size() : 0; }
     [[nodiscard]] std::shared_ptr<ISerializable> Get(const size_t& index) const override { EXT_EXPECT(m_collection); return m_collection->Get(index); }
@@ -240,7 +324,7 @@ struct SerializableOptional : SerializableBase<ISerializableOptional, Type>
     SerializableOptional(const std::string& name, Type* typePointer) : Base(name, typePointer) {}
 protected:
 // ISerializable
-    void PrepareToDeserialize(std::shared_ptr<SerializableNode>& serializableTree) EXT_THROWS() override
+    void OnDeserializationStart(std::shared_ptr<SerializableNode>& serializableTree) override
     {
         using ExtractedType = std::extract_value_type_v<Type>;
         Base::GetType()->reset();
@@ -256,6 +340,7 @@ protected:
         else if (serializableTree->Value.value_or(SerializableValue::CreateNull()).Type != SerializableValue::ValueType::eNull)
             Base::GetType()->emplace(create_default_value<ExtractedType>());
     }
+
 // ISerializableOptional
     [[nodiscard]] std::shared_ptr<ISerializable> Get() const override
     {
@@ -273,11 +358,27 @@ struct SerializableValueProxy : SerializableBase<ISerializableOptional, Type>
 
 protected:
 // ISerializable
-    void PrepareToDeserialize(std::shared_ptr<SerializableNode>& serializableTree) EXT_THROWS() override
+    void OnSerializationStart() override
     {
         using RealType = std::extract_value_type_v<Type>;
-        if constexpr (std::is_same_v<std::unique_ptr<RealType>, Type> ||
-                      std::is_same_v<std::shared_ptr<RealType>, Type>)
+        if constexpr (std::is_same_v<std::unique_ptr<RealType>, Type> || std::is_same_v<std::shared_ptr<RealType>, Type>)
+            call_on_serialization_start(Base::GetType()->get());
+        else
+            call_on_serialization_start(Base::GetType());
+    }
+    void OnSerializationEnd() override
+    {
+        using RealType = std::extract_value_type_v<Type>;
+        if constexpr (std::is_same_v<std::unique_ptr<RealType>, Type> || std::is_same_v<std::shared_ptr<RealType>, Type>)
+            call_on_serialization_end(Base::GetType()->get());
+        else
+            call_on_serialization_end(Base::GetType());
+    }
+
+    void OnDeserializationStart(std::shared_ptr<SerializableNode>& serializableTree) override
+    {
+        using RealType = std::extract_value_type_v<Type>;
+        if constexpr (std::is_same_v<std::unique_ptr<RealType>, Type> || std::is_same_v<std::shared_ptr<RealType>, Type>)
         {
             bool tryCreateDefault = false;
             if constexpr (is_based_on<ISerializableCollection, RealType> || is_registered_serializable_object_v<RealType>)  // TODO it was Type
@@ -292,13 +393,23 @@ protected:
                 else
                     *Base::GetType() = create_default_value<Type>();
 
-                if constexpr (!is_registered_serializable_object_v<RealType>)
-                    Base::GetType()->get()->PrepareToDeserialize(serializableTree);
+                call_on_deserialization_start(Base::GetType()->get(), serializableTree);
             }
             else
                 *Base::GetType() = nullptr;
         }
+        else
+            call_on_deserialization_start(Base::GetType(), serializableTree);
     }
+    void OnDeserializationEnd() override
+    {
+        using RealType = std::extract_value_type_v<Type>;
+        if constexpr (std::is_same_v<std::unique_ptr<RealType>, Type> || std::is_same_v<std::shared_ptr<RealType>, Type>)
+            call_on_deserialization_end(Base::GetType()->get());
+        else
+            call_on_deserialization_end(Base::GetType());
+    }
+
 // ISerializableOptional
     [[nodiscard]] std::shared_ptr<ISerializable> Get() const override
     {
@@ -374,11 +485,13 @@ struct SerializableMap : SerializableBase<ISerializableCollection, MapType>
     SerializableMap(const std::string& name, MapType* typePointer) : Base(name, typePointer) {}
 protected:
 // ISerializable
-    void PrepareToDeserialize(std::shared_ptr<SerializableNode>& deserializableTree) EXT_THROWS() override
+    // Called before collection deserialization
+    void OnDeserializationStart(std::shared_ptr<SerializableNode>& deserializableTree) override
     {
         MapType* container = Base::GetType();
         container->clear();
 
+        m_serializableValues.clear();
         if constexpr (is_serializable_v<typename MapType::key_type>)
         {
             m_serializableValues.resize(deserializableTree->CountChilds());
@@ -415,6 +528,18 @@ protected:
                     insertedIter->second = deserialize_value<typename MapType::mapped_type>(*valueChild->Value);
                 }
             }
+        }
+    }
+    // Called after collection deserialization
+    void OnDeserializationEnd() override
+    {
+        if constexpr (is_serializable_v<typename MapType::key_type>)
+        {
+            for (auto&& [key, value] : m_serializableValues)
+            {
+                Base::GetType()->emplace(std::move(key), std::move(value));
+            }
+            m_serializableValues.clear();
         }
     }
 
@@ -456,24 +581,6 @@ protected:
         return collection;
     }
 
-    // Called before collection deserialization
-    void OnDeserializationStart() override
-    {
-        m_serializableValues.clear();
-    }
-    // Called after collection deserialization
-    void OnDeserializationEnd() override
-    {
-        if constexpr (is_serializable_v<typename MapType::key_type>)
-        {
-            for (auto&& [key, value] : m_serializableValues)
-            {
-                Base::GetType()->emplace(std::move(key), std::move(value));
-            }
-            m_serializableValues.clear();
-        }
-    }
-
 private:
     // Array where we store all objects during deserialization of the serializable MapType::key_type
     // We store them here because we can't resize map with default values  
@@ -488,11 +595,12 @@ struct SerializableSet : SerializableBase<ISerializableCollection, SetType>
     SerializableSet(const std::string& name, SetType* typePointer) : Base(name, typePointer) {}
 protected:
 // ISerializable
-    void PrepareToDeserialize(std::shared_ptr<SerializableNode>& deserializableTree) EXT_THROWS() override
+    void OnDeserializationStart(std::shared_ptr<SerializableNode>& deserializableTree) override
     {
         SetType* container = Base::GetType();
         container->clear();
 
+        m_serializableValues.clear();
         if constexpr (is_serializable_v<typename SetType::key_type>)
         {
             m_serializableValues.resize(deserializableTree->CountChilds());
@@ -506,6 +614,18 @@ protected:
                 EXT_EXPECT(child->Value.has_value()) << "Expect set node with value not empty";
                 container->emplace(deserialize_value<typename SetType::key_type>(*child->Value));
             }
+        }
+    }
+    // Called after collection deserialization
+    void OnDeserializationEnd() override
+    {
+        if constexpr (is_serializable_v<typename SetType::key_type>)
+        {
+            for (const auto& deserializedValue : m_serializableValues)
+            {
+                Base::GetType()->emplace(std::move(deserializedValue));
+            }
+            m_serializableValues.clear();
         }
     }
 // ISerializableCollection
@@ -534,23 +654,6 @@ protected:
             // if set types if not serializable - store string value presentation as index name with empty value
             return std::make_shared<SerializableValueHolder>("Value", serialize_value(*it));
     }
-    // Called before collection deserialization
-    void OnDeserializationStart() override
-    {
-        m_serializableValues.clear();
-    }
-    // Called after collection deserialization
-    void OnDeserializationEnd() override
-    {
-        if constexpr (is_serializable_v<typename SetType::key_type>)
-        {
-            for (const auto& deserializedValue : m_serializableValues)
-            {
-                Base::GetType()->emplace(std::move(deserializedValue));
-            }
-            m_serializableValues.clear();
-        }
-    }
 private:
     // Array where we store all objects during deserialization of the serializable SetType::key_type
     // We store them here because we can't resize set with default values
@@ -565,11 +668,11 @@ struct SerializableArray : SerializableBase<ISerializableCollection, ArrayType>
     SerializableArray(const std::string& name, ArrayType* typePointer) : Base(name, typePointer) {}
 protected:
 // ISerializable
-    void PrepareToDeserialize(std::shared_ptr<SerializableNode>& deserializableTree) EXT_THROWS() override
+    void OnDeserializationStart(std::shared_ptr<SerializableNode>& deserializableTree) override
     {
         ArrayType* array = Base::GetType();
         array->clear();
-        if constexpr (has_reserve_function_v<ArrayType>)
+        if constexpr (HAS_FUNCTION(ArrayType, reserve))
             array->reserve(deserializableTree->CountChilds());
         for (auto count = deserializableTree->CountChilds(); count != 0; --count)
             array->emplace_back(create_default_value<typename ArrayType::value_type>());
@@ -728,6 +831,35 @@ template<class ConvertedType>
 [[nodiscard]] ConvertedType* SerializableObjectDescriptor<Type>::ConvertToType(Type* object) const
 {
     return static_cast<ConvertedType*>(object);
+}
+
+template <class Type>
+inline void SerializableObjectDescriptor<Type>::CallOnSerializationStart(Type* pointer) const
+{
+    if constexpr (HAS_FUNCTION(Type, OnSerializationStart))
+        pointer->OnSerializationStart();
+}
+
+template <class Type>
+inline void SerializableObjectDescriptor<Type>::CallOnSerializationEnd(Type* pointer) const
+{
+    if constexpr (HAS_FUNCTION(Type, OnSerializationEnd))
+        pointer->OnSerializationEnd();
+}
+
+template <class Type>
+inline void SerializableObjectDescriptor<Type>::CallOnDeserializationStart(Type* pointer, 
+    std::shared_ptr<SerializableNode>& serializableTree) const
+{
+    if constexpr (HAS_FUNCTION(Type, OnDeserializationStart))
+        pointer->OnDeserializationStart(serializableTree);
+}
+
+template <class Type>
+inline void SerializableObjectDescriptor<Type>::CallOnDeserializationEnd(Type* pointer) const
+{
+    if constexpr (HAS_FUNCTION(Type, OnDeserializationEnd))
+        pointer->OnDeserializationEnd();
 }
 
 } // namespace ext::serializable

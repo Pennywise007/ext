@@ -312,6 +312,8 @@ inline bool SerializeObject(const std::unique_ptr<ISerializer>& serializer, cons
         {
             const auto* field = dynamic_cast<const ISerializableField*>(objectsVisitor.GetCurrentObject());
             EXT_EXPECT(field);
+
+            const_cast<ISerializableField*>(field)->OnSerializationStart();
             if (!currentNode)
             {
                 EXT_ASSERT(!serializationTreeRoot);
@@ -322,6 +324,7 @@ inline bool SerializeObject(const std::unique_ptr<ISerializer>& serializer, cons
             {
                 currentNode->AddChild(field->GetName(), currentNode)->Value = field->SerializeValue();
             }
+            const_cast<ISerializableField*>(field)->OnSerializationEnd();
         }
         break;
         case Visitor::ObjectType::eOptional:
@@ -362,8 +365,6 @@ inline bool DeserializeObject(const std::unique_ptr<serializer::IDeserializer>& 
     if (!deserializer->Deserialize(deserializationTreeRoot))
         return false;
 
-    deserializableObject->PrepareToDeserialize(deserializationTreeRoot);
-
     std::shared_ptr<SerializableNode> currentNode;
     Visitor objectsVisitor(deserializableObject);
 
@@ -375,7 +376,6 @@ inline bool DeserializeObject(const std::unique_ptr<serializer::IDeserializer>& 
         {
             const auto* collection = dynamic_cast<const ISerializableCollection*>(objectsVisitor.GetCurrentObject());
             EXT_EXPECT(collection);
-            const_cast<ISerializableCollection*>(collection)->OnDeserializationStart();
 
             std::shared_ptr<SerializableNode> childNode;
             if (!currentNode)
@@ -388,7 +388,7 @@ inline bool DeserializeObject(const std::unique_ptr<serializer::IDeserializer>& 
 
             if (childNode)
             {
-                const_cast<ISerializableCollection*>(collection)->PrepareToDeserialize(childNode);
+                const_cast<ISerializableCollection*>(collection)->OnDeserializationStart(childNode);
                 objectsVisitor.UpdateCurrentCollectionSize();
 
                 currentNode = childNode;
@@ -429,11 +429,12 @@ inline bool DeserializeObject(const std::unique_ptr<serializer::IDeserializer>& 
             if (childNode)
             {
                 auto* deserializeField = const_cast<ISerializableField*>(field);
-                deserializeField->PrepareToDeserialize(childNode);
+                deserializeField->OnDeserializationStart(childNode);
                 if (childNode->Value.has_value())
                     deserializeField->DeserializeValue(childNode->Value.value());
                 else
                     EXT_ASSERT(false) << "Can`t find value for field " << field->GetName();
+                deserializeField->OnDeserializationEnd();
             }
             else
                 EXT_ASSERT(false) << "Can`t find node for field " << field->GetName();
@@ -455,8 +456,9 @@ inline bool DeserializeObject(const std::unique_ptr<serializer::IDeserializer>& 
 
             if (childNode)
             {
+                // Just call OnDeserializationStart to create object in SerializableOptional
                 auto* field = const_cast<ISerializableOptional*>(optionalField);
-                field->PrepareToDeserialize(childNode);
+                field->OnDeserializationStart(childNode);
             }
             else
                 EXT_ASSERT(false) << "Can`t find node for field " << optionalField->GetName();

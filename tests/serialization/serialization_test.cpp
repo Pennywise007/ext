@@ -136,9 +136,9 @@ struct SerializableField : ISerializableField
     void DeserializeValue(const SerializableValue& value) override { EXPECT_STREQ(L"test", value.c_str()); }
 };
 
-struct SerializableTypes : BaseTypes, SerializableField, SerializableInterfaceImpl
+struct SerializableTypes : BaseTypes, SerializableInterfaceImpl
 {
-    REGISTER_SERIALIZABLE_OBJECT_N(SerializableTypesName, BaseTypes, SerializableField, SerializableInterfaceImpl);
+    REGISTER_SERIALIZABLE_OBJECT_N(SerializableTypesName, BaseTypes, SerializableInterfaceImpl);
 
     DECLARE_SERIALIZABLE_FIELD(std::shared_ptr<ISerializableInterface>, sharedSerializableInterface, std::make_unique<SerializableInterfaceImpl>());
     DECLARE_SERIALIZABLE_FIELD(std::unique_ptr<ISerializableInterface>, uniqueSerializableInterface, std::make_unique<SerializableInterfaceImpl>());
@@ -297,6 +297,17 @@ TEST(deserialization_test, xml_modified)
     test::samples::expect_equal_to_sample(kTestXmlFilePath, kSampleXMLModified);
 }
 
+#define DECLARE_SERIALIZABLE_CALLBACKS()                                                                    \
+    void OnSerializationStart() { serializationStarted = true; }                                            \
+    void OnSerializationEnd() { EXPECT_TRUE(serializationStarted); serializationEnded = true; };            \
+    void OnDeserializationStart(std::shared_ptr<SerializableNode>& /*serializableTree*/)                    \
+    { deserializationStarted = true; }                                                                      \
+    void OnDeserializationEnd() { EXPECT_TRUE(deserializationStarted); deserializationEnded = true; };      \
+    bool serializationStarted = false;                                                                      \
+    bool serializationEnded = false;                                                                        \
+    bool deserializationStarted = false;                                                                    \
+    bool deserializationEnded = false;
+
 struct Settings
 {
     struct User
@@ -310,12 +321,15 @@ struct Settings
         {
             return id == other.id && firstName == other.firstName && userName == other.userName;
         }
+        DECLARE_SERIALIZABLE_CALLBACKS();
     };
 
     REGISTER_SERIALIZABLE_OBJECT();
     DECLARE_SERIALIZABLE_FIELD(std::wstring, token);
     DECLARE_SERIALIZABLE_FIELD(std::wstring, password);
     DECLARE_SERIALIZABLE_FIELD(std::list<User>, registeredUsers);
+
+    DECLARE_SERIALIZABLE_CALLBACKS();
 };
 
 TEST(serialization_test, serialization_custom)
@@ -330,11 +344,35 @@ TEST(serialization_test, serialization_custom)
 
     ASSERT_TRUE(SerializeObject(Factory::TextSerializer(text), initialSettings));
 
+    EXPECT_TRUE(initialSettings.serializationStarted);
+    EXPECT_TRUE(initialSettings.serializationEnded);
+    EXPECT_FALSE(initialSettings.deserializationStarted);
+    EXPECT_FALSE(initialSettings.deserializationEnded);
+    for (const auto& item : initialSettings.registeredUsers)
+    {
+        EXPECT_TRUE(item.serializationStarted);
+        EXPECT_TRUE(item.serializationEnded);
+        EXPECT_FALSE(item.deserializationStarted);
+        EXPECT_FALSE(item.deserializationEnded);
+    }
+
     Settings result; 
     ASSERT_TRUE(DeserializeObject(Factory::TextDeserializer(text), result));
     EXPECT_EQ(initialSettings.token, result.token);
     EXPECT_EQ(initialSettings.password, result.password);
     EXPECT_EQ(initialSettings.registeredUsers, result.registeredUsers);
+    
+    EXPECT_FALSE(result.serializationStarted);
+    EXPECT_FALSE(result.serializationEnded);
+    EXPECT_TRUE(result.deserializationStarted);
+    EXPECT_TRUE(result.deserializationEnded);
+    for (const auto& item : result.registeredUsers)
+    {
+        EXPECT_FALSE(item.serializationStarted);
+        EXPECT_FALSE(item.serializationEnded);
+        EXPECT_TRUE(item.deserializationStarted);
+        EXPECT_TRUE(item.deserializationEnded);
+    }
 }
 
 class GlobalObject : SerializableInterfaceImpl

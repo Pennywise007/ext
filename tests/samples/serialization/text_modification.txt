@@ -55,7 +55,6 @@
         }
     },
     "testField": true,
-    "Name": "test",
     "SerializableInterfaceImpl": {
         "flagTest": false
     },

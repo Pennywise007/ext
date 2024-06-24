@@ -49,6 +49,17 @@ struct TestStruct : InternalStruct
     }
 };
 
+You can also declare this functions in your REGISTER_SERIALIZABLE_OBJECT object to get notified when (de)serialization was called:
+    // Called before collection serialization
+    void OnSerializationStart() {}
+    // Called after collection serialization
+    void OnSerializationEnd() {};
+
+    // Called before deserializing object, allow to change deserializable tree and avoid unexpected data, allow to add upgrade for old stored settings
+    // Also used to allocate collections elements
+    void OnDeserializationStart(std::shared_ptr<SerializableNode>& serializableTree) {}
+    // Called after collection deserialization
+    void OnDeserializationEnd() {};
 */
 
 #include <algorithm>
@@ -67,6 +78,7 @@ struct TestStruct : InternalStruct
 #include <ext/std/type_traits.h>
 
 #include <ext/utils/call_once.h>
+#include <ext/utils/reflection.h>
 
 // Register serializable object and it's based classes
 #define REGISTER_SERIALIZABLE_OBJECT(/*Serializable base classes list*/...)                     \
@@ -140,9 +152,17 @@ struct ISerializable
     virtual ~ISerializable() = default;
     // Get name of serializable object
     [[nodiscard]] virtual const char* GetName() const noexcept = 0;
+
+    // Called before collection serialization
+    virtual void OnSerializationStart() {}
+    // Called after collection serialization
+    virtual void OnSerializationEnd() {};
+
     // Called before deserializing object, allow to change deserializable tree and avoid unexpected data, allow to add upgrade for old stored settings
     // Also used to allocate collections elements
-    virtual void PrepareToDeserialize(std::shared_ptr<SerializableNode>& /*serializableTree*/) EXT_THROWS() {}
+    virtual void OnDeserializationStart(std::shared_ptr<SerializableNode>& /*serializableTree*/) {}
+    // Called after collection deserialization
+    virtual void OnDeserializationEnd() {};
 };
 
 // Interface for serializable field, @see serialize_value/deserialize_value functions
@@ -155,23 +175,13 @@ struct ISerializableField : ISerializable
     virtual void DeserializeValue(const SerializableValue& value) = 0;
 };
 
-// Interface for collections of serializable objects, to prepare collection to deserialization see ISerializable::PrepareToDeserialize
+// Interface for collections of serializable objects
 struct ISerializableCollection : ISerializable
 {
     // Collection size
     [[nodiscard]] virtual size_t Size() const noexcept = 0;
     // Get collection element by index
     [[nodiscard]] virtual std::shared_ptr<ISerializable> Get(const size_t& index) const = 0;
-
-    // Called before collection serialization
-    virtual void OnSerializationStart() {}
-    // Called after collection serialization
-    virtual void OnSerializationEnd() {};
-
-    // Called before collection deserialization
-    virtual void OnDeserializationStart() {}
-    // Called after collection deserialization
-    virtual void OnDeserializationEnd() {};
 };
 
 // Interface for optional value like std::optional<T>
@@ -222,6 +232,11 @@ public:
     // Conversion object function, allows to avoid private inheritance problems
     template <class ConvertedType>
     [[nodiscard]] ConvertedType* ConvertToType(Type* pointer) const;
+    // Proxy function to call ISerializable methods on object, required if they declared as private 
+    void CallOnSerializationStart(Type* pointer) const;
+    void CallOnSerializationEnd(Type* pointer) const;
+    void CallOnDeserializationStart(Type* pointer, std::shared_ptr<SerializableNode> &serializableTree) const;
+    void CallOnDeserializationEnd(Type* pointer) const;
 
 private:
     std::list<std::shared_ptr<details::ISerializableBaseInfo>> m_baseSerializableClasses;

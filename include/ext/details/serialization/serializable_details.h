@@ -16,13 +16,14 @@
 #include <ext/core/check.h>
 #include <ext/core/mpl.h>
 
+#include <ext/reflection/object.h>
+
 #include <ext/serialization/iserializable.h>
 
 #include <ext/std/type_traits.h>
 #include <ext/std/string.h>
 
 #include <ext/types/utils.h>
-#include <ext/utils/reflection.h>
 
 namespace ext::serializable {
 namespace details {

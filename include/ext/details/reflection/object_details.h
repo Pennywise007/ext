@@ -5,7 +5,7 @@
 #include <ext/core/mpl.h>
 #include <ext/std/type_traits.h>
 
-namespace ext::details::refletion {
+namespace ext::details::reflection {
 
 struct convertible_to_any
 {
@@ -94,4 +94,4 @@ struct find_max_brace_constructor<Type, End, End>
     using type = typename Type::error_constructor_signature_is_not_recognized;
 };
 
-} // namespace ext::details::refletion
+} // namespace ext::details::reflection

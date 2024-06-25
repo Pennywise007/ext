@@ -73,12 +73,13 @@ You can also declare this functions in your REGISTER_SERIALIZABLE_OBJECT object 
 #include <ext/core/check.h>
 #include <ext/core/singleton.h>
 
+#include <ext/reflection/object.h>
+
 #include <ext/serialization/serializable_value.h>
 
 #include <ext/std/type_traits.h>
 
 #include <ext/utils/call_once.h>
-#include <ext/utils/reflection.h>
 
 // Register serializable object and it's based classes
 #define REGISTER_SERIALIZABLE_OBJECT(/*Serializable base classes list*/...)                     \

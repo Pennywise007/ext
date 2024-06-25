@@ -1,7 +1,16 @@
 # ext library
-Header only C++17 extensions library
+Header only C++ extensions library, requires at least C++17
 
 # Build
+
+<details><summary>Bazel build and run tests</summary>
+
+```ps
+bazel build //...
+bazel test //...
+```
+
+</details>
 
 <details><summary>CMake build and run tests</summary>
 
@@ -18,15 +27,6 @@ cmake --build . --parallel
 
 </details>
 
-<details><summary>Bazel build and run tests</summary>
-
-```ps
-bazel build //...
-bazel test //...
-```
-
-</details>
-
 # Dependency injection
 Usage simple with .Net [Microsoft.Extensions.DependencyInjection](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection/)
 <details><summary>Example</summary>
@@ -34,7 +34,6 @@ Usage simple with .Net [Microsoft.Extensions.DependencyInjection](https://www.nu
 ```c++
 
 #include <ext/core/dependency_injection.h>
-
 
 struct InterfaceExample
 {
@@ -79,6 +78,92 @@ const std::shared_ptr<CreatedObjectExample> object = ext::CreateObject<CreatedOb
 
 - [Source](https://github.com/Pennywise007/ext/blob/main/include/ext/core/dependency_injection.h)
 - [Tests and examples](https://github.com/Pennywise007/ext/blob/main/tests/core/dependency_injection_test.cpp)
+
+# Reflection
+
+Support of the compile time reflection in C++, getting object fields, functions
+
+<details><summary>Object</summary>
+
+```c++
+struct TestStruct
+{
+    std::string name;
+    std::string name1;
+    std::string name2;
+    std::string name3;
+
+    void existingFunction(int) {}
+};
+
+// Checking the brace constructor size(basically the fields count)
+ext::reflection::brace_constructor_size<TestStruct> == 4;
+
+// Checking if object has some field
+HAS_FIELD(TestStruct, name) = true;
+HAS_FIELD(TestStruct, unknown) = false;
+
+// Checking if object has some function
+HAS_FUNCTION(TestStruct, existingFunction) == true;
+!HAS_FUNCTION(TestStruct, unknownFunction) == false;
+
+// Real usage of the reflection
+template <typename T>
+void serializeObject(T& object)
+{
+    if constexpr (HAS_FUNCTION(T, onSerializationStart))
+        object.onSerializationStart();
+    // ...
+    if constexpr (HAS_FUNCTION(T, onSerializationEnd))
+        object.onSerializationEnd();
+}
+```
+
+</details>
+
+<details><summary>Enums</summary>
+
+```c++
+#include <ext/reflection/enum.h>
+
+enum class TestEnum
+{
+    eEnumValue1,
+    eEnumValue2,
+    eEnumValue5 = 5,
+};
+
+// Enum to string
+ext::reflection::get_enum_name<TestEnum(0)>() == "TestEnum::eEnumValue1";
+ext::reflection::get_enum_name<TestEnum::eEnumValue5>() == "TestEnum::eEnumValue5";
+
+// Enum size
+ext::reflection::get_enum_size<TestEnum>() == 3;
+
+// Getting enum value by index
+ext::reflection::get_enum_value<TestEnum, 0>() == TestEnum::eEnumValue1
+ext::reflection::get_enum_value<TestEnum, 1>() == TestEnum::eEnumValue2
+ext::reflection::get_enum_value<TestEnum, 2>() == TestEnum::eEnumValue5
+
+// Compilation time checks
+switch (TestEnum)
+{
+case TestEnum::eEnumValue1: // ...
+case TestEnum::eEnumValue2: // ...
+case TestEnum::eEnumValue5: // ...
+default: static_assert(ext::reflection::get_enum_size<TestEnum>() == 3, "Unhandled enum case state");
+}
+
+// Enum values iteration
+for (TestEnum val : ext::reflection::get_enum_values<TestEnum>())
+    // ...
+
+EXPECT_TRUE(ext::reflection::is_enum_value<TestEnum>(0));
+EXPECT_TRUE(ext::reflection::is_enum_value<TestEnum>(TestEnum::eEnumValue2));
+EXPECT_FALSE(ext::reflection::is_enum_value<TestEnum>(-1));
+```
+
+</details>
 
 # Serialization
 Serialization objects to/from text, xml

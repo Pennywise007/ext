@@ -60,9 +60,9 @@ const std::shared_ptr<CreatedObjectExample> object = ext::CreateObject<CreatedOb
 #include <ext/core/mpl.h>
 #include <ext/core/singleton.h>
 
-#include <ext/std/memory.h>
+#include <ext/reflection/object.h>
 
-#include <ext/utils/reflection.h>
+#include <ext/std/memory.h>
 
 #include <ext/types/lazy.h>
 #include <ext/types/utils.h>

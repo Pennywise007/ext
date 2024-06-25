@@ -28,7 +28,7 @@ TEST(exception_test, check_nested)
     {
         EXPECT_STREQ(("Main error caught.\n\n"
                       "Exception: Runtime error\n" +
-                      std::string_sprintf("Job failed Exception At '%s'(18).\n", std::source_location::current().function_name()) +
+                      std::string_sprintf("Job failed Exception At '%s'(19).\n", std::source_location::current().file_name()) +
                       "Failed to do sth Exception").c_str(), ext::ManageExceptionText("Main error caught").c_str());
     }
 }

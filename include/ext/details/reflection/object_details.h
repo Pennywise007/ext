@@ -1,9 +1,12 @@
 #pragma once
 
 #include <type_traits>
+#include <string_view>
 
 #include <ext/core/mpl.h>
 #include <ext/std/type_traits.h>
+
+#include <ext/std/source_location.h>
 
 namespace ext::reflection::details {
 
@@ -20,8 +23,14 @@ template <auto Name>
     constexpr auto split = func_name.substr(0, func_name.find_last_of(suffixDelimer));
     return split.substr(split.find(prefix) + std::string_view(prefix).size());
 #elif defined(_MSC_VER)
-    constexpr auto func_name = std::string_view{__builtin_FUNCSIG()};
 
+#if _HAS_CXX20 // C++20
+    constexpr auto func_name = std::string_view{std::source_location::current().function_name()};
+#elif _MSC_VER >= 1929 // not C++20 and msvc with __builtin_FUNCSIG
+    constexpr auto func_name = std::string_view{__builtin_FUNCSIG()};
+#else
+    static_assert(false, "__builtin_FUNCSIG not available for your compiler, you can't use get_name_impl function");
+#endif
     constexpr auto prefix = "get_name_impl<";
     constexpr auto suffix = ">(void)";
 

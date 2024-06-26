@@ -60,7 +60,17 @@ private:
     const __impl* _M_impl = nullptr;
 };
 
-#else // __GNUC__
+#else // not __GNUC__
+
+#ifndef _USE_DETAILED_FUNCTION_NAME_IN_SOURCE_LOCATION
+#ifdef __EDG__ // TRANSITION, DevCom-10199227
+#define _USE_DETAILED_FUNCTION_NAME_IN_SOURCE_LOCATION 0
+#elif defined(__clang__) // TRANSITION, Clang 17 has this builtin
+#define _USE_DETAILED_FUNCTION_NAME_IN_SOURCE_LOCATION __has_builtin(__builtin_FUNCSIG)
+#else // ^^^ Clang / MSVC vvv
+#define _USE_DETAILED_FUNCTION_NAME_IN_SOURCE_LOCATION 1
+#endif // ^^^ MSVC ^^^
+#endif // ^^^ !defined(_USE_DETAILED_FUNCTION_NAME_IN_SOURCE_LOCATION) ^^^
 
 // copy from <source_location>
 struct source_location {

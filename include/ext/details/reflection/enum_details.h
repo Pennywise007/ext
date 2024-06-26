@@ -3,38 +3,15 @@
 #include <array>
 #include <string_view>
 
-namespace ext::details::reflection {
+#include <ext/details/reflection/object_details.h>
 
-// Using __builtin_ functions to get object name with template type
-template <auto EnumType>
-[[nodiscard]] constexpr std::string_view get_enum_name_impl() {
-
-#if defined(__clang__) || defined(__GNUC__)
-    constexpr auto func_name = std::string_view{__PRETTY_FUNCTION__};
-
-    constexpr auto prefix = "EnumType = ";
-    constexpr auto suffixDelimer = ';';
-
-    constexpr auto split = func_name.substr(0, func_name.find_last_of(suffixDelimer));
-    return split.substr(split.find(prefix) + std::string_view(prefix).size());
-#elif defined(_MSC_VER)
-    constexpr auto func_name = std::string_view{__builtin_FUNCSIG()};
-
-    constexpr auto prefix = "get_enum_name_impl<";
-    constexpr auto suffix = ">(void)";
-
-    constexpr auto split = func_name.substr(0, func_name.size() - std::string_view(suffix).size());
-    return split.substr(split.find(prefix) + std::string_view(prefix).size());
-#else
-    static_assert(false, "Unsupported compiler");
-#endif
-}
+namespace ext::reflection::details {
 
 template <class EnumType, auto EnumValue>
 [[nodiscard]] constexpr bool is_enum_value_impl()
 {
     // value not belong to enum, example: "(enum TestEnum)0xa"
-    return get_enum_name_impl<static_cast<EnumType>(EnumValue)>()[0] != '(';
+    return get_name_impl<static_cast<EnumType>(EnumValue)>()[0] != '(';
 }
 
 // Search over numbers and check if number belongs to enum
@@ -82,4 +59,4 @@ constexpr void get_enum_values_impl(std::array<EnumType, Size>& res)
     }
 }
 
-} // namespace ext::details::reflection
+} // namespace ext::reflection::details

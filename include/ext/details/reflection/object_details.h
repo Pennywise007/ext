@@ -5,7 +5,43 @@
 #include <ext/core/mpl.h>
 #include <ext/std/type_traits.h>
 
-namespace ext::details::reflection {
+namespace ext::reflection::details {
+
+// Using __builtin_ functions to get object name with template type
+template <auto Name>
+[[nodiscard]] constexpr std::string_view get_name_impl() {
+
+#if defined(__clang__) || defined(__GNUC__)
+    constexpr auto func_name = std::string_view{__PRETTY_FUNCTION__};
+
+    constexpr auto prefix = "Name = ";
+    constexpr auto suffixDelimer = ';';
+
+    constexpr auto split = func_name.substr(0, func_name.find_last_of(suffixDelimer));
+    return split.substr(split.find(prefix) + std::string_view(prefix).size());
+#elif defined(_MSC_VER)
+    constexpr auto func_name = std::string_view{__builtin_FUNCSIG()};
+
+    constexpr auto prefix = "get_name_impl<";
+    constexpr auto suffix = ">(void)";
+
+    constexpr auto split = func_name.substr(0, func_name.size() - std::string_view(suffix).size());
+    return split.substr(split.find(prefix) + std::string_view(prefix).size());
+#else
+    static_assert(false, "Unsupported compiler");
+#endif
+}
+
+#if _HAS_CXX20 ||  __cplusplus >= 202002L // C++20
+
+// Getting name and extracting everything which is after '->' symbol
+template <auto Ptr>
+[[nodiscard]] consteval auto get_field_name_impl() -> std::string_view {
+    constexpr auto name = get_name_impl<Ptr>();
+    return name.substr(name.find_last_of("->") + 1);
+}
+
+#endif // C++20
 
 struct convertible_to_any
 {
@@ -94,4 +130,4 @@ struct find_max_brace_constructor<Type, End, End>
     using type = typename Type::error_constructor_signature_is_not_recognized;
 };
 
-} // namespace ext::details::reflection
+} // namespace ext::reflection::details

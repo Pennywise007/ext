@@ -28,19 +28,51 @@ struct DetailTestMultipleArgumentConstructor
 };
 static_assert(ext::reflection::constructor_size<DetailTestMultipleArgumentConstructor> == 3, "Failed to determine multiple argument constructor size");
 
-struct TestStruct  {
-    std::string name;
-    std::string name1;
-    std::string name2;
-    std::string name3;
+struct TestStruct {
+    int intField;
+    bool booleanField;
+    std::string_view charArrayField;
 
     void existingFunction(int) {}
 };
 
-static_assert(ext::reflection::brace_constructor_size<TestStruct> == 4, "Failed to determine fields count");
+static_assert(ext::reflection::brace_constructor_size<TestStruct> == 3, "Failed to determine fields count");
 
-static_assert(HAS_FIELD(TestStruct, name), "Failed to find name field");
+static_assert(HAS_FIELD(TestStruct, booleanField), "Failed to find booleanField field");
 static_assert(!HAS_FIELD(TestStruct, unknown), "Failed to find unknown field");
 
 static_assert(HAS_FUNCTION(TestStruct, existingFunction), "Failed to detect `existingFunction`");
 static_assert(!HAS_FUNCTION(TestStruct, unknownFunction), "Found not existingFunction");
+
+constexpr auto kGlobalObj = TestStruct{ 100, true, "test"};
+
+static_assert(std::is_same_v<std::tuple<const int&, const bool&, const std::string_view&>, decltype(ext::reflection::get_object_fields(kGlobalObj))>,
+              "Failed to get_object_fields");
+static_assert(std::get<0>(ext::reflection::get_object_fields(kGlobalObj)) == 100,
+              "Failed to get_object_fields");
+static_assert(std::get<1>(ext::reflection::get_object_fields(kGlobalObj)) == true,
+              "Failed to get_object_fields");
+static_assert(std::get<2>(ext::reflection::get_object_fields(kGlobalObj)) == "test",
+              "Failed to get_object_fields");
+
+#if _HAS_CXX20 ||  __cplusplus >= 202002L // C++20
+
+static_assert(ext::reflection::get_field_name<decltype(kGlobalObj), 0> == "intField",
+              "Failed to get_field_name");
+static_assert(ext::reflection::get_field_name<TestStruct, 1> == "booleanField",
+              "Failed to get_field_name");
+static_assert(ext::reflection::get_field_name<TestStruct, 2> == "charArrayField",
+              "Failed to get_field_name");
+
+#endif // C++20
+
+TEST(object_test, fields_reflection)
+{
+    auto obj = TestStruct{ 100, true, "wow"};
+    std::get<0>(ext::reflection::get_object_fields(obj)) = -2;
+    std::get<1>(ext::reflection::get_object_fields(obj)) = false;
+    EXPECT_STREQ("wow", std::get<2>(ext::reflection::get_object_fields(obj)).data());
+
+    EXPECT_EQ(-2, obj.intField);
+    EXPECT_FALSE(obj.booleanField);
+}

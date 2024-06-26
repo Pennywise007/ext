@@ -3,6 +3,7 @@
 #include <type_traits>
 
 #include <ext/details/reflection/object_details.h>
+#include <ext/details/reflection/object_fields_details.h>
 
 namespace ext::reflection {
 
@@ -14,7 +15,7 @@ struct TestStruct  {
 };
 static_assert(ext::reflection::constructor_size<TestStruct> == 0);*/
 template <typename T, size_t MaxConstructorSize = 16>
-inline constexpr size_t constructor_size = ext::details::reflection::find_min_constructor<T, 0, MaxConstructorSize>::Count() - 1;
+inline constexpr size_t constructor_size = ext::reflection::details::find_min_constructor<T, 0, MaxConstructorSize>::Count() - 1;
 
 /*  Check if object constructible with {}, useful for getting fields count.
     Note: object shouldn't have a constructors.
@@ -25,7 +26,48 @@ struct TestStruct  {
 };
 static_assert(ext::reflection::brace_constructor_size<TestStruct> == 2);*/
 template <typename T, size_t MaxConstructorSize = 100>
-inline constexpr size_t brace_constructor_size = ext::details::reflection::find_max_brace_constructor<T, MaxConstructorSize, 0>::Count() - 1;
+inline constexpr size_t brace_constructor_size = ext::reflection::details::find_max_brace_constructor<T, MaxConstructorSize, 0>::Count() - 1;
+
+/*
+Getting object fields(works with public fields only)
+Example:
+
+struct Foo {
+    int intField;
+    bool booleanField;
+};
+
+Foo object {};
+constexpr std::tie<int&, bool&> fields = get_object_fields(object);
+std::get<0>(fields) = 5;
+std::get<1>(fields) = true;
+*/
+template <typename Type>
+constexpr auto get_object_fields(Type&& obj)
+{
+    constexpr auto fieldsCount = brace_constructor_size<std::decay_t<Type>>;
+    static_assert(fieldsCount != 0, "Failed to determine fields count");
+
+    return details::get_object_fields_impl<fieldsCount>(obj);
+}
+
+#if _HAS_CXX20 ||  __cplusplus >= 202002L // C++20
+
+/*
+Getting field name
+Example:
+
+struct Foo {
+    int intField;
+    bool booleanField;
+};
+
+ext::reflection::get_field_name<Foo, 0> == "intField"
+ext::reflection::get_field_name<Foo, 1> == "booleanField"
+*/
+template<class Type, auto FieldIndex>
+constexpr auto get_field_name = details::get_field_name_impl<&std::get<FieldIndex>(get_object_fields(details::external<Type>))>();
+#endif // C++20
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Check if object has a field

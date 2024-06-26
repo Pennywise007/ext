@@ -19,20 +19,20 @@ struct TestClass
     };
 };
 
-static_assert(ext::reflection::get_enum_name<TestEnum(0)>() == "TestEnum::eEnumValue1",
+static_assert(ext::reflection::enum_name<TestEnum(0)> == "TestEnum::eEnumValue1",
     "Failed to get enum value name");
-static_assert(ext::reflection::get_enum_name<TestEnum::eEnumValue2>() == "TestEnum::eEnumValue2",
+static_assert(ext::reflection::enum_name<TestEnum::eEnumValue2> == "TestEnum::eEnumValue2",
     "Failed to get enum value name");
-static_assert(ext::reflection::get_enum_name<TestEnum(101)>() == "TestEnum::eEnumValue101",
+static_assert(ext::reflection::enum_name<TestEnum(101)> == "TestEnum::eEnumValue101",
     "Failed to get enum value name");
-static_assert(ext::reflection::get_enum_name<TestClass<int>::InternalEnum::eInternalEnumValue1>() == "TestClass<int>::InternalEnum::eInternalEnumValue1",
+static_assert(ext::reflection::enum_name<TestClass<int>::InternalEnum::eInternalEnumValue1> == "TestClass<int>::InternalEnum::eInternalEnumValue1",
     "Failed to get internal enum value name");
 
 #if defined(__clang__) || defined(__GNUC__)
-    static_assert(ext::reflection::get_enum_name<TestEnum(-1)>() == "(TestEnum)-1",
+    static_assert(ext::reflection::enum_name<TestEnum(-1)> == "(TestEnum)-1",
         "Failed to get enum value of non existing enum value");
 #elif defined(_MSC_VER)
-    static_assert(ext::reflection::get_enum_name<TestEnum(-1)>() == "(enum TestEnum)0xffffffffffffffff",
+    static_assert(ext::reflection::enum_name<TestEnum(-1)> == "(enum TestEnum)0xffffffffffffffff",
         "Failed to get enum value of non existing enum value");
 #else
     static_assert(false, "Unsupported compiler");
@@ -79,9 +79,9 @@ enum UnscopedEnum
     eValue2
 };
 
-static_assert(ext::reflection::get_enum_name<UnscopedEnum(0)>() == "eValue1",
+static_assert(ext::reflection::enum_name<UnscopedEnum(0)> == "eValue1",
     "Failed to get unscoped enum value name");
-static_assert(ext::reflection::get_enum_name<UnscopedEnum::eValue2>() == "eValue2",
+static_assert(ext::reflection::enum_name<UnscopedEnum::eValue2> == "eValue2",
     "Failed to get unscoped enum value name");
 
 static_assert(ext::reflection::is_enum_value<UnscopedEnum, UnscopedEnum::eValue1>(),

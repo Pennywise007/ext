@@ -88,19 +88,31 @@ Support of the compile time reflection in C++, getting object fields, functions
 ```c++
 struct TestStruct
 {
-    std::string name;
-    std::string name1;
-    std::string name2;
-    std::string name3;
+    int intField;
+    bool booleanField;
+    std::string_view charArrayField;
 
     void existingFunction(int) {}
 };
 
 // Checking the brace constructor size(basically the fields count)
-ext::reflection::brace_constructor_size<TestStruct> == 4;
+ext::reflection::brace_constructor_size<TestStruct> == 3;
+
+// Fields iteration
+constexpr auto kGlobalObj = TestStruct{ 100, true, "test"};
+std::get<0>(ext::reflection::get_object_fields(kGlobalObj)) == 100
+std::get<1>(ext::reflection::get_object_fields(kGlobalObj)) == true
+std::get<2>(ext::reflection::get_object_fields(kGlobalObj)) == "test"
+
+// Getting field names(C++20 or later)
+#if C++20
+ext::reflection::get_field_name<decltype(kGlobalObj), 0> == "intField"
+ext::reflection::get_field_name<TestStruct, 1> == "booleanField"
+ext::reflection::get_field_name<TestStruct, 2> == "charArrayField"
+#endif
 
 // Checking if object has some field
-HAS_FIELD(TestStruct, name) = true;
+HAS_FIELD(TestStruct, boolea) = true;
 HAS_FIELD(TestStruct, unknown) = false;
 
 // Checking if object has some function
@@ -134,8 +146,8 @@ enum class TestEnum
 };
 
 // Enum to string
-ext::reflection::get_enum_name<TestEnum(0)>() == "TestEnum::eEnumValue1";
-ext::reflection::get_enum_name<TestEnum::eEnumValue5>() == "TestEnum::eEnumValue5";
+ext::reflection::enum_name<TestEnum(0)>() == "TestEnum::eEnumValue1";
+ext::reflection::enum_name<TestEnum::eEnumValue5>() == "TestEnum::eEnumValue5";
 
 // Enum size
 ext::reflection::get_enum_size<TestEnum>() == 3;

@@ -306,7 +306,7 @@ TEST(deserialization_test, xml_modified)
     bool serializationStarted = false;                                                                      \
     bool serializationEnded = false;                                                                        \
     bool deserializationStarted = false;                                                                    \
-    bool deserializationEnded = false;
+    bool deserializationEnded = false
 
 struct Settings
 {

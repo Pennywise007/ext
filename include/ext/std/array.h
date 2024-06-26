@@ -1,6 +1,6 @@
 #include <array>
 
-#if !_HAS_CXX20
+#if __cplusplus < 202002L
 
 namespace std {
 namespace detail {
@@ -33,4 +33,4 @@ constexpr std::array<std::remove_cv_t<T>, N> to_array(T (&&a)[N]) {
 
 } // namespace std
 
-#endif // !_HAS_CXX20
+#endif // c++20

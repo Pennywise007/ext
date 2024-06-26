@@ -117,14 +117,16 @@ TEST_F(TestFixture, tracing_date)
         std::tm traceTm{};
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
         localtime_s(&traceTm, &localTime);
-#else
-        localtime_r(&localTime, &traceTm);
-#endif
-
         EXPECT_EQ(5, sscanf_s(text.c_str(), "%d:%d:%d\t%s\t%s",
             &traceTm.tm_hour, &traceTm.tm_min, &traceTm.tm_sec,
             level, (unsigned int)sizeof(level),
             traceText, (unsigned int)sizeof(traceText)));
+#else
+        localtime_r(&localTime, &traceTm);
+        EXPECT_EQ(5, sscanf(text.c_str(), "%d:%d:%d\t%s\t%s",
+            &traceTm.tm_hour, &traceTm.tm_min, &traceTm.tm_sec,
+            level, traceText));
+#endif
         std::time_t traceTime = std::mktime(&traceTm);
 
         EXPECT_STREQ("Trace", traceText);
@@ -151,15 +153,19 @@ TEST_F(TestFixture, default_tracing)
         std::tm traceTm{};
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
         localtime_s(&traceTm, &localTime);
-#else
-        localtime_r(&localTime, &traceTm);
-#endif
 
         EXPECT_EQ(7, sscanf_s(text.c_str(), "%d:%d:%d.%d\t%s\t%s\t%s",
             &traceTm.tm_hour, &traceTm.tm_min, &traceTm.tm_sec, &miliseconds,
             threadId, (unsigned int)sizeof(threadId),
             level, (unsigned int)sizeof(level),
             traceText, (unsigned int)sizeof(traceText)));
+#else
+        localtime_r(&localTime, &traceTm);
+
+        EXPECT_EQ(7, sscanf(text.c_str(), "%d:%d:%d.%d\t%s\t%s\t%s",
+            &traceTm.tm_hour, &traceTm.tm_min, &traceTm.tm_sec, &miliseconds,
+            threadId, level, traceText));
+#endif
         std::time_t traceTime = std::mktime(&traceTm);
 
         EXPECT_STREQ("Text", traceText);

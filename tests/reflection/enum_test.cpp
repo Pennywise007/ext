@@ -27,8 +27,16 @@ static_assert(ext::reflection::get_enum_name<TestEnum(101)>() == "TestEnum::eEnu
     "Failed to get enum value name");
 static_assert(ext::reflection::get_enum_name<TestClass<int>::InternalEnum::eInternalEnumValue1>() == "TestClass<int>::InternalEnum::eInternalEnumValue1",
     "Failed to get internal enum value name");
-static_assert(ext::reflection::get_enum_name<TestEnum(-1)>() == "(enum TestEnum)0xffffffffffffffff",
-    "Failed to get enum value of non existing enum value");
+
+#if defined(__clang__) || defined(__GNUC__)
+    static_assert(ext::reflection::get_enum_name<TestEnum(-1)>() == "(TestEnum)-1",
+        "Failed to get enum value of non existing enum value");
+#elif defined(_MSC_VER)
+    static_assert(ext::reflection::get_enum_name<TestEnum(-1)>() == "(enum TestEnum)0xffffffffffffffff",
+        "Failed to get enum value of non existing enum value");
+#else
+    static_assert(false, "Unsupported compiler");
+#endif
 
 static_assert(ext::reflection::is_enum_value<TestEnum, TestEnum::eEnumValue1>(),
     "Failed to detect if value belongs to enum");

@@ -3,32 +3,26 @@
 #include <array>
 #include <string_view>
 
-#include <ext/std/source_location.h>
-
 namespace ext::details::reflection {
 
 // Using __builtin_ functions to get object name with template type
 template <auto EnumType>
 [[nodiscard]] constexpr std::string_view get_enum_name_impl() {
-#if defined(__clang__) && defined(_MSC_VER)
-    // For Clang on Windows we use a compiler-specific macro
-    constexpr auto func_name = std::string_view{__PRETTY_FUNCTION__};
-#else
-#if _HAS_CXX20
-    constexpr auto func_name =
-        std::string_view{std::source_location::current().function_name()};
-#else // _HAS_CXX20
-    // For c++17 we need to use __builtin_FUNCSIG instead of __builtin_FUNCTION
-    constexpr auto func_name = std::string_view{__builtin_FUNCSIG()};
-#endif // _HAS_CXX20
-#endif // defined(__clang__) && defined(_MSC_VER)
 
 #if defined(__clang__) || defined(__GNUC__)
-    constexpr auto split = func_name.substr(0, func_name.size() - 1);
-    return split.substr(split.find("EnumType = ") + 4);
+    constexpr auto func_name = std::string_view{__PRETTY_FUNCTION__};
+
+    constexpr auto prefix = "EnumType = ";
+    constexpr auto suffixDelimer = ';';
+
+    constexpr auto split = func_name.substr(0, func_name.find_last_of(suffixDelimer));
+    return split.substr(split.find(prefix) + std::string_view(prefix).size());
 #elif defined(_MSC_VER)
+    constexpr auto func_name = std::string_view{__builtin_FUNCSIG()};
+
     constexpr auto prefix = "get_enum_name_impl<";
     constexpr auto suffix = ">(void)";
+
     constexpr auto split = func_name.substr(0, func_name.size() - std::string_view(suffix).size());
     return split.substr(split.find(prefix) + std::string_view(prefix).size());
 #else

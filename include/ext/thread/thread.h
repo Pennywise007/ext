@@ -436,9 +436,9 @@ void interruption_point() EXT_THROWS(ext::thread::thread_interrupted())
 template <class _Clock, class _Duration>
 void interruptible_sleep_until(const std::chrono::time_point<_Clock, _Duration>& timePoint) EXT_THROWS(ext::thread::thread_interrupted())
 {
-#if __cplusplus >= 202002L
+#if _HAS_CXX20 ||  __cplusplus >= 202002L // C++20
     static_assert(std::chrono::is_clock_v<_Clock>, "Clock type required");
-#endif // c++20
+#endif // C++20
     ext::this_thread::interruptible_sleep_for(timePoint - _Clock::now());
 }
 
@@ -468,9 +468,9 @@ void interruptible_sleep_for(const std::chrono::duration<_Rep, _Period>& duratio
 template <class _Clock, class _Duration>
 void sleep_until(const std::chrono::time_point<_Clock, _Duration>& timePoint)
 {
-#if __cplusplus >= 202002L
+#if _HAS_CXX20 ||  __cplusplus >= 202002L // C++20
     static_assert(std::chrono::is_clock_v<_Clock>, "Clock type required");
-#endif // c++20
+#endif // C++20
     ext::this_thread::sleep_for(timePoint - _Clock::now());
 }
 

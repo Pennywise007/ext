@@ -181,19 +181,6 @@ auto string_trim_right(const std::basic_string_view<CharType, std::char_traits<C
 #endif
 }
 
-#if defined(__cplusplus) && __cplusplus >= 202004L
-// C++20 (and later) code
-
-#include <format>
-#include <string_view>
-
-template <typename... Args>
-[[nodiscard]] std::string string_sprintf(std::string_view rt_fmt_str, Args&&... args)
-{
-    return std::vformat(rt_fmt_str, std::make_format_args(args...));
-}
-
-#else // not c++ 20
 [[nodiscard]] inline std::string string_sprintf(_Printf_format_string_ const char* format, ...) EXT_THROWS()
 {
     va_list _ArgList;
@@ -264,9 +251,8 @@ template <typename... Args>
     
     string.pop_back(); // - '\0'
     return string;
-#endif
+#endif // not linux
 }
-#endif
 
 inline auto& operator<<(std::ostringstream& stream, const wchar_t* text)
 {

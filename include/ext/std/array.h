@@ -1,6 +1,6 @@
 #include <array>
 
-#if __cplusplus < 202002L
+#if !_HAS_CXX20 &&  __cplusplus < 202002L //  // C++20
 
 namespace std {
 namespace detail {

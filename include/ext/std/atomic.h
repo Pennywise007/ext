@@ -2,7 +2,7 @@
 
 #include <atomic>
 
-#if __cplusplus < 202002L
+#if !_HAS_CXX20 &&  __cplusplus < 202002L // C++20
 #include <memory>
 #include <type_traits>
 
@@ -76,6 +76,6 @@ struct atomic<shared_ptr<T>> {
 private:
     shared_ptr<T> ptr;
 };
-#endif // c++20
 
 } // namespace ext
+#endif  // C++20

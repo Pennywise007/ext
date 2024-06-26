@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined(__cplusplus) && __cplusplus >= 202004L
+#if _HAS_CXX20 ||  __cplusplus >= 202002L // C++ 20
 #error Must not be included, use std::stop_token
 #endif
 

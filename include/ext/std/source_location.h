@@ -1,6 +1,6 @@
 #pragma once
 
-#if __cplusplus >= 202002L
+#if _HAS_CXX20 ||  __cplusplus >= 202002L // C++20
 
 #include <source_location>
 
@@ -106,4 +106,4 @@ private:
 
 } // namespace std
 
-#endif // not c++20
+#endif // C++20

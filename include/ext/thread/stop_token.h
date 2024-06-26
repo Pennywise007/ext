@@ -16,9 +16,9 @@ myThread.join();
 
 #pragma once
 
-#if defined(__cplusplus) && __cplusplus >= 202004L
+#if _HAS_CXX20 ||  __cplusplus >= 202002L // C++20
 
-#include <stop_source>
+#include <stop_token>
 
 namespace ext {
 
@@ -29,7 +29,7 @@ using stop_callback = ::std::stop_callback<Callback>;
 
 } // namespace ext
 
-#else // no C++20
+#else // not C++20
 
 #include <algorithm>
 

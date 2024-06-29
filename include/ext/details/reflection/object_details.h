@@ -1,17 +1,28 @@
 #pragma once
 
 #include <type_traits>
+#include <string_view>
 
 #include <ext/core/mpl.h>
 #include <ext/std/type_traits.h>
 
+#include <ext/std/source_location.h>
+
 namespace ext::reflection::details {
+
+// We support only clang, linux and msvc with __builtin_FUNCSIG on board
+#if defined(__clang__) || defined(__GNUC__) || (defined(_MSC_VER) && _MSC_VER >= 1935)
+#define OBJECT_NAME_AVAILABLE 1
+#else
+#define OBJECT_NAME_AVAILABLE 0
+#endif
 
 // Using __builtin_ functions to get object name with template type
 template <auto Name>
 [[nodiscard]] constexpr std::string_view get_name_impl() {
-
-#if defined(__clang__) || defined(__GNUC__)
+#if !OBJECT_NAME_AVAILABLE
+    static_assert(false, "Unsupported compiller");
+#elif defined(__clang__) || defined(__GNUC__)
     constexpr auto func_name = std::string_view{__PRETTY_FUNCTION__};
 
     constexpr auto prefix = "Name = ";
@@ -20,7 +31,12 @@ template <auto Name>
     constexpr auto split = func_name.substr(0, func_name.find_last_of(suffixDelimer));
     return split.substr(split.find(prefix) + std::string_view(prefix).size());
 #elif defined(_MSC_VER)
+
+#if _HAS_CXX20 ||  __cplusplus >= 202002L // C++20
+    constexpr std::string_view func_name = std::source_location::current().function_name();
+#else // npt C++20
     constexpr auto func_name = std::string_view{__builtin_FUNCSIG()};
+#endif // not C++20
 
     constexpr auto prefix = "get_name_impl<";
     constexpr auto suffix = ">(void)";
@@ -28,7 +44,7 @@ template <auto Name>
     constexpr auto split = func_name.substr(0, func_name.size() - std::string_view(suffix).size());
     return split.substr(split.find(prefix) + std::string_view(prefix).size());
 #else
-    static_assert(false, "Unsupported compiler");
+    static_assert(false, "Unknown compiller");
 #endif
 }
 

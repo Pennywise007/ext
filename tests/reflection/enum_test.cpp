@@ -2,6 +2,8 @@
 
 #include <ext/reflection/enum.h>
 
+#if OBJECT_NAME_AVAILABLE
+
 enum class TestEnum
 {
     eEnumValue1,
@@ -73,6 +75,35 @@ TEST(reflection_enum, get_enum_values)
     EXPECT_EQ((ext::reflection::get_enum_values<TestEnum, 0, 101>()), (std::array{ TestEnum::eEnumValue1, TestEnum::eEnumValue2, TestEnum::eEnumValue5, TestEnum::eEnumValue101 }));
 }
 
+template <typename T, std::size_t N>
+constexpr bool compare_arrays(const std::array<T, N>& a, const std::array<T, N>& b)
+{
+    for (std::size_t i = 0; i < N; ++i)
+    {
+        if (a[i] != b[i])
+            return false;
+    }
+    return true;
+}
+
+using namespace std::literals;
+static_assert(compare_arrays(ext::reflection::get_enum_values_with_names<TestEnum>(), std::array{
+    std::pair{TestEnum::eEnumValue1, "TestEnum::eEnumValue1"sv},
+    std::pair{TestEnum::eEnumValue2, "TestEnum::eEnumValue2"sv},
+    std::pair{TestEnum::eEnumValue5, "TestEnum::eEnumValue5"sv},
+}));
+
+TEST(reflection_enum, values_search)
+{
+    EXPECT_STREQ(std::string(ext::reflection::get_enum_value_name(TestEnum::eEnumValue1)).c_str(), "TestEnum::eEnumValue1");
+    EXPECT_STREQ(std::string(ext::reflection::get_enum_value_name(TestEnum::eEnumValue2)).c_str(), "TestEnum::eEnumValue2");
+    EXPECT_STREQ(std::string(ext::reflection::get_enum_value_name(TestEnum::eEnumValue5)).c_str(), "TestEnum::eEnumValue5");
+    
+    EXPECT_EQ(ext::reflection::get_enum_value_by_name<TestEnum>("TestEnum::eEnumValue1"), TestEnum::eEnumValue1);
+    EXPECT_EQ(ext::reflection::get_enum_value_by_name<TestEnum>("TestEnum::eEnumValue2"), TestEnum::eEnumValue2);
+    EXPECT_EQ(ext::reflection::get_enum_value_by_name<TestEnum>("TestEnum::eEnumValue5"), TestEnum::eEnumValue5);
+}
+
 enum UnscopedEnum
 {
     eValue1,
@@ -108,3 +139,5 @@ TEST(reflection_enum, get_unscoped_enum_values)
 {
     EXPECT_EQ((ext::reflection::get_enum_values<UnscopedEnum>()), (std::array{ UnscopedEnum::eValue1, UnscopedEnum::eValue2 }));
 }
+
+#endif

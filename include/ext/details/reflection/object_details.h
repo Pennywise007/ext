@@ -34,7 +34,7 @@ template <auto Name>
 
 #if _HAS_CXX20 ||  __cplusplus >= 202002L // C++20
     constexpr std::string_view func_name = std::source_location::current().function_name();
-#else // npt C++20
+#else // not C++20
     constexpr auto func_name = std::string_view{__builtin_FUNCSIG()};
 #endif // not C++20
 
@@ -44,7 +44,7 @@ template <auto Name>
     constexpr auto split = func_name.substr(0, func_name.size() - std::string_view(suffix).size());
     return split.substr(split.find(prefix) + std::string_view(prefix).size());
 #else
-    static_assert(false, "Unknown compiller");
+    static_assert(false, "Unsupported compiller");
 #endif
 }
 

@@ -170,7 +170,7 @@ inline LONG CALLBACK unhandled_handler(EXCEPTION_POINTERS* e)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-[[noreturn]] inline void create_dump(const char *msg = nullptr)
+inline void create_dump(const char *msg = nullptr) noexcept
 {
     if (g_dumpGenerationDisabled)
         return;

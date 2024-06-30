@@ -21,7 +21,11 @@ namespace ext::reflection::details {
 template <auto Name>
 [[nodiscard]] constexpr std::string_view get_name_impl() {
 #if !OBJECT_NAME_AVAILABLE
+#if defined(_MSC_VER)
+    static_assert(false, "Only MSVS with version 1935 or higher supports this function.");
+#else
     static_assert(false, "Unsupported compiller");
+#endif
 #elif defined(__clang__) || defined(__GNUC__)
     constexpr auto func_name = std::string_view{__PRETTY_FUNCTION__};
 

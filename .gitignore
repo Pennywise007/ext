@@ -1,13 +1,12 @@
-
-bazel-testlogs
-
-bazel-out
-
-bazel-bin
-
-bazel-ext
-
+# VS Code
 .vscode/settings.json
+
+# Bazel
+bazel-testlogs
+bazel-out
+bazel-bin
+bazel-ext
+MODULE.bazel.lock
 
 # Cmake
 build

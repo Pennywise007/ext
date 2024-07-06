@@ -427,8 +427,7 @@ protected:
         if constexpr (is_registered_serializable_object_v<ExtractedType>)
         {
             auto& descriptor = ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>();
-            auto serializable = descriptor.GetSerializable(*pointer, Base::GetName());
-            return std::make_shared<SerializableProxy<ExtractedType>>(serializable, Base::GetName());
+            return descriptor.GetSerializable(*pointer, Base::GetName());
         }
         /* Use reinterpret_cast in case of private inheritance, example:
         struct Settings
@@ -821,6 +820,8 @@ template<class Type>
 template<class Type>
 [[nodiscard]] std::shared_ptr<ISerializableCollection> SerializableObjectDescriptor<Type>::GetSerializable(Type& object, const char* customName) const
 {
+    EXT_ASSERT(!m_fields.empty()) << "Object " << ext::type_name<Type>() << "doesn't have any registered fields. Did you forget to register them?";
+
     if (customName == nullptr)
         customName = m_name;
     return std::make_shared<details::SerializableObject<Type>>(

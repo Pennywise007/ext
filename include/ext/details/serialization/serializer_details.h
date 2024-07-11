@@ -264,11 +264,19 @@ inline bool SerializeObject(const std::unique_ptr<ISerializer>& serializer, cons
         objectCollection = ext::get_singleton<ext::serializable::SerializableObjectDescriptor<Type>>().GetSerializable(const_cast<Type&>(object));
         serializableObject = objectCollection.get();
     }
-    else
+    else if constexpr (std::is_base_of_v<ISerializable, Type>)
     {
         // To avoid problems with private inheritance will use C++ magic
         serializableObject = reinterpret_cast<const ISerializable*>(&object);
     }
+    else
+    {
+        static_assert(ext::serializable::is_serializable_object<Type>, "Object can be serializable in C++20");
+
+        objectCollection = ext::get_singleton<ext::serializable::SerializableObjectDescriptor<Type>>().GetSerializable(const_cast<Type&>(object));
+        serializableObject = objectCollection.get();
+    }
+
     EXT_EXPECT(serializableObject) << "Can't find serializable description for " << ext::type_name<Type>();
 
     std::shared_ptr<SerializableNode> serializationTreeRoot;
@@ -353,10 +361,17 @@ inline bool DeserializeObject(const std::unique_ptr<serializer::IDeserializer>& 
         objectCollection = ext::get_singleton<ext::serializable::SerializableObjectDescriptor<Type>>().GetSerializable(object);
         deserializableObject = objectCollection.get();
     }
-    else
+    else if constexpr (std::is_base_of_v<ISerializable, Type>)
     {
         // To avoid problems with private inheritance will use C++ magic
         deserializableObject = reinterpret_cast<ISerializable*>(&object);
+    }
+    else
+    {
+        static_assert(ext::serializable::is_serializable_object<Type>, "Object can be serializable in C++20");
+       
+        objectCollection = ext::get_singleton<ext::serializable::SerializableObjectDescriptor<Type>>().GetSerializable(object);
+        deserializableObject = objectCollection.get();
     }
 
     EXT_EXPECT(deserializableObject) << "Can't find deserializable description for " << ext::type_name<Type>();

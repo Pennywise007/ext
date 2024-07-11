@@ -1,0 +1,60 @@
+"SerializableTypes": {
+    "sharedSerializableInterface": null,
+    "uniqueSerializableInterface": null,
+    "optionalSerializableInterface": null,
+    "serializableInterface": {
+        "flagTest": true
+    },
+    "serializableObjectField": "test",
+    "baseTypesField": {
+        "value": 0,
+        "string": "",
+        "wstring": "",
+        "valueMap": {
+        },
+        "valueMultimap": {
+        },
+        "valueList": {
+        },
+        "valueVector": {
+        },
+        "valueSet": {
+        },
+        "valueMultiSet": {
+        },
+        "path": "\"\"",
+        "optional": null,
+        "optionalPair": null,
+        "vectorOptional": {
+        },
+        "pair": {
+            "First": 0,
+            "Second": false
+        },
+        "listPair": {
+        }
+    },
+    "serializableList": {
+    },
+    "serializableSharedPtr": null,
+    "serializableUniquePtr": null,
+    "serializableUniquePtrList": {
+    },
+    "serializableOptional": null,
+    "serializableStructsMap": {
+    },
+    "serializableStructsMapShared": {
+    },
+    "serializableStructsMultiMap": {
+    },
+    "serializableStructsMultiMapShared": {
+    },
+    "serializableStructsSet": {
+    },
+    "serializableStructsMultiSet": {
+    },
+    "strings": {
+    },
+    "wstrings": {
+    }
+}

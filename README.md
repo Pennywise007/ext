@@ -15,14 +15,12 @@ bazel test //...
 <details><summary>CMake build and run tests</summary>
 
 ```ps
-mkdir build
-cd build
-cmake .. -DEXT_BUILD_TESTS=ON
-cmake --build . --parallel
+cmake -B build -DEXT_BUILD_TESTS=ON
+cmake --build build --parallel
 # On windows
-.\tests\Debug\ext_tests.exe
+.\build\tests\Debug\ext_tests.exe
 # On linux
-./tests/ext_tests
+./build/tests/ext_tests
 ```
 
 </details>
@@ -112,7 +110,7 @@ ext::reflection::get_field_name<TestStruct, 2> == "charArrayField"
 #endif
 
 // Checking if object has some field
-HAS_FIELD(TestStruct, boolea) = true;
+HAS_FIELD(TestStruct, booleanField) = true;
 HAS_FIELD(TestStruct, unknown) = false;
 
 // Checking if object has some function
@@ -188,6 +186,28 @@ Serialization objects to/from text, xml
 using namespace ext::serializable;
 using namespace ext::serializer;
 
+#if C++20
+struct Settings
+{
+    struct User
+    {
+        std::int64_t id;
+        std::string firstName;
+        std::string userName;
+    };
+    
+    std::wstring password;
+    std::list<User> registeredUsers;
+};
+
+Settings settings;
+
+std::wstring text;
+if (!DeserializeObject(Factory::TextDeserializer(text), settings))
+    ...
+if (!SerializeObject(Factory::TextSerializer(text), settings))
+    ...
+#endif // C++20
 struct Settings
 {
     struct User
@@ -215,7 +235,6 @@ struct Settings
 			...
 	}
 };
-
 ```
 </details>
 

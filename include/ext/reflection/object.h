@@ -17,16 +17,17 @@ static_assert(ext::reflection::constructor_size<TestStruct> == 0);*/
 template <typename T, size_t MaxConstructorSize = 16>
 inline constexpr size_t constructor_size = ext::reflection::details::find_min_constructor<T, 0, MaxConstructorSize>::Count() - 1;
 
-/*  Check if object constructible with {}, useful for getting fields count.
-    Note: object shouldn't have a constructors.
+/*  Check how many fields object has
+    Note: can check only public fields and only if object doesn't have any custom constructors
     Example:
 struct TestStruct  {
     std::string field_1;
     std::string field_2;
 };
-static_assert(ext::reflection::brace_constructor_size<TestStruct> == 2);*/
+static_assert(ext::reflection::fields_count<TestStruct> == 2);*/
 template <typename T, size_t MaxConstructorSize = 100>
-inline constexpr size_t brace_constructor_size = ext::reflection::details::find_max_brace_constructor<T, MaxConstructorSize, 0>::Count() - 1;
+inline constexpr size_t fields_count = 
+    ext::reflection::details::find_max_brace_constructor<T, MaxConstructorSize, 0>::Count() - 1;
 
 /*
 Getting object fields(works with public fields only)
@@ -45,7 +46,7 @@ std::get<1>(fields) = true;
 template <typename Type>
 constexpr auto get_object_fields(Type&& obj)
 {
-    constexpr auto fieldsCount = brace_constructor_size<std::decay_t<Type>>;
+    constexpr auto fieldsCount = fields_count<std::decay_t<Type>>;
     static_assert(fieldsCount != 0, "Failed to determine fields count");
 
     return details::get_object_fields_impl<fieldsCount>(obj);
@@ -62,11 +63,11 @@ struct Foo {
     bool booleanField;
 };
 
-ext::reflection::get_field_name<Foo, 0> == "intField"
-ext::reflection::get_field_name<Foo, 1> == "booleanField"
+ext::reflection::field_name<Foo, 0> == "intField"
+ext::reflection::field_name<Foo, 1> == "booleanField"
 */
 template<class Type, auto FieldIndex>
-constexpr auto get_field_name = details::get_field_name_impl<&std::get<FieldIndex>(get_object_fields(details::external<Type>))>();
+constexpr auto field_name = details::get_field_name_impl<&std::get<FieldIndex>(get_object_fields(details::external<Type>))>();
 #endif // C++20
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

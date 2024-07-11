@@ -29,12 +29,13 @@ constexpr auto kSampleTextDefault = "serialization/text_default.txt";
 constexpr auto kSampleTextModified = "serialization/text_modification.txt";
 constexpr auto kSampleXMLDefault = "serialization/xml_default.xml";
 constexpr auto kSampleXMLModified = "serialization/xml_modification.xml";
-} // namespace
 
 struct CleanUp
 {
     ~CleanUp() { std::filesystem::remove(kTestXmlFilePath); }
 } __cleanUp;
+
+} // namespace
 
 struct ISerializableInterface : ISerializableCollection
 {
@@ -94,7 +95,7 @@ struct BaseTypes
         REGISTER_SERIALIZABLE_FIELD(testField);
     }
 
-    BaseTypes(bool /*SetValue*/)
+    BaseTypes(bool)
         : BaseTypes()
     {
         SetFieldValues();
@@ -300,7 +301,7 @@ TEST(deserialization_test, xml_modified)
 #define DECLARE_SERIALIZABLE_CALLBACKS()                                                                    \
     void OnSerializationStart() { serializationStarted = true; }                                            \
     void OnSerializationEnd() { EXPECT_TRUE(serializationStarted); serializationEnded = true; };            \
-    void OnDeserializationStart(std::shared_ptr<SerializableNode>& /*serializableTree*/)                    \
+    void OnDeserializationStart(std::shared_ptr<SerializableNode>&)                    \
     { deserializationStarted = true; }                                                                      \
     void OnDeserializationEnd() { EXPECT_TRUE(deserializationStarted); deserializationEnded = true; };      \
     bool serializationStarted = false;                                                                      \

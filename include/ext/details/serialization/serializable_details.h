@@ -79,7 +79,7 @@ template<class T>
 inline constexpr bool is_iserializable_v = is_based_on<ISerializable, T>;
 // Check if class inherited from ISerializable or registered in SerializableObjectDescriptor
 template<class T>
-inline constexpr bool is_serializable_v = is_iserializable_v<T> || is_registered_serializable_object_v<T>;
+inline constexpr bool is_serializable_v = is_iserializable_v<T> || is_serializable_object<T>;
 
 template <class Type>
 std::shared_ptr<ISerializable> get_as_serializable(const std::string& name, Type* type);
@@ -105,15 +105,16 @@ void call_on_serialization_start(Type* pointer)
         return;
 
     using ExtractedType = std::extract_value_type_v<Type>;
-    if constexpr (is_registered_serializable_object_v<ExtractedType>)
-        ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>().CallOnSerializationStart(pointer);
-    else if constexpr (details::is_iserializable_v<ExtractedType>)
+    if constexpr (details::is_iserializable_v<ExtractedType>)
     {
         if constexpr (HAS_FUNCTION(ExtractedType, OnSerializationStart))
             pointer->OnSerializationStart();
     }
     else
-        static_assert(std::is_same_v<void, ExtractedType>, "Unknown object to call serialization start");
+    {
+        static_assert(is_serializable_object<ExtractedType>, "Unknown object to call serialization start");
+        ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>().CallOnSerializationStart(pointer);
+    }
 }
 
 template <class Type>
@@ -123,15 +124,16 @@ void call_on_serialization_end(Type *pointer)
         return;
 
     using ExtractedType = std::extract_value_type_v<Type>;
-    if constexpr (is_registered_serializable_object_v<ExtractedType>)
-        ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>().CallOnSerializationEnd(pointer);
-    else if constexpr (details::is_iserializable_v<ExtractedType>)
+    if constexpr (details::is_iserializable_v<ExtractedType>)
     {
         if constexpr (HAS_FUNCTION(ExtractedType, OnSerializationEnd))
             pointer->OnSerializationEnd();
     }
     else
-        static_assert(std::is_same_v<void, ExtractedType>, "Unknown object to call serialization end");
+    {
+        static_assert(is_serializable_object<ExtractedType>, "Unknown object to call serialization end");
+        ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>().CallOnSerializationEnd(pointer);
+    }
 }
 
 template <class Type>
@@ -141,15 +143,16 @@ void call_on_deserialization_start(Type *pointer, std::shared_ptr<SerializableNo
         return;
 
     using ExtractedType = std::extract_value_type_v<Type>;
-    if constexpr (is_registered_serializable_object_v<ExtractedType>)
-        ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>().CallOnDeserializationStart(pointer, serializableTree);
-    else if constexpr (details::is_iserializable_v<ExtractedType>)
+    if constexpr (details::is_iserializable_v<ExtractedType>)
     {
         if constexpr (HAS_FUNCTION(ExtractedType, OnDeserializationStart))
             pointer->OnDeserializationStart(serializableTree);
     }
     else
-        static_assert(std::is_same_v<void, ExtractedType>, "Unknown object to call serialization end");
+    {
+        static_assert(is_serializable_object<ExtractedType>, "Unknown object to call deserialization start");
+        ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>().CallOnDeserializationStart(pointer, serializableTree);
+    }
 }
 
 template <class Type>
@@ -159,15 +162,16 @@ void call_on_deserialization_end(Type *pointer)
         return;
 
     using ExtractedType = std::extract_value_type_v<Type>;
-    if constexpr (is_registered_serializable_object_v<ExtractedType>)
-        ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>().CallOnDeserializationEnd(pointer);
-    else if constexpr (details::is_iserializable_v<ExtractedType>)
+    if constexpr (details::is_iserializable_v<ExtractedType>)
     {
         if constexpr (HAS_FUNCTION(ExtractedType, OnDeserializationEnd))
             pointer->OnDeserializationEnd();
     }
     else
-        static_assert(std::is_same_v<void, ExtractedType>, "Unknown object to call serialization end");
+    {
+        static_assert(is_serializable_object<ExtractedType>, "Unknown object to call deserialization end");
+        ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>().CallOnDeserializationEnd(pointer);
+    }
 }
 
 // Wrapper around Type object to convert it to the ISerializableCollection to create ability to iterate over fields
@@ -288,13 +292,10 @@ protected:
 
 // Proxy class for ISerializableCollection, used for base classes
 template <class Type>
-struct SerializableProxy<Type, std::enable_if_t<is_based_on<ISerializableCollection, Type> || is_registered_serializable_object_v<Type>>> : ISerializableCollection
+struct SerializableProxy<Type, std::enable_if_t<is_based_on<ISerializableCollection, Type>>> : ISerializableCollection
 {
     SerializableProxy(ISerializableCollection* collectionPointer, std::optional<std::string> name = std::nullopt)
        : m_name(std::move(name)), m_collection(collectionPointer) {}
-    // used for is_registered_serializable_object_v
-    SerializableProxy(const std::shared_ptr<ISerializableCollection>& collectionPointer, std::optional<std::string> name = std::nullopt)
-       : m_name(std::move(name)), m_collection(collectionPointer.get()), m_collectionHolder(collectionPointer) {}
 
 protected:
 // ISerializable
@@ -331,9 +332,11 @@ protected:
         Base::GetType()->reset();
         if (serializableTree->HasChilds())
         {
-            if (is_registered_serializable_object_v<ExtractedType> ||
-                is_based_on<ISerializableCollection, ExtractedType> ||
-                std::dynamic_pointer_cast<ISerializableCollection>(get_as_serializable<ExtractedType>(Base::GetName(), nullptr)))
+            if constexpr (is_serializable_object<ExtractedType> ||
+                is_based_on<ISerializableCollection, ExtractedType>)
+                Base::GetType()->emplace(create_default_value<ExtractedType>());
+            else if (std::dynamic_pointer_cast<ISerializableCollection>(
+                get_as_serializable<ExtractedType>(Base::GetName(), nullptr)))
                 Base::GetType()->emplace(create_default_value<ExtractedType>());
             else
                 EXT_ASSERT(false);
@@ -382,7 +385,7 @@ protected:
         if constexpr (std::is_same_v<std::unique_ptr<RealType>, Type> || std::is_same_v<std::shared_ptr<RealType>, Type>)
         {
             bool tryCreateDefault = false;
-            if constexpr (is_based_on<ISerializableCollection, RealType> || is_registered_serializable_object_v<RealType>)  // TODO it was Type
+            if constexpr (is_based_on<ISerializableCollection, RealType> || is_serializable_object<RealType>)
                 tryCreateDefault = serializableTree->HasChilds();
             else
                 tryCreateDefault = serializableTree->Value.value_or(SerializableValue::CreateNull()).Type != SerializableValue::ValueType::eNull;
@@ -443,8 +446,9 @@ protected:
             return std::make_shared<SerializableProxy<ExtractedType>>(reinterpret_cast<ISerializableField*>(pointer), Base::GetName());
         else
         {
-            EXT_EXPECT(false) << "Failed to create SerializableProxy from " << ext::type_name<ExtractedType>();
-            return nullptr;
+            static_assert(is_serializable_object<ExtractedType>, "Object can be serializable in C++20 but not registered");
+            auto& descriptor = ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>();
+            return descriptor.GetSerializable(*pointer, Base::GetName());
         }
     }
 };
@@ -760,8 +764,13 @@ protected:
     {
         if constexpr (is_registered_serializable_object_v<BaseType>)
             return ext::get_singleton<SerializableObjectDescriptor<BaseType>>().GetFieldsCount();
+        else if constexpr (is_iserializable_v<BaseType>)
+            return 1;
         else
-            return 1;        
+        {
+            static_assert(is_serializable_object<BaseType>, "Object can be serializable in C++20");
+            return ext::get_singleton<SerializableObjectDescriptor<BaseType>>().GetFieldsCount();
+        }
     }
 
     [[nodiscard]] std::shared_ptr<ISerializable> GetField(const size_t& index, void* objectPointer) const override
@@ -773,10 +782,15 @@ protected:
         const SerializableObjectDescriptor<BaseType>& baseDescriptor = ext::get_singleton<SerializableObjectDescriptor<BaseType>>();
         if constexpr (is_registered_serializable_object_v<BaseType>)
             return baseDescriptor.GetSerializable(*object)->Get(index);
-        else
+        else if constexpr (is_iserializable_v<BaseType>)
         {
             auto* ser = baseDescriptor.template ConvertToType<ext::serializable::ISerializable>(object);
             return get_as_serializable<BaseType>(ser->GetName(), object);
+        }
+        else
+        {
+            static_assert(is_serializable_object<BaseType>, "Object can be serializable in C++20");
+            return baseDescriptor.GetSerializable(*object)->Get(index);
         }
     }
 };
@@ -809,23 +823,55 @@ void SerializableObjectDescriptor<Type>::RegisterSerializableBaseClasses()
 template<class Type>
 [[nodiscard]] size_t SerializableObjectDescriptor<Type>::GetFieldsCount() const
 {
-    size_t result = 0;
-    for (const auto& base : m_baseSerializableClasses)
-    {
-        result += base->CountFields();
-    }
-    return result + m_fields.size();
+    static const size_t fieldsCount = [&]() {
+        size_t result = 0;
+        for (const auto& base : m_baseSerializableClasses)
+        {
+            result += base->CountFields();
+        }
+
+        if constexpr (!is_registered_serializable_object_v<Type>)
+            return result + ext::reflection::fields_count<Type>;
+        else
+            return result + m_fields.size();
+    }();
+    return fieldsCount;
 }
 
 template<class Type>
 [[nodiscard]] std::shared_ptr<ISerializableCollection> SerializableObjectDescriptor<Type>::GetSerializable(Type& object, const char* customName) const
 {
-    EXT_ASSERT(!m_fields.empty()) << "Object " << ext::type_name<Type>() << "doesn't have any registered fields. Did you forget to register them?";
-
     if (customName == nullptr)
         customName = m_name;
-    return std::make_shared<details::SerializableObject<Type>>(
-        object, customName != nullptr ? customName : ext::type_name<Type>(), m_fields, m_baseSerializableClasses);
+
+    const char* collectionName = customName != nullptr ? customName : ext::type_name<Type>();
+
+#if _HAS_CXX20 ||  __cplusplus >= 202002L // C++20
+    if constexpr (!is_registered_serializable_object_v<Type>)
+    {
+        static_assert(ext::reflection::fields_count<Type> > 0, "No fields in object for serialization");
+
+        auto fields = ext::reflection::get_object_fields(object);
+        
+        auto fieldsCollection = std::make_shared<details::SerializableCollectionImpl>(collectionName);
+        const auto registerField = [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+            (([&] {
+                fieldsCollection->AddField(details::get_as_serializable(
+                    std::string(ext::reflection::field_name<Type, Is>),
+                    &std::get<Is>(fields)));
+            }()), ...);
+        };
+        registerField(std::make_index_sequence<std::tuple_size_v<decltype(fields)>>());
+
+        return fieldsCollection;
+    }
+    else
+#endif // C++20
+    {
+        EXT_ASSERT(!m_fields.empty()) << "Object " << ext::type_name<Type>() << "doesn't have any registered fields. Did you forget to register them?";
+        return std::make_shared<details::SerializableObject<Type>>(
+            object, collectionName, m_fields, m_baseSerializableClasses);
+    }
 }
 
 template<class Type>

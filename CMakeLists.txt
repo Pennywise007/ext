@@ -9,7 +9,7 @@ set(GTEST_VERSION 1.12.0 CACHE STRING "Google test version")
 set(PUGI_XML_VERSION v1.13 CACHE STRING "Pugi XML version")
 
 # Enable C++17 language standard.
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 macro(ext_option OPTION_NAME OPTION_TEXT OPTION_DEFAULT)
     option(${OPTION_NAME} ${OPTION_TEXT} ${OPTION_DEFAULT})

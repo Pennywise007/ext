@@ -8,6 +8,29 @@
 
     Usage example:
 
+#if C++20
+struct Settings
+{
+    struct User
+    {
+        std::int64_t id;
+        std::string firstName;
+        std::string userName;
+    };
+    
+    std::wstring password;
+    std::list<User> registeredUsers;
+};
+
+Settings settings;
+
+std::wstring text;
+if (!DeserializeObject(Factory::TextDeserializer(text), settings))
+    ...
+if (!SerializeObject(Factory::TextSerializer(text), settings))
+    ...
+#endif // C++ 20
+
 struct InternalStruct
 {
     REGISTER_SERIALIZABLE_OBJECT();
@@ -144,6 +167,17 @@ DECLARE_CHECK_FIELD_EXISTS(__serializable_object_registration);
 // Check if class has __serializable_object_registration field
 template<class T>
 inline constexpr bool is_registered_serializable_object_v = has___serializable_object_registration_field_v<std::remove_pointer_t<std::extract_value_type_v<T>>>;
+// Check if object is seriazliable
+template<class T>
+inline constexpr bool is_serializable_object = is_registered_serializable_object_v<T>
+#if _HAS_CXX20 ||  __cplusplus >= 202002L // C++20
+    || (std::is_class_v<T>
+        // Exceptions list
+        && !std::is_same_v<T, std::string>
+        && !std::is_same_v<T, std::wstring>
+        && !std::is_same_v<T, std::filesystem::path>)
+#endif // C++20
+    ;
 
 struct SerializableNode;
 

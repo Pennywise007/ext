@@ -10,6 +10,28 @@ Usage example:
 using namespace ext::serializable;
 using namespace ext::serializer;
 
+#if C++20
+struct Settings
+{
+    struct User
+    {
+        std::int64_t id;
+        std::string firstName;
+        std::string userName;
+    };
+    
+    std::wstring password;
+    std::list<User> registeredUsers;
+};
+
+Settings settings;
+
+std::wstring text;
+if (!DeserializeObject(Factory::TextDeserializer(text), settings))
+    ...
+if (!SerializeObject(Factory::TextSerializer(text), settings))
+    ...
+#endif // C++20
 struct Settings
 {
     struct User

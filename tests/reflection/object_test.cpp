@@ -36,7 +36,7 @@ struct TestStruct {
     void existingFunction(int) {}
 };
 
-static_assert(ext::reflection::brace_constructor_size<TestStruct> == 3, "Failed to determine fields count");
+static_assert(ext::reflection::fields_count<TestStruct> == 3, "Failed to determine fields count");
 
 static_assert(HAS_FIELD(TestStruct, booleanField), "Failed to find booleanField field");
 static_assert(!HAS_FIELD(TestStruct, unknown), "Failed to find unknown field");
@@ -57,11 +57,11 @@ static_assert(std::get<2>(ext::reflection::get_object_fields(kGlobalObj)) == "te
 
 #if _HAS_CXX20 ||  __cplusplus >= 202002L // C++20
 
-static_assert(ext::reflection::get_field_name<decltype(kGlobalObj), 0> == "intField",
+static_assert(ext::reflection::field_name<decltype(kGlobalObj), 0> == "intField",
               "Failed to get_field_name");
-static_assert(ext::reflection::get_field_name<TestStruct, 1> == "booleanField",
+static_assert(ext::reflection::field_name<TestStruct, 1> == "booleanField",
               "Failed to get_field_name");
-static_assert(ext::reflection::get_field_name<TestStruct, 2> == "charArrayField",
+static_assert(ext::reflection::field_name<TestStruct, 2> == "charArrayField",
               "Failed to get_field_name");
 
 #endif // C++20

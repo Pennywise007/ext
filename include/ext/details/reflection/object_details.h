@@ -126,7 +126,6 @@ struct find_min_constructor<Type, End, End>
 
 template <class T, class... TArgs>
 decltype(void(T{std::declval<TArgs>()...}), std::true_type{}) test_is_braces_constructible(int);
-
 template <class, class...>
 std::false_type test_is_braces_constructible(...);
 

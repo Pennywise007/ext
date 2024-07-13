@@ -58,7 +58,14 @@ template <auto Name>
 template <auto Ptr>
 [[nodiscard]] consteval auto get_field_name_impl() -> std::string_view {
     constexpr auto name = get_name_impl<Ptr>();
+#if defined(__GNUC__)
+    constexpr auto ind = name.find_last_of(":") + 1;
+    // extracting everything which is after ':' symbol and before ')'
+    return name.substr(ind, name.size() - ind - 1);
+#else // not GNUC
+    // extracting everything which is after '->' symbol
     return name.substr(name.find_last_of("->") + 1);
+#endif // not GNUC
 }
 
 #endif // C++20

@@ -11,9 +11,13 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlcomcli.h>
+#include <objbase.h>
 
 #include <combaseapi.h> // DECLARE_INTERFACE_IID_
+#include <comdef.h>
 #include <stdio.h>      // __VA_ARGS__
+
+#include <ext/core/check.h>
 
 /*
 Usage:
@@ -143,6 +147,34 @@ Usage:
 class ATL_NO_VTABLE classname                           \
     : public CComObjectRootEx<CComMultiThreadModel>
 
+// Initilize com, allows to init it single time in any time on the app run and uninit it on app exit
+inline void init_com(bool multithreaded)
+{
+    struct com_initializer
+    {
+        com_initializer(bool multithreaded)
+        {
+            auto result = multithreaded ? CoInitializeEx(NULL, COINIT_MULTITHREADED) : CoInitialize(NULL);
+            EXT_EXPECT(SUCCEEDED(result)) << "COM initialization failed, " << _com_error(result).ErrorMessage();
+
+            result = CoInitializeSecurity(NULL, -1, NULL, NULL,
+                RPC_C_AUTHN_LEVEL_PKT_PRIVACY,
+                RPC_C_IMP_LEVEL_IMPERSONATE,
+                NULL,
+                EOAC_SECURE_REFS,
+                NULL);
+            EXT_EXPECT(SUCCEEDED(result)) << "COM initialization of the security failed, " << _com_error(result).ErrorMessage();
+        }
+
+        ~com_initializer() noexcept
+        {
+            CoUninitialize();
+        }
+    };
+
+    static const com_initializer init(multithreaded);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // An extended class CComQIPtr, can be used with all standard CComPtr classes,
 // whether it's CComPtr, CComQIPtr, or CComPtrBase.
@@ -153,15 +185,12 @@ class ComPtr :
 {
 public:
     ComPtr() throw()
-    {
-    }
+    {}
     ComPtr(decltype(__nullptr)) throw()
-    {
-    }
+    {}
     ComPtr(_Inout_opt_ T* lp) throw() :
         CComPtr<T>(lp)
-    {
-    }
+    {}
     ComPtr(_Inout_opt_ IUnknown* lp) throw()
     {
         if (lp != NULL)
@@ -172,12 +201,10 @@ public:
     }
     ComPtr(_Inout_ const ComPtr<T>& lp) throw() :
         CComPtr<T>(lp.p)
-    {
-    }
+    {}
     ComPtr(_Inout_ const CComPtrBase<T>& lp) throw() :
         CComPtr<T>(lp.p)
-    {
-    }
+    {}
     template <typename U>
     ComPtr(_Inout_ const CComPtrBase<U>& lp)
     {
@@ -220,8 +247,7 @@ public:
     template <typename ...Args>
     ComObjectNoLock(_In_ Args&&... args)
         : Base(std::forward<Args>(args)...)
-    {
-    }
+    {}
 
     // Set refcount to -(LONG_MAX/2) to protect destruction and
     // also catch mismatched Release in debug builds

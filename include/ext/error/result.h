@@ -5,6 +5,7 @@
 #include <ext/core/check.h>
 #include <ext/core/defines.h>
 #include <ext/error/exception.h>
+#include <ext/reflection/enum.h>
 #include <ext/scope/on_exit.h>
 
 namespace ext {
@@ -23,23 +24,7 @@ enum ResultCodes
 template <typename T>
 inline T& operator<<(T& stream, const ::ext::ResultCodes res)
 {
-    switch (res)
-    {
-    case ::ext::ResultCodes::sOk:
-        return stream << "sOk";
-    case ::ext::ResultCodes::sFalse:
-        return stream << "sFalse";
-    case ::ext::ResultCodes::eFailed:
-        return stream << "eFailed";
-    case ::ext::ResultCodes::eNotFound:
-        return stream << "eNotFound";
-    case ::ext::ResultCodes::eOutOfMemory:
-        return stream << "eOutOfMemory";
-    case ::ext::ResultCodes::eUnknown:
-        return stream << "eUnknown";
-    }
-
-    EXT_UNREACHABLE();
+    return stream << ::ext::reflection::get_enum_value_name<::ext::ResultCodes>(res);
 }
 
 namespace result {

@@ -1,9 +1,9 @@
 #pragma once
 
+#include <string_view>
+
 #include <ext/core/check.h>
-
 #include <ext/details/reflection/enum_details.h>
-
 #include <ext/types/utils.h>
 
 namespace ext::reflection {

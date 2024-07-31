@@ -1,5 +1,8 @@
-# ext library
-Header only C++ extensions library, requires at least C++17
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/c27e7ac4-7453-498a-90ea-dfab4a430a43" alt="Ext logo">
+</p>
+
+Developed and maintained a comprehensive header-only C++ library, EXT designed to enhance productivity and flexibility in modern C++17 and later standarts.
 
 # Build
 
@@ -551,7 +554,7 @@ static_assert(33 == my_map.get_value(22));
 - [Full exe path](https://github.com/Pennywise007/ext/blob/main/include/ext/std/filesystem.h#L17C44-L17C61)
 
 # Other
-- [Call once(GO analog)](https://github.com/Pennywise007/ext/blob/main/include/ext/utils/call_once.h#L23)
+- [Call once (GO analog)](https://github.com/Pennywise007/ext/blob/main/include/ext/utils/call_once.h#L23)
 - [Thread safe singleton with lifetime check](https://github.com/Pennywise007/ext/blob/main/include/ext/core/singleton.h)
 - [Extension for tuples/variants and types array](https://github.com/Pennywise007/ext/blob/main/include/ext/core/mpl.h)
 - [Auto setter on scope change](https://github.com/Pennywise007/ext/blob/main/include/ext/scope/auto_setter.h)

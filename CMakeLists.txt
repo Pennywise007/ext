@@ -9,7 +9,10 @@ set(GTEST_VERSION 1.12.0 CACHE STRING "Google test version")
 set(PUGI_XML_VERSION v1.13 CACHE STRING "Pugi XML version")
 
 # Enable C++17 language standard.
-set(CMAKE_CXX_STANDARD 20)
+if (NOT CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+endif()
 
 macro(ext_option OPTION_NAME OPTION_TEXT OPTION_DEFAULT)
     option(${OPTION_NAME} ${OPTION_TEXT} ${OPTION_DEFAULT})
@@ -33,7 +36,8 @@ include_directories(include)
 if (EXT_BUILD_TESTS)
     # GTest
     if (EXT_USE_SYSTEM_GTEST)
-        find_package(GTest)
+        find_package(GTest REQUIRED)
+        message(STATUS "Using system gtest.")
     endif()
 
     if (NOT GTEST_FOUND)
@@ -61,7 +65,8 @@ if (EXT_BUILD_TESTS)
 
     # Pugi xml
     if (EXT_USE_SYSTEM_PUGIXML)
-        find_package(pugixml)
+        find_package(pugixml REQUIRED)
+        message(STATUS "Using system pugixml.")
     endif()
 
     if (NOT PUGIXML_FOUND)
@@ -69,7 +74,7 @@ if (EXT_BUILD_TESTS)
         FetchContent_Declare(pugixml
                              GIT_REPOSITORY https://github.com/zeux/pugixml.git
                              GIT_TAG ${PUGI_XML_VERSION})
-        
+
         FetchContent_GetProperties(pugixml)
         if (NOT pugixml_POPULATED)
             FetchContent_Populate(pugixml)
@@ -79,6 +84,8 @@ if (EXT_BUILD_TESTS)
 
     # Adding test libraries
     enable_testing()
+
+    # Adding ext_tests project
     add_subdirectory(tests)
 
 endif()

@@ -6,7 +6,6 @@ cc_library(
    includes = ["."],
    data = glob([
       "serialization/*.txt",
-      "serialization/*.xml",
    ]),
    visibility = ["//tests:__subpackages__"],
 )

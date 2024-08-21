@@ -4,10 +4,3 @@ bazel_dep(name = "googletest", version = "1.14.0")
 bazel_dep(name = "rules_cc", version = "0.0.9")
 
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
-http_archive(
-    name = "com_github_zeux_pugixml",
-    url = "https://github.com/zeux/pugixml/archive/refs/tags/v1.13.zip",
-    strip_prefix = "pugixml-1.13",
-    build_file = "//bazel:BUILD.pugixml",
-)

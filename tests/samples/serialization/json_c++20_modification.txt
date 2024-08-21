@@ -1,0 +1,503 @@
+{
+    "sharedSerializableInterface": [false],
+    "uniqueSerializableInterface": [false],
+    "optionalSerializableInterface": [false],
+    "serializableInterface": [false],
+    "serializableValueField": "test",
+    "customTimeValue": "2019/05/04 03:02:01",
+    "baseTypesField": {
+            "value": 213,
+            "string": "text,\\s2\\\"}]{[\\val\\",
+            "wstring": "wtext,\\s2\\\"}]{[\\val\\",
+            "valueList": [2, 5],
+            "valueVector": [2.4, 5.7, "nan"],
+            "valueSet": [2.4, 5.7],
+            "valueMultiSet": [2, 5],
+            "valueMap": {
+                    0: 2
+                },
+            "valueMultimap": {
+                    0: 2
+                },
+            "path": "\"C:\\\\Test\"",
+            "system_time": "04.03.2007 05:06:07",
+            "duration_nanoseconds": 12345678,
+            "duration_microseconds": 2000,
+            "duration_milliseconds": 3000000,
+            "duration_seconds": 4000000000,
+            "duration_minutes": 300000000000,
+            "duration_hours": 21600000000000,
+            "duration_days": 604800000000000,
+            "duration_weeks": 4838400000000000,
+            "duration_months": 23667714000000000,
+            "duration_years": 315569520000000000,
+            "optional": false,
+            "optionalPair": {
+                    "first": 453,
+                    "second": true
+                },
+            "vectorOptional": [false, true],
+            "pair": {
+                    "first": 7,
+                    "second": false
+                },
+            "listPair": [{
+                        "first": 5,
+                        "second": true
+                    }, {
+                        "first": 88,
+                        "second": false
+                    }]
+        },
+    "serializableList": [{
+                "value": 213,
+                "string": "text,\\s2\\\"}]{[\\val\\",
+                "wstring": "wtext,\\s2\\\"}]{[\\val\\",
+                "valueList": [2, 5],
+                "valueVector": [2.4, 5.7, "nan"],
+                "valueSet": [2.4, 5.7],
+                "valueMultiSet": [2, 5],
+                "valueMap": {
+                        0: 2
+                    },
+                "valueMultimap": {
+                        0: 2
+                    },
+                "path": "\"C:\\\\Test\"",
+                "system_time": "04.03.2007 05:06:07",
+                "duration_nanoseconds": 12345678,
+                "duration_microseconds": 2000,
+                "duration_milliseconds": 3000000,
+                "duration_seconds": 4000000000,
+                "duration_minutes": 300000000000,
+                "duration_hours": 21600000000000,
+                "duration_days": 604800000000000,
+                "duration_weeks": 4838400000000000,
+                "duration_months": 23667714000000000,
+                "duration_years": 315569520000000000,
+                "optional": false,
+                "optionalPair": {
+                        "first": 453,
+                        "second": true
+                    },
+                "vectorOptional": [false, true],
+                "pair": {
+                        "first": 7,
+                        "second": false
+                    },
+                "listPair": [{
+                            "first": 5,
+                            "second": true
+                        }, {
+                            "first": 88,
+                            "second": false
+                        }]
+            }, {
+                "value": 213,
+                "string": "text,\\s2\\\"}]{[\\val\\",
+                "wstring": "wtext,\\s2\\\"}]{[\\val\\",
+                "valueList": [2, 5],
+                "valueVector": [2.4, 5.7, "nan"],
+                "valueSet": [2.4, 5.7],
+                "valueMultiSet": [2, 5],
+                "valueMap": {
+                        0: 2
+                    },
+                "valueMultimap": {
+                        0: 2
+                    },
+                "path": "\"C:\\\\Test\"",
+                "system_time": "04.03.2007 05:06:07",
+                "duration_nanoseconds": 12345678,
+                "duration_microseconds": 2000,
+                "duration_milliseconds": 3000000,
+                "duration_seconds": 4000000000,
+                "duration_minutes": 300000000000,
+                "duration_hours": 21600000000000,
+                "duration_days": 604800000000000,
+                "duration_weeks": 4838400000000000,
+                "duration_months": 23667714000000000,
+                "duration_years": 315569520000000000,
+                "optional": false,
+                "optionalPair": {
+                        "first": 453,
+                        "second": true
+                    },
+                "vectorOptional": [false, true],
+                "pair": {
+                        "first": 7,
+                        "second": false
+                    },
+                "listPair": [{
+                            "first": 5,
+                            "second": true
+                        }, {
+                            "first": 88,
+                            "second": false
+                        }]
+            }],
+    "serializableSharedPtr": {
+            "value": 213,
+            "string": "text,\\s2\\\"}]{[\\val\\",
+            "wstring": "wtext,\\s2\\\"}]{[\\val\\",
+            "valueList": [2, 5],
+            "valueVector": [2.4, 5.7, "nan"],
+            "valueSet": [2.4, 5.7],
+            "valueMultiSet": [2, 5],
+            "valueMap": {
+                    0: 2
+                },
+            "valueMultimap": {
+                    0: 2
+                },
+            "path": "\"C:\\\\Test\"",
+            "system_time": "04.03.2007 05:06:07",
+            "duration_nanoseconds": 12345678,
+            "duration_microseconds": 2000,
+            "duration_milliseconds": 3000000,
+            "duration_seconds": 4000000000,
+            "duration_minutes": 300000000000,
+            "duration_hours": 21600000000000,
+            "duration_days": 604800000000000,
+            "duration_weeks": 4838400000000000,
+            "duration_months": 23667714000000000,
+            "duration_years": 315569520000000000,
+            "optional": false,
+            "optionalPair": {
+                    "first": 453,
+                    "second": true
+                },
+            "vectorOptional": [false, true],
+            "pair": {
+                    "first": 7,
+                    "second": false
+                },
+            "listPair": [{
+                        "first": 5,
+                        "second": true
+                    }, {
+                        "first": 88,
+                        "second": false
+                    }]
+        },
+    "serializableUniquePtr": {
+            "value": 213,
+            "string": "text,\\s2\\\"}]{[\\val\\",
+            "wstring": "wtext,\\s2\\\"}]{[\\val\\",
+            "valueList": [2, 5],
+            "valueVector": [2.4, 5.7, "nan"],
+            "valueSet": [2.4, 5.7],
+            "valueMultiSet": [2, 5],
+            "valueMap": {
+                    0: 2
+                },
+            "valueMultimap": {
+                    0: 2
+                },
+            "path": "\"C:\\\\Test\"",
+            "system_time": "04.03.2007 05:06:07",
+            "duration_nanoseconds": 12345678,
+            "duration_microseconds": 2000,
+            "duration_milliseconds": 3000000,
+            "duration_seconds": 4000000000,
+            "duration_minutes": 300000000000,
+            "duration_hours": 21600000000000,
+            "duration_days": 604800000000000,
+            "duration_weeks": 4838400000000000,
+            "duration_months": 23667714000000000,
+            "duration_years": 315569520000000000,
+            "optional": false,
+            "optionalPair": {
+                    "first": 453,
+                    "second": true
+                },
+            "vectorOptional": [false, true],
+            "pair": {
+                    "first": 7,
+                    "second": false
+                },
+            "listPair": [{
+                        "first": 5,
+                        "second": true
+                    }, {
+                        "first": 88,
+                        "second": false
+                    }]
+        },
+    "serializableUniquePtrList": [{
+                "value": 213,
+                "string": "text,\\s2\\\"}]{[\\val\\",
+                "wstring": "wtext,\\s2\\\"}]{[\\val\\",
+                "valueList": [2, 5],
+                "valueVector": [2.4, 5.7, "nan"],
+                "valueSet": [2.4, 5.7],
+                "valueMultiSet": [2, 5],
+                "valueMap": {
+                        0: 2
+                    },
+                "valueMultimap": {
+                        0: 2
+                    },
+                "path": "\"C:\\\\Test\"",
+                "system_time": "04.03.2007 05:06:07",
+                "duration_nanoseconds": 12345678,
+                "duration_microseconds": 2000,
+                "duration_milliseconds": 3000000,
+                "duration_seconds": 4000000000,
+                "duration_minutes": 300000000000,
+                "duration_hours": 21600000000000,
+                "duration_days": 604800000000000,
+                "duration_weeks": 4838400000000000,
+                "duration_months": 23667714000000000,
+                "duration_years": 315569520000000000,
+                "optional": false,
+                "optionalPair": {
+                        "first": 453,
+                        "second": true
+                    },
+                "vectorOptional": [false, true],
+                "pair": {
+                        "first": 7,
+                        "second": false
+                    },
+                "listPair": [{
+                            "first": 5,
+                            "second": true
+                        }, {
+                            "first": 88,
+                            "second": false
+                        }]
+            }],
+    "serializableOptional": {
+            "value": 213,
+            "string": "text,\\s2\\\"}]{[\\val\\",
+            "wstring": "wtext,\\s2\\\"}]{[\\val\\",
+            "valueList": [2, 5],
+            "valueVector": [2.4, 5.7, "nan"],
+            "valueSet": [2.4, 5.7],
+            "valueMultiSet": [2, 5],
+            "valueMap": {
+                    0: 2
+                },
+            "valueMultimap": {
+                    0: 2
+                },
+            "path": "\"C:\\\\Test\"",
+            "system_time": "04.03.2007 05:06:07",
+            "duration_nanoseconds": 12345678,
+            "duration_microseconds": 2000,
+            "duration_milliseconds": 3000000,
+            "duration_seconds": 4000000000,
+            "duration_minutes": 300000000000,
+            "duration_hours": 21600000000000,
+            "duration_days": 604800000000000,
+            "duration_weeks": 4838400000000000,
+            "duration_months": 23667714000000000,
+            "duration_years": 315569520000000000,
+            "optional": false,
+            "optionalPair": {
+                    "first": 453,
+                    "second": true
+                },
+            "vectorOptional": [false, true],
+            "pair": {
+                    "first": 7,
+                    "second": false
+                },
+            "listPair": [{
+                        "first": 5,
+                        "second": true
+                    }, {
+                        "first": 88,
+                        "second": false
+                    }]
+        },
+    "serializableStructsMap": {
+            1: {
+                    "value": 213,
+                    "string": "text,\\s2\\\"}]{[\\val\\",
+                    "wstring": "wtext,\\s2\\\"}]{[\\val\\",
+                    "valueList": [2, 5],
+                    "valueVector": [2.4, 5.7, "nan"],
+                    "valueSet": [2.4, 5.7],
+                    "valueMultiSet": [2, 5],
+                    "valueMap": {
+                            0: 2
+                        },
+                    "valueMultimap": {
+                            0: 2
+                        },
+                    "path": "\"C:\\\\Test\"",
+                    "system_time": "04.03.2007 05:06:07",
+                    "duration_nanoseconds": 12345678,
+                    "duration_microseconds": 2000,
+                    "duration_milliseconds": 3000000,
+                    "duration_seconds": 4000000000,
+                    "duration_minutes": 300000000000,
+                    "duration_hours": 21600000000000,
+                    "duration_days": 604800000000000,
+                    "duration_weeks": 4838400000000000,
+                    "duration_months": 23667714000000000,
+                    "duration_years": 315569520000000000,
+                    "optional": false,
+                    "optionalPair": {
+                            "first": 453,
+                            "second": true
+                        },
+                    "vectorOptional": [false, true],
+                    "pair": {
+                            "first": 7,
+                            "second": false
+                        },
+                    "listPair": [{
+                                "first": 5,
+                                "second": true
+                            }, {
+                                "first": 88,
+                                "second": false
+                            }]
+                }
+        },
+    "serializableStructsMapShared": {
+            "{\"value\": 213,\"string\": \"text,\\\\s2\\\\\\\"}]{[\\\\val\\\\\",\"wstring\": \"wtext,\\\\s2\\\\\\\"}]{[\\\\val\\\\\",\"valueList\": [2, 5],\"valueVector\": [2.4, 5.7, \"nan\"],\"valueSet\": [2.4, 5.7],\"valueMultiSet\": [2, 5],\"valueMap\": {0: 2},\"valueMultimap\": {0: 2},\"path\": \"\\\"C:\\\\\\\\Test\\\"\",\"system_time\": \"04.03.2007 05:06:07\",\"duration_nanoseconds\": 12345678,\"duration_microseconds\": 2000,\"duration_milliseconds\": 3000000,\"duration_seconds\": 4000000000,\"duration_minutes\": 300000000000,\"duration_hours\": 21600000000000,\"duration_days\": 604800000000000,\"duration_weeks\": 4838400000000000,\"duration_months\": 23667714000000000,\"duration_years\": 315569520000000000,\"optional\": false,\"optionalPair\": {\"first\": 453,\"second\": true},\"vectorOptional\": [false, true],\"pair\": {\"first\": 7,\"second\": false},\"listPair\": [{\"first\": 5,\"second\": true}, {\"first\": 88,\"second\": false}]}": 534
+        },
+    "serializableStructsMultiMap": {
+            1: {
+                    "value": 213,
+                    "string": "text,\\s2\\\"}]{[\\val\\",
+                    "wstring": "wtext,\\s2\\\"}]{[\\val\\",
+                    "valueList": [2, 5],
+                    "valueVector": [2.4, 5.7, "nan"],
+                    "valueSet": [2.4, 5.7],
+                    "valueMultiSet": [2, 5],
+                    "valueMap": {
+                            0: 2
+                        },
+                    "valueMultimap": {
+                            0: 2
+                        },
+                    "path": "\"C:\\\\Test\"",
+                    "system_time": "04.03.2007 05:06:07",
+                    "duration_nanoseconds": 12345678,
+                    "duration_microseconds": 2000,
+                    "duration_milliseconds": 3000000,
+                    "duration_seconds": 4000000000,
+                    "duration_minutes": 300000000000,
+                    "duration_hours": 21600000000000,
+                    "duration_days": 604800000000000,
+                    "duration_weeks": 4838400000000000,
+                    "duration_months": 23667714000000000,
+                    "duration_years": 315569520000000000,
+                    "optional": false,
+                    "optionalPair": {
+                            "first": 453,
+                            "second": true
+                        },
+                    "vectorOptional": [false, true],
+                    "pair": {
+                            "first": 7,
+                            "second": false
+                        },
+                    "listPair": [{
+                                "first": 5,
+                                "second": true
+                            }, {
+                                "first": 88,
+                                "second": false
+                            }]
+                }
+        },
+    "serializableStructsMultiMapShared": {
+            "{\"value\": 213,\"string\": \"text,\\\\s2\\\\\\\"}]{[\\\\val\\\\\",\"wstring\": \"wtext,\\\\s2\\\\\\\"}]{[\\\\val\\\\\",\"valueList\": [2, 5],\"valueVector\": [2.4, 5.7, \"nan\"],\"valueSet\": [2.4, 5.7],\"valueMultiSet\": [2, 5],\"valueMap\": {0: 2},\"valueMultimap\": {0: 2},\"path\": \"\\\"C:\\\\\\\\Test\\\"\",\"system_time\": \"04.03.2007 05:06:07\",\"duration_nanoseconds\": 12345678,\"duration_microseconds\": 2000,\"duration_milliseconds\": 3000000,\"duration_seconds\": 4000000000,\"duration_minutes\": 300000000000,\"duration_hours\": 21600000000000,\"duration_days\": 604800000000000,\"duration_weeks\": 4838400000000000,\"duration_months\": 23667714000000000,\"duration_years\": 315569520000000000,\"optional\": false,\"optionalPair\": {\"first\": 453,\"second\": true},\"vectorOptional\": [false, true],\"pair\": {\"first\": 7,\"second\": false},\"listPair\": [{\"first\": 5,\"second\": true}, {\"first\": 88,\"second\": false}]}": 534
+        },
+    "serializableStructsSet": [{
+                "value": 213,
+                "string": "text,\\s2\\\"}]{[\\val\\",
+                "wstring": "wtext,\\s2\\\"}]{[\\val\\",
+                "valueList": [2, 5],
+                "valueVector": [2.4, 5.7, "nan"],
+                "valueSet": [2.4, 5.7],
+                "valueMultiSet": [2, 5],
+                "valueMap": {
+                        0: 2
+                    },
+                "valueMultimap": {
+                        0: 2
+                    },
+                "path": "\"C:\\\\Test\"",
+                "system_time": "04.03.2007 05:06:07",
+                "duration_nanoseconds": 12345678,
+                "duration_microseconds": 2000,
+                "duration_milliseconds": 3000000,
+                "duration_seconds": 4000000000,
+                "duration_minutes": 300000000000,
+                "duration_hours": 21600000000000,
+                "duration_days": 604800000000000,
+                "duration_weeks": 4838400000000000,
+                "duration_months": 23667714000000000,
+                "duration_years": 315569520000000000,
+                "optional": false,
+                "optionalPair": {
+                        "first": 453,
+                        "second": true
+                    },
+                "vectorOptional": [false, true],
+                "pair": {
+                        "first": 7,
+                        "second": false
+                    },
+                "listPair": [{
+                            "first": 5,
+                            "second": true
+                        }, {
+                            "first": 88,
+                            "second": false
+                        }]
+            }],
+    "serializableStructsMultiSet": [{
+                "value": 213,
+                "string": "text,\\s2\\\"}]{[\\val\\",
+                "wstring": "wtext,\\s2\\\"}]{[\\val\\",
+                "valueList": [2, 5],
+                "valueVector": [2.4, 5.7, "nan"],
+                "valueSet": [2.4, 5.7],
+                "valueMultiSet": [2, 5],
+                "valueMap": {
+                        0: 2
+                    },
+                "valueMultimap": {
+                        0: 2
+                    },
+                "path": "\"C:\\\\Test\"",
+                "system_time": "04.03.2007 05:06:07",
+                "duration_nanoseconds": 12345678,
+                "duration_microseconds": 2000,
+                "duration_milliseconds": 3000000,
+                "duration_seconds": 4000000000,
+                "duration_minutes": 300000000000,
+                "duration_hours": 21600000000000,
+                "duration_days": 604800000000000,
+                "duration_weeks": 4838400000000000,
+                "duration_months": 23667714000000000,
+                "duration_years": 315569520000000000,
+                "optional": false,
+                "optionalPair": {
+                        "first": 453,
+                        "second": true
+                    },
+                "vectorOptional": [false, true],
+                "pair": {
+                        "first": 7,
+                        "second": false
+                    },
+                "listPair": [{
+                            "first": 5,
+                            "second": true
+                        }, {
+                            "first": 88,
+                            "second": false
+                        }]
+            }],
+    "strings": ["123", "Test1"],
+    "wstrings": ["123", "Test2"]
+}

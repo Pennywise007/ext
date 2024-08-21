@@ -6,7 +6,6 @@ include(FetchContent)
 
 # Setting third-party libraries versions
 set(GTEST_VERSION 1.12.0 CACHE STRING "Google test version")
-set(PUGI_XML_VERSION v1.13 CACHE STRING "Pugi XML version")
 
 # Enable C++17 language standard.
 if (NOT CMAKE_CXX_STANDARD)
@@ -27,7 +26,6 @@ macro(ext_option OPTION_NAME OPTION_TEXT OPTION_DEFAULT)
 endmacro()
 
 ext_option(EXT_USE_SYSTEM_GTEST "If ON, this project will use an installed gtest library. If none is found it will use the built-in one." OFF)
-ext_option(EXT_USE_SYSTEM_PUGIXML "If ON, this project will use an installed pugixml library. If none is found it will use the built-in one." OFF)
 ext_option(EXT_BUILD_TESTS "Set to ON to build ext tests." OFF)
 
 # Add ext include libraries
@@ -62,25 +60,6 @@ if (EXT_BUILD_TESTS)
     # Group under the "tests/gtest" project folder in IDEs such as Visual Studio.
     set_property(TARGET gtest PROPERTY FOLDER "tests/gtest")
     set_property(TARGET gtest_main PROPERTY FOLDER "tests/gtest")
-
-    # Pugi xml
-    if (EXT_USE_SYSTEM_PUGIXML)
-        find_package(pugixml REQUIRED)
-        message(STATUS "Using system pugixml.")
-    endif()
-
-    if (NOT PUGIXML_FOUND)
-        message(STATUS "Not using system pugixml, using built-in pugixml project instead.")
-        FetchContent_Declare(pugixml
-                             GIT_REPOSITORY https://github.com/zeux/pugixml.git
-                             GIT_TAG ${PUGI_XML_VERSION})
-
-        FetchContent_GetProperties(pugixml)
-        if (NOT pugixml_POPULATED)
-            FetchContent_Populate(pugixml)
-            add_subdirectory(${pugixml_SOURCE_DIR} ${pugixml_BINARY_DIR})
-        endif()
-    endif()
 
     # Adding test libraries
     enable_testing()

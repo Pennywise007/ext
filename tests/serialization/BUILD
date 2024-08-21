@@ -5,7 +5,6 @@ ext_test(
    srcs = ["serialization_test.cpp"],
    deps = [
       "//tests/samples:serialization_samples",
-      "@com_github_zeux_pugixml//:lib_pugixml",
    ],
 )
 
@@ -14,6 +13,5 @@ ext_test(
    srcs = ["serialization_c++20_test.cpp"],
    deps = [
       "//tests/samples:serialization_samples",
-      "@com_github_zeux_pugixml//:lib_pugixml",
    ],
 )

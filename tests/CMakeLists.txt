@@ -44,14 +44,8 @@ else()
   target_compile_options(ext_tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
 
-# Add pugixml source file to fix linker problems
-target_sources(ext_tests PRIVATE ${pugixml_SOURCE_DIR}/src/pugixml.cpp)
-
 # Adding test private headers
 target_include_directories(ext_tests PRIVATE samples)
 
-# Adding wchar_t support
-target_compile_definitions(ext_tests PRIVATE PUGIXML_WCHAR_MODE)
-
 # Linking third-party libraries
-target_link_libraries(ext_tests PRIVATE ${UUID_LIBRARIES} gtest_int pugixml-static)
+target_link_libraries(ext_tests PRIVATE ${UUID_LIBRARIES} gtest_int)

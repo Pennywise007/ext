@@ -1,6 +1,6 @@
-<p align="center">
+<div align="center">
   <img src="https://github.com/user-attachments/assets/c27e7ac4-7453-498a-90ea-dfab4a430a43" alt="Ext logo">
-</p>
+</div>
 
 Developed and maintained a comprehensive header-only C++ library, EXT designed to enhance productivity and flexibility in modern C++17 and later standarts.
 
@@ -29,50 +29,38 @@ cmake --build build --parallel
 </details>
 
 # Dependency injection
+
 Usage simple with .Net [Microsoft.Extensions.DependencyInjection](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection/)
+
 <details><summary>Example</summary>
 
 ```c++
 
 #include <ext/core/dependency_injection.h>
 
-struct InterfaceExample
+struct SomeInterface
 {
-    virtual ~InterfaceExample() = default;
+    virtual ~SomeInterface() = default;
 };
 
-struct InterfaceImplementationExample : InterfaceExample
+struct InterfaceImplementation : SomeInterface
 {};
 
-struct CreatedObjectExample : ext::ServiceProviderHolder
+struct Object
 {
-    explicit CreatedObjectExample(std::shared_ptr<InterfaceExample> interfaceShared, std::lazy_interface<InterfaceExample> interfaceLazy, ext::ServiceProvider::Ptr&& serviceProvider)
-        : ServiceProviderHolder(std::move(serviceProvider))
-        , m_interfaceShared(std::move(interfaceShared))
-        , m_interfaceLazyOne(std::move(interfaceLazy))
-        , m_interfaceLazyTwo(ServiceProviderHolder::m_serviceProvider)
+    explicit Object(std::shared_ptr<SomeInterface> interface)
+        : m_interface(std::move(interface))
     {}
 
-    std::shared_ptr<IRandomInterface> GetRandomInterface() const
-    {
-        return ServiceProviderHolder::GetInterface<IRandomInterface>();
-    }
-
-    std::shared_ptr<IRandomInterface> GetRandomInterfaceOption2() const
-    {
-        return ext::GetInterface<IRandomInterface>(ServiceProviderHolder::m_serviceProvider);
-    }
-
-    std::shared_ptr<InterfaceExample> m_interfaceShared;
-    ext::lazy_interface<InterfaceExample> m_interfaceLazyOne;
-    ext::lazy_interface<InterfaceExample> m_interfaceLazyTwo;
+    std::shared_ptr<SomeInterface> m_interface;
 };
 
 ext::ServiceCollection& serviceCollection = ext::get_singleton<ext::ServiceCollection>();
 serviceCollection.RegisterScoped<InterfaceImplementationExample, InterfaceExample>();
+// Register other classes
+auto serviceProvider = serviceCollection.BuildServiceProvider();
 
-const std::shared_ptr<CreatedObjectExample> object = ext::CreateObject<CreatedObjectExample>(serviceCollection.BuildServiceProvider());
-
+std::shared_ptr<Object> object = ext::CreateObject<Object>(serviceProvider);
 ```
 
 </details>
@@ -179,7 +167,9 @@ EXPECT_FALSE(ext::reflection::is_enum_value<TestEnum>(-1));
 </details>
 
 # Serialization
+
 Serialization objects to/from text, xml
+
 <details><summary>Example</summary>
 
 ```c++
@@ -239,13 +229,16 @@ struct Settings
 	}
 };
 ```
+
 </details>
 
 - [Source](https://github.com/Pennywise007/ext/tree/main/include/ext/serialization)
 - [Tests and examples](https://github.com/Pennywise007/ext/blob/main/tests/serialization/serialization_test.cpp)
 
 # Event dispatcher
+
 Allow to register events and notify subscribers
+
 <details><summary>Example</summary>
 
 ```c++
@@ -272,6 +265,7 @@ struct Recipient : ext::events::ScopeSubscription<IEvent>
 - [Source](https://github.com/Pennywise007/ext/blob/main/include/ext/core/dispatcher.h)
 
 # Threading
+
 <details><summary>Interruptible thread(boost/thread analog)</summary>
 
 ```c++
@@ -329,7 +323,7 @@ threadPool.wait_for_tasks();
 </details>
 
 
-## And others:
+## And others
 
 - [Task scheduler](https://github.com/Pennywise007/ext/blob/main/include/ext/thread/scheduler.h)
 - [Main thread methods invoker(for GUI and other synchronized actions)](https://github.com/Pennywise007/ext/blob/main/include/ext/thread/invoker.h)
@@ -351,7 +345,9 @@ channel.add(1);
 channel.add(10);
 channel.close();
 ```
+
 - [C++17 stop token](https://github.com/Pennywise007/ext/blob/main/include/ext/utils/stop_token_details.h)
+
 ```c++
 ext::stop_source source;
 ext::thread myThread([stop_token = source.get_token()]()
@@ -365,7 +361,9 @@ ext::thread myThread([stop_token = source.get_token()]()
 source.request_stop();
 myThread.join();
 ```
+
 # Tracer
+
 <details><summary>Show traces with defferent levels and time stamps in cout/cerr/output/trace file</summary>
 
 ```c++
@@ -374,42 +372,40 @@ ext::get_tracer().Enable();
 ```
 
 Simple macroses:
-Default information trace
-`	EXT_TRACE() << "My trace";`
 
-Debug information only for Debug build
-`	EXT_TRACE_DBG() << EXT_TRACE_FUNCTION "called";`
-	
-Error trace to cerr, mostly used in EXT_CHECK/EXT_EXPECT
-`	EXT_TRACE_ERR() << EXT_TRACE_FUNCTION "called";`
-	
-Can be called for scope call function check. Trace start and end scope with the given text
-`	EXT_TRACE_SCOPE() << EXT_TRACE_FUNCTION << "Main function called with " << args;`
+- Default information trace `EXT_TRACE() << "My trace";`
+- Debug information only for Debug build `EXT_TRACE_DBG() << EXT_TRACE_FUNCTION "called";`
+- Error trace to cerr, mostly used in EXT_CHECK/EXT_EXPECT `EXT_TRACE_ERR() << EXT_TRACE_FUNCTION "called";`
+- Can be called for scope call function check. Trace start and end scope with the given text `EXT_TRACE_SCOPE() << EXT_TRACE_FUNCTION << "Main function called with " << args;`
 
 - [Source](https://github.com/Pennywise007/ext/blob/main/include/ext/core/tracer.h)
 
 </details>
 
 # Check code execution and handling errors
-<details><summary>Allows to add simple checks inside executing code and manage exceptions</summary>
 
+<details><summary>Allows to add simple checks inside executing code and manage exceptions</summary>
 
 ```c++
 #include <ext/core/check.h>
 ```
+
 **EXT_CHECK** - throws exception if expression is false
 
 **EXT_CHECK**(bool_expression) << "Text";
+
 ```c++
 if (!bool_expression)
 	throw ::ext::check::CheckFailedException(std::source_location::current(), #bool_expression "Text");
 ```
 
 **EXT_EXPECT** - if expression is false:
+
 - Only on first failure: debug break if debugger presents, create dump otherwise
 - throws exception
 
 **EXT_EXPECT**(bool_expression) << "Text";
+
 ```c++
 if (!bool_expression)
 {
@@ -442,6 +438,7 @@ if (!bool_expression)
 </details>
 
 # Managing exceptions
+
 <details><summary>Allow to simplify managing exceptions and output error text</summary>
 
 ```c++
@@ -473,6 +470,7 @@ catch (...)
 <details><summary>Allow to catch unhandled exceptions and generate dump file</summary>
 
 Declare unhandled exceptions handler(called automatic on calling ext::dump::create_dump())
+
 ```c++
 #include <ext/error/dump_writer.h>
 
@@ -482,11 +480,13 @@ void main()
 	...
 }
 ```
-	
+
 If you need to catch error inside you code you add check:
+
 ```c++
 EXT_DUMP_IF(is_something_wrong());
-``` 
+```
+
 In this case if debugger presents - it will be stopped here, otherwise generate dump file and **continue** execution, @see DEBUG_BREAK_OR_CREATE_DUMP.
 Dump generation and debug break in case with EXT_DUMP_IF generates only once to avoid spam.
 
@@ -495,9 +495,11 @@ Dump generation and debug break in case with EXT_DUMP_IF generates only once to 
 </details>
 
 # Compile time classes
+
 <details><summary>Constexpr string</summary>
 
 Allows to combine and check text in compile time.
+
 ```c++
 #include <ext/constexpr/string.h>
 
@@ -509,6 +511,7 @@ static_assert(TextCombination == "test_second");
 ```
 
 In C++20 can be used to store text as a template argument:
+
 ```c++
     template <ext::constexpr_string name__>
     struct Object {
@@ -528,6 +531,7 @@ In C++20 can be used to store text as a template argument:
 <details><summary>Constexpr map</summary>
 
 Compile time extension for strings, allow to combine and check text in compile time.
+
 ```c++
 #include <ext/constexpr/map.h>
 
@@ -542,18 +546,23 @@ static_assert(33 == my_map.get_value(22));
 </details>
 
 # Std extensions
-## Memory:
+
+## Memory
+
 - [lazy_shared_ptr](https://github.com/Pennywise007/ext/blob/main/include/ext/std/memory.h#L56C8-L56C23) - allow to create a shared memory which will be created only on first call
 
-## Strings:
+## Strings
+
 - [Trim all](https://github.com/Pennywise007/ext/blob/main/include/ext/std/string.h#L19)
 - [String/wstring converters](https://github.com/Pennywise007/ext/blob/main/include/ext/std/string.h#L36)
 - [String format](https://github.com/Pennywise007/ext/blob/main/include/ext/std/string.h#L116C27-L116C41)
 
-## Filesystem:
+## Filesystem
+
 - [Full exe path](https://github.com/Pennywise007/ext/blob/main/include/ext/std/filesystem.h#L17C44-L17C61)
 
 # Other
+
 - [Call once (GO analog)](https://github.com/Pennywise007/ext/blob/main/include/ext/utils/call_once.h#L23)
 - [Thread safe singleton with lifetime check](https://github.com/Pennywise007/ext/blob/main/include/ext/core/singleton.h)
 - [Extension for tuples/variants and types array](https://github.com/Pennywise007/ext/blob/main/include/ext/core/mpl.h)

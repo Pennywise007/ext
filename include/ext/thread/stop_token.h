@@ -114,7 +114,7 @@ private:
 class stop_source
 {
 public:
-    stop_source() noexcept {} // compiller doesn`t like = default
+    stop_source() noexcept {} // compiler doesn`t like = default
     stop_source(stop_source&&) noexcept = default;
     stop_source(const stop_source&) noexcept = default;
     stop_source& operator=(stop_source&&) noexcept = default;

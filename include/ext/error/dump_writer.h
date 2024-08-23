@@ -8,11 +8,12 @@
 #include <Dbghelp.h>
 #include <shlwapi.h>
 #elif __GNUC__ // linux
-#include <sys/stat.h>
-#include <string.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <ctype.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #endif
 
 #include <ext/core/tracer.h>
@@ -94,7 +95,7 @@ Checks boolean expression, if true:
 * show error in log*/
 #define EXT_DUMP_IF(bool_expression)                                \
     if (const bool __result = (bool_expression); !__result)         \
-        {}                                                          \
+    {}                                                              \
     else                                                            \
         for (bool __firstEnter = true;; __firstEnter = false)       \
             if (!__firstEnter)                                      \

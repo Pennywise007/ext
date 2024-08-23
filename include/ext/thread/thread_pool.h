@@ -21,8 +21,8 @@ for (auto i = maxThreads; i != 0; --i)
     }));
 }
 threadPool.wait_for_tasks();
+*/
 
- */
 #include <algorithm>
 #include <future>
 #include <mutex>
@@ -33,6 +33,8 @@ threadPool.wait_for_tasks();
 
 #include <ext/core/check.h>
 #include <ext/core/noncopyable.h>
+
+#include <ext/reflection/enum.h>
 
 #include <ext/thread/event.h>
 #include <ext/thread/thread.h>
@@ -237,6 +239,8 @@ std::pair<thread_pool::TaskId,
             m_queueTasks.emplace_back(std::move(taskInfo));
             break;
         default:
+            static_assert(ext::reflection::get_enum_size<TaskPriority>() == 2, 
+                "Task priority has unsopported value, extent this enum");
             EXT_UNREACHABLE();
         }
         m_taskQueueChangedNotifier.notify_one();

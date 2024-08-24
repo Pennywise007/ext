@@ -24,7 +24,7 @@ template <auto Name>
 #if defined(_MSC_VER)
     static_assert(false, "Only MSVS with version 1935 or higher supports this function.");
 #else
-    static_assert(false, "Unsupported compiller");
+    static_assert(false, "Unsupported compiler");
 #endif
 #elif defined(__clang__) || defined(__GNUC__)
     constexpr auto func_name = std::string_view{__PRETTY_FUNCTION__};
@@ -48,7 +48,7 @@ template <auto Name>
     constexpr auto split = func_name.substr(0, func_name.size() - std::string_view(suffix).size());
     return split.substr(split.find(prefix) + std::string_view(prefix).size());
 #else
-    static_assert(false, "Unsupported compiller");
+    static_assert(false, "Unsupported compiler");
 #endif
 }
 

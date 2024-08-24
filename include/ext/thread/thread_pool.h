@@ -240,7 +240,7 @@ std::pair<thread_pool::TaskId,
             break;
         default:
             static_assert(ext::reflection::get_enum_size<TaskPriority>() == 2, 
-                "Task priority has unsopported value, extent this enum");
+                "Task priority has unsupported value, extent this enum");
             EXT_UNREACHABLE();
         }
         m_taskQueueChangedNotifier.notify_one();

@@ -111,15 +111,15 @@ struct TestStruct : InternalStruct
 };
 
 You can also declare this functions in your REGISTER_SERIALIZABLE_OBJECT object to get notified when (de)serialization was called:
-    // Called before collection serialization
+    // Called before object serialization
     void OnSerializationStart() {}
-    // Called after collection serialization
+    // Called after object serialization
     void OnSerializationEnd() {};
 
     // Called before deserializing object, allow to change deserializable tree and avoid unexpected data, allow to add upgrade for old stored settings
-    // Also used to allocate collections elements
+    // Also used to allocate object elements
     void OnDeserializationStart(SerializableNode& serializableTree) {}
-    // Called after collection deserialization
+    // Called after object deserialization
     void OnDeserializationEnd() {};
 */
 

@@ -168,7 +168,7 @@ EXPECT_FALSE(ext::reflection::is_enum_value<TestEnum>(-1));
 
 # Serialization
 
-Serialization objects to/from text, xml
+Serialization objects to/from json etc.
 
 <details><summary>Example</summary>
 
@@ -179,7 +179,7 @@ Serialization objects to/from text, xml
 using namespace ext::serializable;
 using namespace ext::serializer;
 
-#if C++20
+#if C++20 // we use reflection to get fields info, no macro needed, to use base classes you need to use REGISTER_SERIALIZABLE_OBJECT
 struct Settings
 {
     struct User
@@ -193,47 +193,82 @@ struct Settings
     std::list<User> registeredUsers;
 };
 
+#else // not C++20
+
+struct InternalStruct
+{
+    REGISTER_SERIALIZABLE_OBJECT();
+    DECLARE_SERIALIZABLE_FIELD(long, value);
+    DECLARE_SERIALIZABLE_FIELD(std::list<int>, valueList);
+};
+
+struct CustomValue : ISerializableValue {
+// ISerializableValue
+    [[nodiscard]] SerializableValue SerializeValue() const override { return std::to_wstring(val); }
+    [[nodiscard]] void DeserializeValue(const SerializableValue& value) override { val = std::wtoi(value); }
+    int val = 10;
+};
+
+struct Setting : InternalStruct
+{
+    REGISTER_SERIALIZABLE_OBJECT(InternalStruct);
+
+    DECLARE_SERIALIZABLE_FIELD(long, valueLong, 2);
+    DECLARE_SERIALIZABLE_FIELD(int, valueInt);
+    DECLARE_SERIALIZABLE_FIELD(std::vector<bool>, boolVector, { true, false });
+
+    DECLARE_SERIALIZABLE_FIELD(CustomValue, value);
+    DECLARE_SERIALIZABLE_FIELD(InternalStruct, internalStruct);
+
+    // Instead of using macroses - use REGISTER_SERIALIZABLE_FIELD in constructor
+    std::list<int> m_listOfParams;
+
+    MyTestStruct()
+    {
+        REGISTER_SERIALIZABLE_FIELD(m_listOfParams); // or use DECLARE_SERIALIZABLE_FIELD macro
+    }
+};
+
+#endif
+
 Settings settings;
 
-std::wstring text;
-if (!DeserializeObject(Factory::TextDeserializer(text), settings))
-    ...
-if (!SerializeObject(Factory::TextSerializer(text), settings))
-    ...
-#endif // C++20
-struct Settings
-{
-    struct User
-    {
-        REGISTER_SERIALIZABLE_OBJECT();
+std::wstring json;
+try {
+    SerializeToJson(settings, json);
+}
+catch (...) {
+    ext::ManageException(EXT_TRACE_FUNCTION);
+}
+...
+try {
+    DeserializeFromJson(settings, json);
+}
+catch (...) {
+    ext::ManageException(EXT_TRACE_FUNCTION);
+}
 
-        DECLARE_SERIALIZABLE_FIELD(std::int64_t, id);
-        DECLARE_SERIALIZABLE_FIELD(std::string, firstName);
-        DECLARE_SERIALIZABLE_FIELD(std::string, userName);
-    };
-    
-    REGISTER_SERIALIZABLE_OBJECT_N("My settings");
-    DECLARE_SERIALIZABLE_FIELD(std::wstring, token);
-    DECLARE_SERIALIZABLE_FIELD(std::wstring, password);
-    DECLARE_SERIALIZABLE_FIELD(std::list<User>, registeredUsers);
-
-	Settings(){
-        std::wstring text;
-		if (!DeserializeObject(Factory::TextDeserializer(text), *this))
-			...
-	}
-	~Settings() {
-        std::wstring text;
-		if (!SerializeObject(Factory::TextSerializer(text), *this))
-			...
-	}
-};
 ```
+
+You can also declare this functions in your REGISTER_SERIALIZABLE_OBJECT object to get notified when (de)serialization was called:
+
+// Called before object serialization
+void OnSerializationStart() {}
+// Called after object serialization
+void OnSerializationEnd() {};
+
+// Called before deserializing object, allow to change deserializable tree and avoid unexpected data, allows to add upgraders for outdated settings
+// Also used to allocate collections elements
+void OnDeserializationStart(SerializableNode& serializableTree) {}
+// Called after collection deserialization
+void OnDeserializationEnd() {};
 
 </details>
 
 - [Source](https://github.com/Pennywise007/ext/tree/main/include/ext/serialization)
-- [Tests and examples](https://github.com/Pennywise007/ext/blob/main/tests/serialization/serialization_test.cpp)
+Tests and examples:
+- [C++ 20](https://github.com/Pennywise007/ext/blob/main/tests/serialization/serialization_c++20_test.cpp)
+- [C++17](https://github.com/Pennywise007/ext/blob/main/tests/serialization/serialization_test.cpp)
 
 # Event dispatcher
 

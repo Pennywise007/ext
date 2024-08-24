@@ -173,7 +173,6 @@ Serialization objects to/from json etc.
 <details><summary>Example</summary>
 
 ```c++
-
 #include <ext/serialization/iserializable.h>
 
 using namespace ext::serializable;
@@ -266,6 +265,7 @@ void OnDeserializationEnd() {};
 </details>
 
 - [Source](https://github.com/Pennywise007/ext/tree/main/include/ext/serialization)
+
 Tests and examples:
 - [C++ 20 tests and examples](https://github.com/Pennywise007/ext/blob/main/tests/serialization/serialization_c++20_test.cpp)
 - [C++ 17 tests and examples](https://github.com/Pennywise007/ext/blob/main/tests/serialization/serialization_test.cpp)

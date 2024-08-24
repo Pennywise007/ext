@@ -34,11 +34,11 @@ TEST(stop_token_test, check_callback)
     ext::thread myThread([&, stop_token = source.get_token()]()
     {
         ext::stop_callback callback(stop_token, [&]() { callbackCalled = true; });
-
         while (!stop_token.stop_requested())
         {
             threadStartedEvent.RaiseAll();
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     });
 
     EXPECT_TRUE(threadStartedEvent.Wait());

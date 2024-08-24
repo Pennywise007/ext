@@ -95,9 +95,9 @@ static_assert(compare_arrays(ext::reflection::get_enum_values_with_names<TestEnu
 
 TEST(reflection_enum, values_search)
 {
-    EXPECT_STREQ(std::string(ext::reflection::get_enum_value_name(TestEnum::eEnumValue1)).c_str(), "TestEnum::eEnumValue1");
-    EXPECT_STREQ(std::string(ext::reflection::get_enum_value_name(TestEnum::eEnumValue2)).c_str(), "TestEnum::eEnumValue2");
-    EXPECT_STREQ(std::string(ext::reflection::get_enum_value_name(TestEnum::eEnumValue5)).c_str(), "TestEnum::eEnumValue5");
+    EXPECT_STREQ(std::string(ext::reflection::enum_to_string(TestEnum::eEnumValue1)).c_str(), "TestEnum::eEnumValue1");
+    EXPECT_STREQ(std::string(ext::reflection::enum_to_string(TestEnum::eEnumValue2)).c_str(), "TestEnum::eEnumValue2");
+    EXPECT_STREQ(std::string(ext::reflection::enum_to_string(TestEnum::eEnumValue5)).c_str(), "TestEnum::eEnumValue5");
     
     EXPECT_EQ(ext::reflection::get_enum_value_by_name<TestEnum>("TestEnum::eEnumValue1"), TestEnum::eEnumValue1);
     EXPECT_EQ(ext::reflection::get_enum_value_by_name<TestEnum>("TestEnum::eEnumValue2"), TestEnum::eEnumValue2);

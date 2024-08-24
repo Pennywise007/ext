@@ -147,10 +147,10 @@ Get enum value name in runtime
 
 Usage:
 enum class TestEnum { eEnumValue };
-ext::reflection::get_enum_value_name(TestEnum::eEnumValue) == "TestEnum::eEnumValue"
+ext::reflection::enum_to_string(TestEnum::eEnumValue) == "TestEnum::eEnumValue"
 */
 template <int MinEnumValue = 0, int MaxEnumValue = 100, typename EnumType>
-[[nodiscard]] constexpr std::string_view get_enum_value_name(EnumType value)
+[[nodiscard]] constexpr std::string_view enum_to_string(EnumType value)
 {
     static_assert(std::is_enum_v<EnumType>, "Type is not a enum");
     static_assert(MaxEnumValue > MinEnumValue, "Invalid params");
@@ -163,8 +163,8 @@ template <int MinEnumValue = 0, int MaxEnumValue = 100, typename EnumType>
         });
     if (it == enumValuesWithNames.cend())
     {
-        EXT_ASSERT(false);
-        return "Unknown value" + std::to_string((int)value) + " of enum " + ext::type_name<EnumType>();
+        EXT_ASSERT(false) << "Unknown value" + std::to_string((int)value) + " of enum " + ext::type_name<EnumType>();
+        return "Unknown enum value";
     }
     return it->second;
 }

@@ -250,7 +250,7 @@ inline DeserializerJson::DeserializerJson(const std::wstring& inputText) EXT_THR
 {
     EXT_ASSERT(m_currentNode->Type == SerializableNode::NodeType::eArray
         || m_currentNode->Type == SerializableNode::NodeType::eObject) << "Current node expected to be array or object, type: "
-        << ext::reflection::get_enum_value_name(m_currentNode->Type);
+        << ext::reflection::enum_to_string(m_currentNode->Type);
 
     EXT_EXPECT(text.size() >= 2) << "Text doesn't contain collection end";
 
@@ -270,13 +270,13 @@ inline DeserializerJson::DeserializerJson(const std::wstring& inputText) EXT_THR
         {
         case SerializableNode::NodeType::eObject:
             EXT_EXPECT(nextNode.Type == SerializableNode::NodeType::eField) << "Unexpected child type for object: "
-                << ext::reflection::get_enum_value_name(m_currentNode->Type) << ", expect field, text: " << text;
+                << ext::reflection::enum_to_string(m_currentNode->Type) << ", expect field, text: " << text;
             break;
         case SerializableNode::NodeType::eArray:
             EXT_EXPECT(nextNode.Type != SerializableNode::NodeType::eField) << "Unexpected child type for array, array can't contain fields, text: " << text;
             break;
         default:
-            EXT_EXPECT(false) << "Unexpected collection type " << ext::reflection::get_enum_value_name(m_currentNode->Type);
+            EXT_EXPECT(false) << "Unexpected collection type " << ext::reflection::enum_to_string(m_currentNode->Type);
         }
 
         bool fieldNode = nextNode.Type == SerializableNode::NodeType::eField;
@@ -301,7 +301,7 @@ inline DeserializerJson::DeserializerJson(const std::wstring& inputText) EXT_THR
             text.remove_prefix(parseCollection(text) + 1);
             break;
         default:
-            EXT_EXPECT(false) << "Unexpected object type " << ext::reflection::get_enum_value_name(m_currentNode->Type);
+            EXT_EXPECT(false) << "Unexpected object type " << ext::reflection::enum_to_string(m_currentNode->Type);
         }
 
         m_currentNode = m_currentNode->Parent;

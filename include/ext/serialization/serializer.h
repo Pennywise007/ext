@@ -437,7 +437,7 @@ private:
                 serializer->WriteFieldEnd(childLevelInfo.size() - 1, nextElementExist);
                 break;
             default:
-                EXT_EXPECT(false) << "Unknown parent node type " << ext::reflection::get_enum_value_name(node->Type);
+                EXT_EXPECT(false) << "Unknown parent node type " << ext::reflection::enum_to_string(node->Type);
             }
         };
 

@@ -218,7 +218,7 @@ inline void DeserializeObject(const std::unique_ptr<serializer::IDeserializer>& 
                 EXT_EXPECT(currentNode) << "Can't find object node for " << objectPointer->ObjectName()
                     << " with index " << objectsVisitor.GetCurrentIndexInCollection();
                 EXT_EXPECT(currentNode->Type == SerializableNode::NodeType::eObject) <<
-                    "Unexpected node type, expect object, received: " << ext::reflection::get_enum_value_name(currentNode->Type) <<
+                    "Unexpected node type, expect object, received: " << ext::reflection::enum_to_string(currentNode->Type) <<
                     ". Object name " << objectPointer->ObjectName();
 
                 objectPointer->OnDeserializationStart(*currentNode);
@@ -237,7 +237,7 @@ inline void DeserializeObject(const std::unique_ptr<serializer::IDeserializer>& 
 
                 EXT_EXPECT(currentNode) << "Can't find array node with index " << objectsVisitor.GetCurrentIndexInCollection();
                 EXT_EXPECT(currentNode->Type == SerializableNode::NodeType::eArray) <<
-                    "Unexpected node type, expect array, received: " << ext::reflection::get_enum_value_name(currentNode->Type);
+                    "Unexpected node type, expect array, received: " << ext::reflection::enum_to_string(currentNode->Type);
 
                 auto* arrayPointer = dynamic_cast<ISerializableArray*>(objectsVisitor.GetCurrentObject());
                 EXT_EXPECT(arrayPointer);

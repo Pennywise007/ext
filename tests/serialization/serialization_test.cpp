@@ -25,8 +25,6 @@ namespace {
 constexpr auto kSampleJsonDefault = "serialization/json_default.txt";
 constexpr auto kSampleJsonModified = "serialization/json_modification.txt";
 
-} // namespace
-
 struct ISerializableInterface : ISerializableArray
 {
     virtual void changeValue() = 0;
@@ -125,7 +123,7 @@ struct BaseTypes
     DECLARE_SERIALIZABLE_FIELD(std::vector<float>, valueVector);
     DECLARE_SERIALIZABLE_FIELD(std::set<double>, valueSet);
     DECLARE_SERIALIZABLE_FIELD(std::multiset<int>, valueMultiSet);
-    //DECLARE_SERIALIZABLE_FIELD((std::map<int, long>), valueMap);
+    DECLARE_SERIALIZABLE_FIELD((std::map<int, long>), valueMap);
     DECLARE_SERIALIZABLE_FIELD((std::multimap<unsigned, long>), valueMultimap);
 
     DECLARE_SERIALIZABLE_FIELD(std::filesystem::path, path);
@@ -171,7 +169,7 @@ struct BaseTypes
         string = R"(text,\s2\"}]{[\val\)";
         wstring = LR"(wtext,\s2\"}]{[\val\)";
 
-       // valueMap = { {0, 2} };
+        valueMap = { {0, 2} };
         valueMultimap = { {0, 2} };
         valueList = { 2, 5 };
         valueVector = { 2.4f, 5.7f, NAN };
@@ -290,6 +288,8 @@ struct SerializableTypes : BaseTypes, SerializableFieldImpl
         flags2 = { { 0, 1 },  { 1, 15245 } };
     }
 };
+
+} // namespace
 
 TEST(serialization_test, json_default)
 {

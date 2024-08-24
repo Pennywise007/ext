@@ -20,8 +20,6 @@ namespace {
 constexpr auto kSampleTextDefault = "serialization/json_c++20_default.txt";
 constexpr auto kSampleTextModified = "serialization/json_c++20_modification.txt";
 
-} // namespace
-
 struct ISerializableInterface : ISerializableArray
 {
     virtual void changeValue() = 0;
@@ -259,6 +257,8 @@ struct SerializableTypes
         wstrings = { L"123", L"Test2" };
     }
 };
+
+} // namespace
 
 TEST(serialization_c_plus_plus_20_test, text_default)
 {

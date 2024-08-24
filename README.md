@@ -2,7 +2,7 @@
   <img src="https://github.com/user-attachments/assets/c27e7ac4-7453-498a-90ea-dfab4a430a43" alt="Ext logo">
 </div>
 
-Developed and maintained a comprehensive header-only C++ library, EXT designed to enhance productivity and flexibility in modern C++17 and later standarts.
+Developed and maintained a comprehensive header-only C++ library, EXT designed to enhance productivity and flexibility in mode C++17 and later standards.
 
 # Build
 
@@ -267,8 +267,8 @@ void OnDeserializationEnd() {};
 
 - [Source](https://github.com/Pennywise007/ext/tree/main/include/ext/serialization)
 Tests and examples:
-- [C++ 20](https://github.com/Pennywise007/ext/blob/main/tests/serialization/serialization_c++20_test.cpp)
-- [C++17](https://github.com/Pennywise007/ext/blob/main/tests/serialization/serialization_test.cpp)
+- [C++ 20 tests and examples](https://github.com/Pennywise007/ext/blob/main/tests/serialization/serialization_c++20_test.cpp)
+- [C++ 17 tests and examples](https://github.com/Pennywise007/ext/blob/main/tests/serialization/serialization_test.cpp)
 
 # Event dispatcher
 

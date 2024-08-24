@@ -7,9 +7,9 @@ include(FetchContent)
 # Setting third-party libraries versions
 set(GTEST_VERSION 1.12.0 CACHE STRING "Google test version")
 
-# Enable C++17 language standard.
+# Enable C++20 language standard.
 if (NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD 20)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif()
 

@@ -1,11 +1,11 @@
 DEFAULT_COMPILER_OPTIONS = select({
     "@platforms//os:windows": [
-        "/std:c++17",
+        "/std:c++20",
         "-W4",
         "-WX",
     ],
     "//conditions:default": [
-        "-std=c++17",
+        "-std=c++20",
         "-Wall",
         "-Wcast-align",
         "-Wconversion",

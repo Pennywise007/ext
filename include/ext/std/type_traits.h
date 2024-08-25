@@ -30,6 +30,6 @@ struct extract_value_type<std::unique_ptr<U>> { typedef U value_type; };
 template<template<typename> class X, typename U>
 struct extract_value_type<X<U>> { typedef U value_type; };
 template<class U>
-using extract_value_type_v = typename extract_value_type<U>::value_type;
+using extract_value_type_v = typename extract_value_type<std::remove_const_t<U>>::value_type;
 
 } // namespace std

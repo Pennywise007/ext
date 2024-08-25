@@ -40,7 +40,7 @@ private:
     [[nodiscard]] virtual std::shared_ptr<ISerializable> Get(const size_t& index) override
     {
         EXPECT_EQ(0, index);
-        return details::get_as_serializable(&flagTest);
+        return details::get_as_serializable(flagTest);
     }
 
 public:
@@ -106,7 +106,7 @@ private:
 struct SerializableFieldImpl : ISerializableField {
 // ISerializableField
     [[nodiscard]] virtual SerializableValue GetName() const override { return L"Serializable field name"; }
-    [[nodiscard]] virtual std::shared_ptr<ISerializable> GetField() override { return ext::serializable::details::get_as_serializable(&val); }
+    [[nodiscard]] virtual std::shared_ptr<ISerializable> GetField() override { return ext::serializable::details::get_as_serializable(val); }
     void ChangeValue() { val = 303; }
     int val = 10;
 };

@@ -19,78 +19,66 @@ namespace ext::serializable {
 namespace details {
 
 template <class Type>
-void call_on_serialization_start(Type* pointer)
+void call_on_serialization_start(Type& object)
 {
-    if (pointer == nullptr)
-        return;
-
     using ExtractedType = std::extract_value_type_v<Type>;
     if constexpr (details::is_iserializable_v<ExtractedType>)
     {
         if constexpr (HAS_FUNCTION(ExtractedType, OnSerializationStart))
-            pointer->OnSerializationStart();
+            object.OnSerializationStart();
     }
     else
     {
         static_assert(is_serializable_object<ExtractedType>, "Unknown object to call serialization start");
-        ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>().CallOnSerializationStart(pointer);
+        ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>().CallOnSerializationStart(object);
     }
 }
 
 template <class Type>
-void call_on_serialization_end(Type *pointer)
+void call_on_serialization_end(Type& object)
 {
-    if (pointer == nullptr)
-        return;
-
     using ExtractedType = std::extract_value_type_v<Type>;
     if constexpr (details::is_iserializable_v<ExtractedType>)
     {
         if constexpr (HAS_FUNCTION(ExtractedType, OnSerializationEnd))
-            pointer->OnSerializationEnd();
+            object.OnSerializationEnd();
     }
     else
     {
         static_assert(is_serializable_object<ExtractedType>, "Unknown object to call serialization end");
-        ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>().CallOnSerializationEnd(pointer);
+        ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>().CallOnSerializationEnd(object);
     }
 }
 
 template <class Type>
-void call_on_deserialization_start(Type *pointer, SerializableNode& serializableTree)
+void call_on_deserialization_start(Type& object, SerializableNode& serializableTree)
 {
-    if (pointer == nullptr)
-        return;
-
     using ExtractedType = std::extract_value_type_v<Type>;
     if constexpr (details::is_iserializable_v<ExtractedType>)
     {
         if constexpr (HAS_FUNCTION(ExtractedType, OnDeserializationStart))
-            pointer->OnDeserializationStart(serializableTree);
+            object.OnDeserializationStart(serializableTree);
     }
     else
     {
         static_assert(is_serializable_object<ExtractedType>, "Unknown object to call deserialization start");
-        ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>().CallOnDeserializationStart(pointer, serializableTree);
+        ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>().CallOnDeserializationStart(object, serializableTree);
     }
 }
 
 template <class Type>
-void call_on_deserialization_end(Type *pointer)
+void call_on_deserialization_end(Type& object)
 {
-    if (pointer == nullptr)
-        return;
-
     using ExtractedType = std::extract_value_type_v<Type>;
     if constexpr (details::is_iserializable_v<ExtractedType>)
     {
         if constexpr (HAS_FUNCTION(ExtractedType, OnDeserializationEnd))
-            pointer->OnDeserializationEnd();
+            object.OnDeserializationEnd();
     }
     else
     {
         static_assert(is_serializable_object<ExtractedType>, "Unknown object to call deserialization end");
-        ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>().CallOnDeserializationEnd(pointer);
+        ext::get_singleton<SerializableObjectDescriptor<ExtractedType>>().CallOnDeserializationEnd(object);
     }
 }
 
@@ -108,12 +96,12 @@ struct SerializableObjectDescription : ISerializableObject
 
 private:
 // ISerializable
-    void OnSerializationStart() override { call_on_serialization_start(&m_object); }
-    void OnSerializationEnd() override { call_on_serialization_end(&m_object); }
+    void OnSerializationStart() override { call_on_serialization_start(m_object); }
+    void OnSerializationEnd() override { call_on_serialization_end(m_object); }
     void OnDeserializationStart(SerializableNode& serializableTree) override { 
-        call_on_deserialization_start(&m_object, serializableTree);
+        call_on_deserialization_start(m_object, serializableTree);
     }
-    void OnDeserializationEnd() override { call_on_deserialization_end(&m_object); }
+    void OnDeserializationEnd() override { call_on_deserialization_end(m_object); }
 
 // ISerializableObject
     [[nodiscard]] virtual const char* ObjectName() const noexcept override { return ext::type_name<Type>(); }
@@ -167,7 +155,7 @@ protected:
     {
         Type* typePointer = reinterpret_cast<Type*>(objectPointer);
         EXT_EXPECT(typePointer) << "Can`t get type " << ext::type_name<Type>();
-        return get_as_serializable<Field>(&((*typePointer).*m_field));
+        return get_as_serializable<Field>(typePointer->*m_field);
     }
 
 protected:
@@ -242,7 +230,7 @@ protected:
                 {
                     EXT_EXPECT(index == 0) << "Unexpected field index";
                     ext::serializable::ISerializableField* field = baseDescriptor.template ConvertToType<ext::serializable::ISerializableField>(object);
-                    return std::make_shared<ext::serializable::details::SerializableProxy<BaseType>>(field);
+                    return std::make_shared<ext::serializable::details::SerializableProxy<BaseType>>(*field);
                 }
                 else
                 {
@@ -324,7 +312,7 @@ template<class Type>
         const auto registerField = [&]<std::size_t... Is>(std::index_sequence<Is...>) {
             (([&] {
                 constexpr auto fieldName = ext::reflection::field_name<Type, Is>;
-                fieldsCollection->AddField(std::string(fieldName.data(), fieldName.size()), &std::get<Is>(fields));
+                fieldsCollection->AddField(std::string(fieldName.data(), fieldName.size()), std::get<Is>(fields));
             }()), ...);
         };
         registerField(std::make_index_sequence<std::tuple_size_v<decltype(fields)>>());
@@ -348,31 +336,31 @@ template<class ConvertedType>
 }
 
 template <class Type>
-inline void SerializableObjectDescriptor<Type>::CallOnSerializationStart(Type* pointer) const
+inline void SerializableObjectDescriptor<Type>::CallOnSerializationStart(Type& object) const
 {
     if constexpr (HAS_FUNCTION(Type, OnSerializationStart))
-        pointer->OnSerializationStart();
+        object.OnSerializationStart();
 }
 
 template <class Type>
-inline void SerializableObjectDescriptor<Type>::CallOnSerializationEnd(Type* pointer) const
+inline void SerializableObjectDescriptor<Type>::CallOnSerializationEnd(Type& object) const
 {
     if constexpr (HAS_FUNCTION(Type, OnSerializationEnd))
-        pointer->OnSerializationEnd();
+        object.OnSerializationEnd();
 }
 
 template <class Type>
-inline void SerializableObjectDescriptor<Type>::CallOnDeserializationStart(Type* pointer, SerializableNode& serializableTree) const
+inline void SerializableObjectDescriptor<Type>::CallOnDeserializationStart(Type& object, SerializableNode& serializableTree) const
 {
     if constexpr (HAS_FUNCTION(Type, OnDeserializationStart))
-        pointer->OnDeserializationStart(serializableTree);
+        object.OnDeserializationStart(serializableTree);
 }
 
 template <class Type>
-inline void SerializableObjectDescriptor<Type>::CallOnDeserializationEnd(Type* pointer) const
+inline void SerializableObjectDescriptor<Type>::CallOnDeserializationEnd(Type& object) const
 {
     if constexpr (HAS_FUNCTION(Type, OnDeserializationEnd))
-        pointer->OnDeserializationEnd();
+        object.OnDeserializationEnd();
 }
 
 } // namespace ext::serializable

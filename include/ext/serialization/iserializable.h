@@ -200,7 +200,8 @@ namespace ext::serializable {
 DECLARE_CHECK_FIELD_EXISTS(__serializable_object_registration);
 // Check if class has __serializable_object_registration field
 template<class T>
-inline constexpr bool is_registered_serializable_object_v = has___serializable_object_registration_field_v<std::remove_pointer_t<std::extract_value_type_v<T>>>;
+inline constexpr bool is_registered_serializable_object_v = has___serializable_object_registration_field_v<
+    std::remove_pointer_t<std::extract_value_type_v<T>>>;
 // Check if object is serializable
 template<class T>
 inline constexpr bool is_serializable_object = is_registered_serializable_object_v<T>
@@ -323,10 +324,10 @@ public:
     template <class ConvertedType>
     [[nodiscard]] ConvertedType* ConvertToType(Type* pointer) const;
     // Proxy function to call ISerializable methods on object, required if they declared as private 
-    void CallOnSerializationStart(Type* pointer) const;
-    void CallOnSerializationEnd(Type* pointer) const;
-    void CallOnDeserializationStart(Type* pointer, SerializableNode &serializableTree) const;
-    void CallOnDeserializationEnd(Type* pointer) const;
+    void CallOnSerializationStart(Type& object) const;
+    void CallOnSerializationEnd(Type& object) const;
+    void CallOnDeserializationStart(Type& object, SerializableNode &serializableTree) const;
+    void CallOnDeserializationEnd(Type& object) const;
 
 private:
     std::list<std::shared_ptr<details::ISerializableBaseInfo>> m_baseSerializableClasses;

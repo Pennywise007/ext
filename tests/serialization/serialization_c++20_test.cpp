@@ -153,7 +153,7 @@ struct BaseTypes
         valueSet = { {2.4}, {5.7} };
         valueMultiSet = { {2}, {5} };
 
-        path = "C:\\Test";
+        path = "C:\\T}es\"t";
 
         std::tm timeinfo = {};
         timeinfo.tm_sec = 7;

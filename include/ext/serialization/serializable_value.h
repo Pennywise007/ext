@@ -85,6 +85,9 @@ template<>
 #endif
 }
 
+template<>
+[[nodiscard]] inline std::filesystem::path deserialize_value<std::filesystem::path>(const SerializableValue& value) { return static_cast<std::wstring>(value); }
+
 template<class T>
 [[nodiscard]] T deserialize_value(const SerializableValue& value)
 {
@@ -155,6 +158,8 @@ template<class T>
     else if constexpr (is_duration_v<T>)
         return SerializableValue::Create((std::wostringstream() << std::chrono::duration_cast<std::chrono::nanoseconds>(val).count()).str(),
                                          SerializableValue::ValueType::eNumber);
+    else if constexpr (std::is_same_v<T, std::filesystem::path>)
+        return SerializableValue::Create(std::wstring(val), SerializableValue::ValueType::eString);
     else
     {
         std::wostringstream stream;

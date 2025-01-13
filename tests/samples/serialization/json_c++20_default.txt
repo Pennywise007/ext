@@ -15,7 +15,7 @@
             "valueMultiSet": [],
             "valueMap": {},
             "valueMultimap": {},
-            "path": "\"\"",
+            "path": "",
             "system_time": "01.01.1970 00:00:00",
             "duration_nanoseconds": 0,
             "duration_microseconds": 0,

@@ -25,14 +25,29 @@ Settings settings;
 
 std::wstring json;
 try {
-    SerializeToJson(settings, json);
+    std::wifstream file(get_settings_path());
+    EXT_CHECK(!file.is_open()) << "Failed to open settings file";
+    EXT_DEFER(file.close());
+
+    std::wstringstream buffer;
+    buffer << file.rdbuf();
+
+    std::wstring json = buffer.str();
+    ext::serializer::DeserializeFromJson(settings, json);
 }
 catch (...) {
     ext::ManageException(EXT_TRACE_FUNCTION);
 }
 ...
 try {
-    DeserializeFromJson(settings, json);
+    std::wstring json;
+    ext::serializer::SerializeToJson(*this, json);
+
+    std::wofstream file(get_settings_path());
+    EXT_CHECK(!file.is_open()) << "Failed to open settings file";
+    EXT_DEFER(file.close());
+
+    file << json;
 }
 catch (...) {
     ext::ManageException(EXT_TRACE_FUNCTION);

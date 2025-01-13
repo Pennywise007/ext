@@ -88,9 +88,9 @@ EXT_ASSERT(val == true) << "Check failed";
 * EXT_UNREACHABLE()
 */
 #ifdef __GNUC__
-#define EXT_UNREACHABLE() EXT_ASSERT(false) << EXT_TRACE_FUNCTION; __builtin_unreachable()
+#define EXT_UNREACHABLE(...) EXT_ASSERT(false) << EXT_TRACE_FUNCTION << "" __VA_ARGS__; __builtin_unreachable()
 #else
-#define EXT_UNREACHABLE() EXT_ASSERT(false) << EXT_TRACE_FUNCTION; __assume(0)
+#define EXT_UNREACHABLE(...) EXT_ASSERT(false) << EXT_TRACE_FUNCTION << "" __VA_ARGS__; __assume(0)
 #endif
 
 /*

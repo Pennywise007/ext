@@ -293,7 +293,6 @@ public:
     [[nodiscard]] bool IsInterrupted(const std::thread::id& id) const noexcept
     {
         EXT_ASSERT(id != kInvalidThreadId);
-
         std::shared_lock lock(m_workingThreadsMutex);
         if (const auto it = m_workingThreadsInterruptionEvents.find(id); it != m_workingThreadsInterruptionEvents.end())
             return it->second.interrupted();
@@ -421,6 +420,7 @@ namespace this_thread {
 }
 
 // Interruption point for ext::thread function, if thread interrupted - throws a ext::thread::thread_interrupted
+// NOTE: slow method, use ext::this_thread::get_stop_token() and check if stop_requested
 void interruption_point() EXT_THROWS(ext::thread::thread_interrupted())
 {
     if (interruption_requested())

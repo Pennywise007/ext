@@ -189,23 +189,41 @@ TEST(thread_pool_test, interrupt_and_rerun)
 
     threadPool.add_task(threadFunction);
 
-    EXPECT_TRUE(threadStarted.Wait());
+    EXPECT_TRUE(threadStarted.Wait(std::chrono::seconds(1)));
     threadPool.interrupt_and_remove_all_tasks();
     EXPECT_EQ(1u, executedTasksCount);
 
     threadStarted.Reset();
     threadPool.add_task(threadFunction);
 
-    EXPECT_TRUE(threadStarted.Wait());
+    EXPECT_TRUE(threadStarted.Wait(std::chrono::seconds(1)));
     threadPool.interrupt_and_remove_all_tasks();
     EXPECT_EQ(2u, executedTasksCount);
+}
+
+TEST(thread_pool_test, interrupt_before_run)
+{
+    std::atomic_uint executedTasksCount = 0;
+    ext::thread_pool threadPool([&executedTasksCount](auto) { ++executedTasksCount; }, 1);
+
+    threadPool.interrupt_and_remove_all_tasks();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    EXPECT_EQ(0u, executedTasksCount);
+
+    ext::Event threadStarted;
+    threadPool.add_task([&threadStarted]() { threadStarted.RaiseOne(); });
+
+    EXPECT_TRUE(threadStarted.Wait(std::chrono::milliseconds(200)));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    EXPECT_EQ(1u, executedTasksCount);
 }
 
 TEST(thread_pool_test, arguments_copying_test)
 {
     struct Counter {
         Counter() = default;
-        Counter(Counter&& v) { m_moves = v.m_moves + 1; };
+        Counter(Counter&& v) noexcept { m_moves = v.m_moves + 1; };
         Counter(const Counter& v) { m_copies = v.m_copies + 1; }
 
         Counter& operator=(const Counter& v) = delete;

@@ -29,6 +29,7 @@ EXPECT_TRUE(myThread.interrupted());
 #include <atomic>
 #include <chrono>
 #include <mutex>
+#include <memory>
 #include <thread>
 #include <shared_mutex>
 #include <unordered_map>
@@ -45,7 +46,6 @@ EXPECT_TRUE(myThread.interrupted());
 #include <ext/details/thread_details.h>
 
 #include <ext/utils/invoke.h>
-#include <ext/scope/defer.h>
 
 #if !(defined(_WIN32) || defined(__CYGWIN__)) // not windows
 #include <pthread.h>
@@ -262,7 +262,7 @@ public:
         EXT_ASSERT(id != kInvalidThreadId);
 
         std::unique_lock lock(m_workingThreadsMutex);
-        m_workingThreadsInterruptionEvents.erase(id);
+        EXT_DUMP_IF(m_workingThreadsInterruptionEvents.erase(id) == 0) << "Finishing unregistered thread";
     }
 
     // Call this function for interrupting thread by thread id
@@ -276,6 +276,8 @@ public:
         // the thread might be interrupted before calling a thread function
         if (threadIt != m_workingThreadsInterruptionEvents.end())
             threadIt->second.on_interrupt();
+        else
+            EXT_ASSERT(false) << "Interrupting non registered thread";
     }
 
     // Call this function for restore interrupted thread by thread id
@@ -285,8 +287,11 @@ public:
         EXT_ASSERT(id != kInvalidThreadId);
 
         std::unique_lock lock(m_workingThreadsMutex);
-        EXT_ASSERT(m_workingThreadsInterruptionEvents.find(id) != m_workingThreadsInterruptionEvents.end());
-        m_workingThreadsInterruptionEvents.at(id).restore_interrupted(thread.get_token());
+        auto it = m_workingThreadsInterruptionEvents.find(id);
+        if (it != m_workingThreadsInterruptionEvents.end())
+            it->second.restore_interrupted(thread.get_token());
+        else
+            EXT_ASSERT(false) << "Trying to restoring not registered thread";
     }
 
     // Call this function for check if thread interrupted by thread id
@@ -336,15 +341,41 @@ public:
 template<class _Function, class... _Args>
 [[nodiscard]] thread::base thread::create_thread(ext::stop_token&& token, _Function&& function, _Args&&... arguments)
 {
-    return base([invoker = ext::ThreadInvoker<_Function, _Args...>(std::forward<_Function>(function),
-                                                                   std::forward<_Args>(arguments)...)]
-        (ext::stop_token&& token) mutable
+    class ThreadRegistrator {
+    public:
+        ThreadRegistrator() = default;
+        ~ThreadRegistrator() 
         {
-            manager().OnStartingThread(this_thread::get_id(), std::move(token));
-            EXT_DEFER(manager().OnFinishingThread(this_thread::get_id()));
-            
+            manager().OnFinishingThread(threadId);
+        }
+
+        void RegisterThread(std::thread::id id, ext::stop_token&& token)
+        {
+            std::call_once(flag, [&, id, token = std::move(token)]() mutable
+            {
+                threadId = std::move(id);
+                manager().OnStartingThread(threadId, std::move(token));
+            });
+        }
+
+    private:
+        std::thread::id threadId;
+        std::once_flag flag;
+    };
+
+    auto threadRegistrator = std::make_shared<ThreadRegistrator>();
+
+    using Invoker = ext::ThreadInvoker<_Function, _Args...>;
+    auto thread = base([invoker = Invoker(std::forward<_Function>(function), std::forward<_Args>(arguments)...),
+                        threadRegistrator]
+        (ext::stop_token token) mutable
+        {
+            threadRegistrator->RegisterThread(this_thread::get_id(), std::move(token));
             invoker();
-        }, std::move(token));
+        }, token);
+
+    threadRegistrator->RegisterThread(thread.get_id(), std::move(token));
+    return thread;
 }
 
 template<class _Function, class... _Args>

@@ -33,11 +33,9 @@ void main()
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
 /* Declare handler for unhandled exceptions and create dumps */
 #define EXT_DUMP_DECLARE_HANDLER()                                          \
-    if (!::ext::dump::g_exceptionHandlerAdded)                              \
-    {                                                                       \
-        ::ext::dump::g_exceptionHandlerAdded = true;                        \
+    std::call_once(::ext::dump::g_exceptionHandlerFlag, [](){               \
         ::AddVectoredExceptionHandler(1, ::ext::dump::unhandled_handler);   \
-    }
+    });
 
 /* Create dump code, it is better to call EXT_DUMP_DECLARE_HANDLER in main to catch unhandled exceptions */
 #define EXT_DUMP_CREATE() ext::dump::create_dump();
@@ -91,19 +89,19 @@ void main()
 
 /*
 Checks boolean expression, if true:
-* generate breakpoint if debugger present, othervise - create dump
+* generate breakpoint if debugger present, otherwise - create dump
 * show error in log*/
-#define EXT_DUMP_IF(bool_expression)                                \
-    if (const bool __result = (bool_expression); !__result)         \
-    {}                                                              \
-    else                                                            \
-        for (bool __firstEnter = true;; __firstEnter = false)       \
-            if (!__firstEnter)                                      \
-            {                                                       \
-                CALL_ONCE(DEBUG_BREAK_OR_CREATE_DUMP());            \
-                break;                                              \
-            }                                                       \
-            else                                                    \
+#define EXT_DUMP_IF(bool_expression)                                                                    \
+    if (const bool __result = (bool_expression); !__result)                                             \
+    {}                                                                                                  \
+    else                                                                                                \
+        for (bool __firstEnter = true; !::ext::dump::g_dumpGenerationDisabled; __firstEnter = false)    \
+            if (!__firstEnter)                                                                          \
+            {                                                                                           \
+                CALL_ONCE(DEBUG_BREAK_OR_CREATE_DUMP());                                                \
+                break;                                                                                  \
+            }                                                                                           \
+            else                                                                                        \
                 EXT_TRACE_ERR() << "DUMP at " << __FILE__ << "(" << __LINE__ << ") expr: \'" << #bool_expression << "\' "
 
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
@@ -112,14 +110,14 @@ namespace ext::dump {
 
 constexpr unsigned long long g_exceptionWriteDumpAndContinue = 0x42849fc0;
 
-static std::atomic_bool g_dumpGenerationDisabled = true;
-static std::atomic_bool g_exceptionHandlerAdded = false;
+inline std::atomic_bool g_dumpGenerationDisabled = false;
+inline std::once_flag g_exceptionHandlerFlag;
 
 // Helper to disable dump generation, might be usefull in negative test cases
 struct ScopeDumpDisabler
 {
-    ScopeDumpDisabler() noexcept { g_dumpGenerationDisabled = true; }
-    ~ScopeDumpDisabler() noexcept { g_dumpGenerationDisabled = false; }
+    ScopeDumpDisabler() noexcept { ::ext::dump::g_dumpGenerationDisabled = true; }
+    ~ScopeDumpDisabler() noexcept { ::ext::dump::g_dumpGenerationDisabled = false; }
 };
 
 inline void make_minidump(EXCEPTION_POINTERS* e)

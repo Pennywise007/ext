@@ -47,14 +47,14 @@ Checks expression via check function, if check fails:
 Example:
 EXT_EXPECT_RESULT(val, _result == 0, ::ext::check::CheckFailedException(std::source_location::current(), "Value check failed")) << "Check failed";
 */
-#define EXT_EXPECT_RESULT(expr, check_func, exception)                              \
-    for (auto &&__result = (expr); !(check_func);)                                  \
-         for (bool __firstEnter = true;; __firstEnter = false)                      \
-            if (__firstEnter)                                                       \
-            {                                                                       \
-                CALL_ONCE(DEBUG_BREAK_OR_CREATE_DUMP())                             \
-            }                                                                       \
-            else                                                                    \
+#define EXT_EXPECT_RESULT(expr, check_func, exception)                      \
+    for (auto &&__result = (expr); !(check_func);)                          \
+         for (bool __firstEnter = true;; __firstEnter = false)              \
+            if (__firstEnter && !::ext::dump::g_dumpGenerationDisabled)     \
+            {                                                               \
+                CALL_ONCE(DEBUG_BREAK_OR_CREATE_DUMP())                     \
+            }                                                               \
+            else                                                            \
                 throw exception
 
 /*

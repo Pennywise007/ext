@@ -348,31 +348,31 @@ inline void DeserializeObject(const std::unique_ptr<serializer::IDeserializer>& 
 struct Visitor::CollectionInfo
 {
     explicit CollectionInfo(const ISerializableArray* array_)
-        : array(array_)
-        , sizeOfCollection(array_->Size())
+        : sizeOfCollection(array_->Size())
+        , array(array_)
     {}
     explicit CollectionInfo(const ISerializableObject* object_)
-        : object(object_)
-        , sizeOfCollection(object_->Size())
+        : sizeOfCollection(object_->Size())
+        , object(object_)
     {}
     explicit CollectionInfo(const ISerializableField* field_)
-        : field(field_)
-        , sizeOfCollection(1L)
+        : sizeOfCollection(1L)
+        , field(field_)
     {}
     explicit CollectionInfo(const std::shared_ptr<ISerializableArray>& array_)
         : CollectionInfo(array_.get())
     {
-        collectionHolder = array_; 
+        collectionHolder = array_;
     }
     explicit CollectionInfo(const std::shared_ptr<ISerializableObject>& object_)
         : CollectionInfo(object_.get())
     {
-        collectionHolder = object_; 
+        collectionHolder = object_;
     }
     explicit CollectionInfo(const std::shared_ptr<ISerializableField>& field_)
         : CollectionInfo(field_.get())
     {
-        collectionHolder = field_; 
+        collectionHolder = field_;
     }
 
     [[nodiscard]] std::shared_ptr<ISerializable> Get(size_t index)

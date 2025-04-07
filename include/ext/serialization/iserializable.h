@@ -65,7 +65,7 @@ struct InternalStruct
 struct CustomValue : ISerializableValue {
 // ISerializableValue
     [[nodiscard]] SerializableValue SerializeValue() const override { return std::to_wstring(val); }
-    [[nodiscard]] void DeserializeValue(const SerializableValue& value) override { val = std::wtoi(value); }
+    void DeserializeValue(const SerializableValue& value) override { val = std::wtoi(value); }
     int val = 10;
 };
 
@@ -92,7 +92,7 @@ struct TestStruct : InternalStruct
         try
         {
             std::wifstream file(kFilePath);
-            EXT_CHECK(file.is_open()) << "Failed to open file " << kFileName;
+            EXT_CHECK(file.is_open()) << "Failed to open file " << kFilePath;
             EXT_DEFER(file.close());
 
             const std::wstring json{ std::istreambuf_iterator<wchar_t>(file),
@@ -113,8 +113,8 @@ struct TestStruct : InternalStruct
             std::wstring json;
             ext::serializer::SerializeToJson(*this, json);
 
-            std::wofstream file(kFullFileName);
-            EXT_CHECK(file.is_open()) << "Failed to open file " << kFileName;
+            std::wofstream file(kFilePath);
+            EXT_CHECK(file.is_open()) << "Failed to open file " << kFilePath;
             EXT_DEFER(file.close());
             file << json;
         }
@@ -163,15 +163,15 @@ You can also declare this functions in your REGISTER_SERIALIZABLE_OBJECT object 
     /* Make helper function our class friend to allow serialization of the private fields */    \
     template <class __SerializableClass__>                                                      \
     friend struct ::ext::serializable::has___serializable_object_registration_field;            \
-    /* To avoid problems with private fields/inheritance we will use SerializableObjectDescriptor::ConvertToType */  \
+    /* To avoid problems with private fields/inheritance we will use SerializableObjectDescriptor::ConvertToType */     \
     template <class __SerializableClass__>                                                      \
     friend class ext::serializable::SerializableObjectDescriptor;                               \
-    /* Special flag to mark that this struct can be serialized, see is_registered_serializable_object_v */  \
+    /* Special flag to mark that this struct can be serialized, see is_registered_serializable_object_v */              \
     bool __serializable_object_registration = [this]() -> bool                                  \
         {                                                                                       \
             CALL_ONCE({                                                                         \
                 using CurrentType = std::remove_reference_t<decltype(*this)>;                   \
-                auto& __info = ext::get_singleton<ext::serializable::SerializableObjectDescriptor<CurrentType>>(); \
+                auto& __info = ext::get_singleton<ext::serializable::SerializableObjectDescriptor<CurrentType>>();      \
                 __info.RegisterSerializableBaseClasses<__VA_ARGS__>();                          \
             })                                                                                  \
             return true;                                                                        \
@@ -202,12 +202,12 @@ You can also declare this functions in your REGISTER_SERIALIZABLE_OBJECT object 
 // Register serializable field of current class in global serializable objects register with pretty name
 #define REGISTER_SERIALIZABLE_FIELD_N(SerializableName, object)                                 \
     CALL_ONCE({                                                                                 \
-            using CurrentType = std::remove_reference_t<decltype(*this)>;                       \
-            static_assert(ext::serializable::is_registered_serializable_object_v<CurrentType>,  \
-                "Trying to register field on non registered object, maybe you forget to add REGISTER_SERIALIZABLE_OBJECT?");    \
-            auto& __info = ext::get_singleton<ext::serializable::SerializableObjectDescriptor<CurrentType>>();                  \
-            __info.RegisterField(SerializableName, &CurrentType::object);                       \
-        })
+        using CurrentType = std::remove_reference_t<decltype(*this)>;                           \
+        static_assert(ext::serializable::is_registered_serializable_object_v<CurrentType>,      \
+            "Trying to register field on non registered object, maybe you forget to add REGISTER_SERIALIZABLE_OBJECT?");    \
+        auto& __info = ext::get_singleton<ext::serializable::SerializableObjectDescriptor<CurrentType>>();                  \
+        __info.RegisterField(SerializableName, &CurrentType::object);                           \
+    })
 
 namespace ext::serializable {
 
@@ -427,7 +427,7 @@ public:
     std::optional<SerializableValue> Value;
 
 private:
-    explicit SerializableNode(NodeType type) noexcept : Parent(nullptr), Type(type) {}
+    explicit SerializableNode(NodeType type) noexcept : Type(type), Parent(nullptr) {}
     // Collection child nodes, for field will contain 1 node
     std::list<std::shared_ptr<SerializableNode>> m_childNodes;
     // Cache for child nodes by names, used for fast access to child nodes by name

@@ -57,7 +57,7 @@ private:
     const bool m_addNewLines;
 };
 
-[[nodiscard]] inline void SerializerJson::Serialize(const SerializableNode& serializationTreeRoot) EXT_THROWS()
+inline void SerializerJson::Serialize(const SerializableNode& serializationTreeRoot) EXT_THROWS()
 {
     TreeSerializer::SerializeTree(serializationTreeRoot, this);
 }
@@ -296,6 +296,7 @@ inline DeserializerJson::DeserializerJson(const std::wstring& inputText) EXT_THR
             break;
         case SerializableNode::NodeType::eField:
             EXT_EXPECT(false) << "Internal error, we should already handle this case";
+            EXT_UNREACHABLE();
         case SerializableNode::NodeType::eArray:
         case SerializableNode::NodeType::eObject:
             text.remove_prefix(parseCollection(text) + 1);
@@ -515,7 +516,8 @@ inline DeserializerJson::DeserializerJson(const std::wstring& inputText) EXT_THR
     EXT_EXPECT(firstStringSymbol == L'-' || std::iswdigit(firstStringSymbol))
         << "Unexpected symbol in `" << text << "', expect number/nan/null/array/object start";
 
-    size_t pointIndex = static_cast<size_t>(-1);
+    constexpr size_t kNotFound = static_cast<size_t>(-1);
+    size_t pointIndex = kNotFound;
     bool eExist = false;
     size_t numberLength = 0;
     if (firstStringSymbol == L'-')
@@ -528,7 +530,7 @@ inline DeserializerJson::DeserializerJson(const std::wstring& inputText) EXT_THR
             continue;
         if (symbol == L'.')
         {
-            EXT_EXPECT(pointIndex == -1) << "Unexpected second point symbol in the number " << text;
+            EXT_EXPECT(pointIndex == kNotFound) << "Unexpected second point symbol in the number " << text;
             pointIndex = numberLength;
         }
         else if (symbol == L'e')
@@ -541,7 +543,7 @@ inline DeserializerJson::DeserializerJson(const std::wstring& inputText) EXT_THR
     }
 
     std::wstring numerText(text.data(), numberLength);
-    if (pointIndex != -1)
+    if (pointIndex != kNotFound)
     {
         // Replacing decimal point with the current decimal symbol
         std::wostringstream woss;

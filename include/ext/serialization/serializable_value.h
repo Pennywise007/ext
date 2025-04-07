@@ -99,7 +99,7 @@ template<class T>
         stream >> tempValue;
         result = static_cast<T>(tempValue);
 
-        EXT_EXPECT(ext::reflection::is_enum_value<T>(result)) << 
+        EXT_EXPECT(ext::reflection::is_enum_value<T>(result)) <<
             "Value " << tempValue << " is not a valid enum value for " << ext::type_name<T>();
     }
     else if constexpr (std::is_floating_point_v<T>)
@@ -159,13 +159,13 @@ template<class T>
         return SerializableValue::Create((std::wostringstream() << std::chrono::duration_cast<std::chrono::nanoseconds>(val).count()).str(),
                                          SerializableValue::ValueType::eNumber);
     else if constexpr (std::is_same_v<T, std::filesystem::path>)
-        return SerializableValue::Create(std::wstring(val), SerializableValue::ValueType::eString);
+        return SerializableValue::Create(std::widen(val.string()), SerializableValue::ValueType::eString);
     else
     {
         std::wostringstream stream;
         stream << val;
         if constexpr (std::is_floating_point_v<T>)
-            return SerializableValue::Create(stream.str(), 
+            return SerializableValue::Create(stream.str(),
                 std::isnan(val) ? SerializableValue::ValueType::eString : SerializableValue::ValueType::eNumber);
         else if constexpr (
             std::is_unsigned_v<T> ||

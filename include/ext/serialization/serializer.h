@@ -49,7 +49,7 @@ struct InternalStruct
 struct CustomValue : ISerializableValue {
 // ISerializableValue
     [[nodiscard]] SerializableValue SerializeValue() const override { return std::to_wstring(val); }
-    [[nodiscard]] void DeserializeValue(const SerializableValue& value) override { val = std::wtoi(value); }
+    void DeserializeValue(const SerializableValue& value) override { val = std::wtoi(value); }
     int val = 10;
 };
 

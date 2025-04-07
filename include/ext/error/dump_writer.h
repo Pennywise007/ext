@@ -12,7 +12,6 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #endif
 
@@ -104,14 +103,9 @@ Checks boolean expression, if true:
             else                                                                                        \
                 EXT_TRACE_ERR() << "DUMP at " << __FILE__ << "(" << __LINE__ << ") expr: \'" << #bool_expression << "\' "
 
-#if defined(_WIN32) || defined(__CYGWIN__) // windows
-
 namespace ext::dump {
 
-constexpr unsigned long long g_exceptionWriteDumpAndContinue = 0x42849fc0;
-
 inline std::atomic_bool g_dumpGenerationDisabled = false;
-inline std::once_flag g_exceptionHandlerFlag;
 
 // Helper to disable dump generation, might be usefull in negative test cases
 struct ScopeDumpDisabler
@@ -119,6 +113,12 @@ struct ScopeDumpDisabler
     ScopeDumpDisabler() noexcept { ::ext::dump::g_dumpGenerationDisabled = true; }
     ~ScopeDumpDisabler() noexcept { ::ext::dump::g_dumpGenerationDisabled = false; }
 };
+
+#if defined(_WIN32) || defined(__CYGWIN__) // windows
+
+constexpr unsigned long long g_exceptionWriteDumpAndContinue = 0x42849fc0;
+
+inline std::once_flag g_exceptionHandlerFlag;
 
 inline void make_minidump(EXCEPTION_POINTERS* e)
 {
@@ -185,6 +185,7 @@ inline void create_dump(const char *msg = nullptr) noexcept
     __except (-1)
     {}
 }
-} // namespace ext::dump
 
 #endif
+
+} // namespace ext::dump

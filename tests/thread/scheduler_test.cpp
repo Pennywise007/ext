@@ -78,3 +78,37 @@ TEST(scheduler_test, check_scheduling_task_at_time_exists)
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
     EXPECT_TRUE(executed);
 }
+
+TEST(scheduler_test, check_scheduling_multiple_tasks)
+{
+    ext::Scheduler& scheduler = ext::Scheduler::GlobalInstance();
+
+    std::chrono::system_clock::time_point firstTaskCallTime = std::chrono::system_clock::now() + std::chrono::milliseconds(300);
+    std::chrono::system_clock::time_point secondTaskCallTime = std::chrono::system_clock::now() + std::chrono::milliseconds(150);
+
+    bool executedFirstTask = false;
+    bool executedSecondTask = false;
+
+    ext::TaskId firstTaskId, secondTaskId;
+    firstTaskId = scheduler.SubscribeTaskAtTime(
+        [&]()
+        {
+            executedFirstTask = true;
+            EXPECT_TRUE(executedSecondTask) << "First task should be executed after second one";
+            EXPECT_FALSE(scheduler.IsTaskExists(secondTaskId));
+        },
+        firstTaskCallTime);
+
+    secondTaskId = scheduler.SubscribeTaskAtTime(
+        [&]()
+        {
+            executedSecondTask = true;
+            EXPECT_FALSE(executedFirstTask) << "First task should be executed after second one";
+            EXPECT_TRUE(scheduler.IsTaskExists(firstTaskId));
+        },
+        secondTaskCallTime);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(400));
+    EXPECT_TRUE(executedFirstTask);
+    EXPECT_TRUE(executedSecondTask);
+}

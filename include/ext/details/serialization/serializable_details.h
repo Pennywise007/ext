@@ -224,7 +224,7 @@ protected:
         if (serializableTree.CountChilds() != 0)
         {
             constexpr bool collection =
-                is_serializable_object<ExtractedType> || 
+                is_serializable_object<ExtractedType> ||
                 is_iserializable_collection_v<ExtractedType> ||
                 details::is_map_v<Type> ||
                 details::is_set_v<ExtractedType> ||
@@ -308,7 +308,7 @@ public:
 
 public:
 #ifdef DEBUG
-    bool m_nameRequested = false;
+    mutable bool m_nameRequested = false;
 #endif // DEBUG
     const KeyType& m_key;
     const ValueType& m_value;
@@ -558,13 +558,13 @@ protected:
             DECLARE_SERIALIZABLE_FIELD(SubSettings, field);
         }
         */
-        else if constexpr (std::is_base_of_v<ISerializableArray, ExtractedType>) 
+        else if constexpr (std::is_base_of_v<ISerializableArray, ExtractedType>)
             return std::make_shared<SerializableProxy<ExtractedType>>(*reinterpret_cast<ISerializableArray*>(pointer));
-        else if constexpr (std::is_base_of_v<ISerializableObject, ExtractedType>) 
+        else if constexpr (std::is_base_of_v<ISerializableObject, ExtractedType>)
             return std::make_shared<SerializableProxy<ExtractedType>>(*reinterpret_cast<ISerializableObject*>(pointer));
-        else if constexpr (std::is_base_of_v<ISerializableField, ExtractedType>) 
+        else if constexpr (std::is_base_of_v<ISerializableField, ExtractedType>)
             return std::make_shared<SerializableProxy<ExtractedType>>(*reinterpret_cast<ISerializableField*>(pointer));
-        else if constexpr (std::is_base_of_v<ISerializableValue, ExtractedType>) 
+        else if constexpr (std::is_base_of_v<ISerializableValue, ExtractedType>)
             return std::make_shared<SerializableProxy<ExtractedType>>(*reinterpret_cast<ISerializableValue*>(pointer));
         else
         {

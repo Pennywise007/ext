@@ -15,7 +15,7 @@ struct Settings
         std::string firstName;
         std::string userName;
     };
-    
+
     std::wstring password;
     std::list<User> registeredUsers;
 };
@@ -339,7 +339,7 @@ struct TreeSerializer
             case SerializableNode::NodeType::eObject:
             {
                 serializer->WriteObjectStart(childLevelInfo.size() - 1, currentNode->CountChilds() == 0);
-                
+
                 if (currentNode->CountChilds() == 0)
                 {
                     const bool nextNodeExist = GoToNextChild(childLevelInfo, currentNode);
@@ -354,7 +354,7 @@ struct TreeSerializer
             case SerializableNode::NodeType::eArray:
             {
                 serializer->WriteArrayStart(childLevelInfo.size() - 1, currentNode->CountChilds() == 0);
-                
+
                 if (currentNode->CountChilds() == 0)
                 {
                     const bool nextNodeExist = GoToNextChild(childLevelInfo, currentNode);

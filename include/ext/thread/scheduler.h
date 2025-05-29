@@ -45,7 +45,7 @@ public:
 
     // Setting task call period by task id, next call will be now() + callingPeriod
     TaskId SubscribeTaskByPeriod(std::function<void()>&& task,
-                                 std::chrono::high_resolution_clock::duration callingPeriod,
+                                 std::chrono::system_clock::duration callingPeriod,
                                  TaskId taskId = kInvalidId);
 
     // Setting next task call time by task id, if time < now() execute it immediately
@@ -80,9 +80,9 @@ struct Scheduler::TaskInfo
     std::function<void()> task;
 
     std::chrono::system_clock::time_point nextCallTime;
-    std::optional<std::chrono::high_resolution_clock::duration> callingPeriod;
+    std::optional<std::chrono::system_clock::duration> callingPeriod;
 
-    explicit TaskInfo(std::function<void()>&& function, std::chrono::high_resolution_clock::duration&& period) noexcept
+    explicit TaskInfo(std::function<void()>&& function, std::chrono::system_clock::duration&& period) noexcept
         : task(function)
         , nextCallTime(std::chrono::system_clock::now() + std::chrono::duration_cast<std::chrono::system_clock::duration>(period))
         , callingPeriod(std::move(period))
@@ -114,7 +114,7 @@ inline Scheduler& Scheduler::GlobalInstance() noexcept
 }
 
 inline TaskId Scheduler::SubscribeTaskByPeriod(std::function<void()>&& task,
-                                               std::chrono::high_resolution_clock::duration callingPeriod,
+                                               std::chrono::system_clock::duration callingPeriod,
                                                TaskId taskId)
 {
     {
@@ -175,14 +175,11 @@ inline void Scheduler::MainThread()
             std::unique_lock<std::mutex> lk(m_mutexTasks);
 
             // wait for scheduled tasks
-            while (m_tasks.empty())
-            {
-                m_cvTasks.wait(lk);
+            m_cvTasks.wait(lk, [&] { return !m_tasks.empty() || m_interrupted; });
 
-                // notification call can be connected with interrupting
-                if (m_interrupted)
-                    return;
-            }
+            // notification call can be connected with interrupting
+            if (m_interrupted)
+                return;
 
             const auto it = std::min_element(m_tasks.begin(), m_tasks.end(),
                                              [](const auto &a, const auto &b)

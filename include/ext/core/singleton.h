@@ -25,11 +25,11 @@ namespace ext {
 
 // Flag that shows created singletons
 template<class T>
-static std::atomic_bool kSingletonCreated = false;
+std::atomic_bool kSingletonCreated = false;
 
 // Flag that shows destroyed singletons
 template<class T>
-static std::atomic_bool kSingletonDestroyed = false;
+std::atomic_bool kSingletonDestroyed = false;
 
 template<class T>
 struct Singleton final

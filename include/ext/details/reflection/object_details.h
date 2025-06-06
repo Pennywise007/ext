@@ -153,6 +153,7 @@ struct find_max_brace_constructor : std::conditional_t<
 template <typename Type, size_t End>
 struct find_max_brace_constructor<Type, End, End>
 {
+    // Failed to find a constructor signature, probably Type is not constructible with braces
     using type = typename Type::error_constructor_signature_is_not_recognized;
 };
 

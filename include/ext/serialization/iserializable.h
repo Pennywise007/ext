@@ -21,38 +21,6 @@ struct Settings
     std::list<User> registeredUsers;
 };
 
-Settings settings;
-
-std::wstring json;
-try {
-    std::wifstream file(get_settings_path());
-    EXT_CHECK(!file.is_open()) << "Failed to open settings file";
-    EXT_DEFER(file.close());
-
-    std::wstringstream buffer;
-    buffer << file.rdbuf();
-
-    std::wstring json = buffer.str();
-    ext::serializer::DeserializeFromJson(settings, json);
-}
-catch (...) {
-    ext::ManageException(EXT_TRACE_FUNCTION);
-}
-...
-try {
-    std::wstring json;
-    ext::serializer::SerializeToJson(*this, json);
-
-    std::wofstream file(get_settings_path());
-    EXT_CHECK(!file.is_open()) << "Failed to open settings file";
-    EXT_DEFER(file.close());
-
-    file << json;
-}
-catch (...) {
-    ext::ManageException(EXT_TRACE_FUNCTION);
-}
-
 #endif // C++20
 
 struct InternalStruct
@@ -136,6 +104,40 @@ You can also declare this functions in your REGISTER_SERIALIZABLE_OBJECT object 
     void OnDeserializationStart(SerializableNode& serializableTree) {}
     // Called after object deserialization
     void OnDeserializationEnd() {};
+
+
+// Serialization example
+    Settings settings;
+    try {
+        std::wifstream file(get_settings_path());
+        EXT_CHECK(file.is_open()) << "Failed to open file";
+        EXT_DEFER(file.close());
+
+        std::wstringstream buffer;
+        buffer << file.rdbuf();
+
+        std::wstring json = buffer.str();
+        ext::serializer::DeserializeFromJson(settings, json);
+    }
+    catch (...) {
+        ext::ManageException(EXT_TRACE_FUNCTION);
+    }
+
+// Deserialization example
+    Settings settings;
+    try {
+        std::wstring json;
+        ext::serializer::SerializeToJson(settings, json);
+
+        std::wofstream file(get_settings_path());
+        EXT_CHECK(file.is_open()) << "Failed to open file";
+        EXT_DEFER(file.close());
+
+        file << json;
+    }
+    catch (...) {
+        ext::ManageException(EXT_TRACE_FUNCTION);
+    }
 */
 
 #include <algorithm>

@@ -2,7 +2,7 @@
   <img src="https://github.com/user-attachments/assets/c27e7ac4-7453-498a-90ea-dfab4a430a43" alt="Ext logo">
 </div>
 
-Developed and maintained a comprehensive header-only C++ library, EXT designed to enhance productivity and flexibility in mode C++17 and later standards.
+Comprehensive header-only C++ library, EXT designed to enhance productivity and flexibility in C++20 and later standards(most of the features supports C++17 also).
 
 # Build
 

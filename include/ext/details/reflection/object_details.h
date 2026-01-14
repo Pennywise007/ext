@@ -29,11 +29,11 @@ template <auto Name>
 #elif defined(__clang__) || defined(__GNUC__)
     constexpr auto func_name = std::string_view{__PRETTY_FUNCTION__};
 
-    constexpr auto prefix = "Name = ";
+    constexpr std::string_view prefix = "Name = ";
     constexpr auto suffixDelimer = ';';
 
     constexpr auto split = func_name.substr(0, func_name.find_last_of(suffixDelimer));
-    return split.substr(split.find(prefix) + std::string_view(prefix).size());
+    return split.substr(split.find(prefix) + prefix.size());
 #elif defined(_MSC_VER)
 
 #if _HAS_CXX20 ||  __cplusplus >= 202002L // C++20
@@ -42,11 +42,11 @@ template <auto Name>
     constexpr auto func_name = std::string_view{__builtin_FUNCSIG()};
 #endif // not C++20
 
-    constexpr auto prefix = "get_name_impl<";
-    constexpr auto suffix = ">(void)";
+    constexpr std::string_view prefix = "get_name_impl<";
+    constexpr std::string_view suffix = ">(void)";
 
-    constexpr auto split = func_name.substr(0, func_name.size() - std::string_view(suffix).size());
-    return split.substr(split.find(prefix) + std::string_view(prefix).size());
+    constexpr auto split = func_name.substr(0, func_name.size() - suffix.size());
+    return split.substr(split.find(prefix) + prefix.size());
 #else
     static_assert(false, "Unsupported compiler");
 #endif

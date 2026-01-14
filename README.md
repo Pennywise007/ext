@@ -135,8 +135,16 @@ enum class TestEnum
 };
 
 // Enum to string
-ext::reflection::enum_name<TestEnum(0)>() == "TestEnum::eEnumValue1";
-ext::reflection::enum_name<TestEnum::eEnumValue5>() == "TestEnum::eEnumValue5";
+ext::reflection::enum_to_string(TestEnum::eEnumValue1) == "TestEnum::eEnumValue1"
+ext::reflection::enum_to_string(TestEnum(5)) == "TestEnum::eEnumValue5"
+ext::reflection::enum_to_string(TestEnum(int)) -> exception in runtime
+// Enum to string in compile time
+ext::reflection::enum_to_string<TestEnum(0)>() == "TestEnum::eEnumValue1";
+ext::reflection::enum_to_string<TestEnum::eEnumValue5>() == "TestEnum::eEnumValue5";
+
+// String to enum
+ext::reflection::get_enum_value_by_name<TestEnum>("TestEnum::eEnumValue1") == TestEnum::eEnumValue1
+ext::reflection::get_enum_value_by_name<TestEnum>("InvalidEnumValueName") -> exception
 
 // Enum size
 ext::reflection::get_enum_size<TestEnum>() == 3;

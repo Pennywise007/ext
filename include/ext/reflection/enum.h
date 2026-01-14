@@ -16,19 +16,36 @@ constexpr bool is_scoped_enum_v = std::is_enum_v<EnumType> &&
     !std::is_convertible_v<EnumType, std::underlying_type_t<EnumType>>;
 
 /*
+Convert enum value to string representation
+
+Usage:
+enum class TestEnum { 
+    eEnumValue,  
+    eEnumValue5 = 5,
+};
+ext::reflection::enum_to_string(TestEnum::eEnumValue) == "TestEnum::eEnumValue"
+ext::reflection::enum_to_string(TestEnum(5)) == "TestEnum::eEnumValue5"
+*/
+template <int MinEnumValue = 0, int MaxEnumValue = 100, typename EnumType>
+[[nodiscard]] constexpr std::string_view enum_to_string(EnumType value) EXT_THROWS();
+
+/*
 Get enum value name
 
 Usage:
 enum class TestEnum { eEnumValue };
 
-enum_name<TestEnum(0)> == "TestEnum::eEnumValue"
-enum_name<TestEnum::eEnumValue>() == "TestEnum::eEnumValue"
-enum_name<TestEnum(-1)> == "(enum TestEnum)0xffffffffffffffff"
+ext::reflection::enum_to_string<TestEnum(0)>() == "TestEnum::eEnumValue"
+ext::reflection::enum_to_string<TestEnum::eEnumValue>() == "TestEnum::eEnumValue"
+ext::reflection::enum_to_string<TestEnum(-1)>() == "(enum TestEnum)0xffffffffffffffff"
 
 @return string presentation of the enum value or (enum %ENUM_NAME%)0xF if not found
 */
 template <auto EnumType>
-constexpr std::string_view enum_name = ext::reflection::details::get_name_impl<EnumType>();
+[[nodiscard]] constexpr std::string_view enum_to_string()
+{
+    return ext::reflection::details::get_name_impl<EnumType>();
+}
 
 /*
 Get enum items size
@@ -149,7 +166,7 @@ Usage:
 enum class TestEnum { eEnumValue };
 ext::reflection::enum_to_string(TestEnum::eEnumValue) == "TestEnum::eEnumValue"
 */
-template <int MinEnumValue = 0, int MaxEnumValue = 100, typename EnumType>
+template <int MinEnumValue, int MaxEnumValue, typename EnumType>
 [[nodiscard]] constexpr std::string_view enum_to_string(EnumType value)
 {
     static_assert(std::is_enum_v<EnumType>, "Type is not a enum");
@@ -177,7 +194,7 @@ enum class TestEnum { eEnumValue };
 ext::reflection::get_enum_value_by_name<TextEnum>("TestEnum::eEnumValue") == TestEnum::eEnumValue
 */
 template <typename EnumType, int MinEnumValue = 0, int MaxEnumValue = 100>
-[[nodiscard]] constexpr EnumType get_enum_value_by_name(std::string_view name)
+[[nodiscard]] constexpr EnumType get_enum_value_by_name(std::string_view name) EXT_THROWS()
 {
     static_assert(std::is_enum_v<EnumType>, "Type is not a enum");
     static_assert(MaxEnumValue > MinEnumValue, "Invalid params");

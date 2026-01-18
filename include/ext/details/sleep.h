@@ -3,6 +3,7 @@
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
 #include <Windows.h>
 #include <bcrypt.h>
+#include <chrono>
 
 #include <ext/core/defines.h>
 
@@ -21,7 +22,8 @@ static const ZwSetTimerResolution_t kZwSetTimerResolution =
 namespace ext::thread_details {
 
 // Improved sleep function which allows to sleep for less then 15 milliseconds
-inline void sleep_for(long long milliseconds)
+template <class _Rep, class _Period>
+void sleep_for(const std::chrono::duration<_Rep, _Period>& _Rel_time)
 {
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
     // On Windows, when you call Sleep(1), you're asking the system to sleep for 1 millisecond. 
@@ -36,11 +38,11 @@ inline void sleep_for(long long milliseconds)
     EXT_UNUSED(once);
 
     LARGE_INTEGER interval;
-    interval.QuadPart = -1 * (milliseconds * 10000);
+    interval.QuadPart = -10000 * std::chrono::duration_cast<std::chrono::milliseconds>(_Rel_time).count();
     // We will use NtDelayExecution to make 1 millisecond sleep exactly 1 millisecond sleep
     kNtDelayExecution(false, &interval);
 #else
-    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+    std::this_thread::sleep_for(_Rel_time);
 #endif
 }
 

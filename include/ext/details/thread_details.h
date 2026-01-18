@@ -84,7 +84,7 @@ public:
     }
     static void MaxWait() noexcept
     {
-        ext::thread_details::sleep_for(1);
+        ext::thread_details::sleep_for(std::chrono::milliseconds(1));
     }
 
 private:

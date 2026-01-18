@@ -78,7 +78,8 @@ void interruptible_sleep_for(const std::chrono::duration<_Rep, _Period>& timeDur
 template <class _Clock, class _Duration>
 void sleep_until(const std::chrono::time_point<_Clock, _Duration>& absoluteTime);
 // Sleep for time duration
-inline void sleep_for(const std::chrono::milliseconds& timeDuration);
+template <class _Rep, class _Period>
+inline void sleep_for(const std::chrono::duration<_Rep, _Period>& timeDuration);
 
 } // namespace this_thread
 
@@ -505,9 +506,10 @@ void sleep_until(const std::chrono::time_point<_Clock, _Duration>& timePoint)
     ext::this_thread::sleep_for(timePoint - _Clock::now());
 }
 
-inline void sleep_for(const std::chrono::milliseconds& duration)
+template <class _Rep, class _Period>
+void sleep_for(const std::chrono::duration<_Rep, _Period>& duration)
 {
-    ext::thread_details::sleep_for(duration.count());
+    ext::thread_details::sleep_for(duration);
 }
 
 } // namespace this_thread

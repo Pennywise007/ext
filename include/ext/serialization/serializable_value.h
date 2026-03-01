@@ -13,12 +13,19 @@
 
 namespace ext::serializable {
 
-template <typename T, typename = void>
+template<typename T>
 struct is_duration : std::false_type {};
-template <typename T>
-struct is_duration<T, std::void_t<typename T::rep, typename T::period>> : std::true_type {};
+template<typename Rep, typename Period>
+struct is_duration<std::chrono::duration<Rep, Period>> : std::true_type {};
 template <typename T>
 inline constexpr bool is_duration_v = is_duration<T>::value;
+
+template<typename T>
+struct is_bitset : std::false_type {};
+template<std::size_t N>
+struct is_bitset<std::bitset<N>> : std::true_type {};
+template <typename T>
+inline constexpr bool is_bitset_v = is_bitset<T>::value;
 
 // Serializable value, string with real data type, allow to adopt data on serialization
 struct SerializableValue : std::wstring
@@ -86,7 +93,16 @@ template<>
 }
 
 template<>
-[[nodiscard]] inline std::filesystem::path deserialize_value<std::filesystem::path>(const SerializableValue& value) { return static_cast<std::wstring>(value); }
+[[nodiscard]] inline std::filesystem::path deserialize_value<std::filesystem::path>(const SerializableValue& value)
+{
+     return static_cast<std::wstring>(value);
+}
+
+template<>
+[[nodiscard]] inline std::filesystem::directory_entry deserialize_value<std::filesystem::directory_entry>(const SerializableValue& value)
+{
+    return std::filesystem::directory_entry(std::filesystem::path(static_cast<std::wstring>(value))); 
+}
 
 template<class T>
 [[nodiscard]] T deserialize_value(const SerializableValue& value)
@@ -120,6 +136,12 @@ template<class T>
         long long val;
         stream >> val;
         result = std::chrono::duration_cast<T>(std::chrono::nanoseconds(val));
+    }
+    else if constexpr (is_bitset_v<T>)
+    {
+        unsigned long long val;
+        stream >> val;
+        result = T(val);
     }
     else
         stream >> result;
@@ -160,6 +182,10 @@ template<class T>
                                          SerializableValue::ValueType::eNumber);
     else if constexpr (std::is_same_v<T, std::filesystem::path>)
         return SerializableValue::Create(std::widen(val.string()), SerializableValue::ValueType::eString);
+    else if constexpr (std::is_same_v<T, std::filesystem::directory_entry>)
+        return SerializableValue::Create(std::widen(val.path().string()), SerializableValue::ValueType::eString);
+    else if constexpr (is_bitset_v<T>)
+        return SerializableValue::Create(std::to_wstring(val.to_ullong()), SerializableValue::ValueType::eNumber);
     else
     {
         std::wostringstream stream;

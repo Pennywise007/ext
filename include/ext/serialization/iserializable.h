@@ -227,9 +227,12 @@ inline constexpr bool is_serializable_object = is_registered_serializable_object
         // Exceptions list
         && !std::is_same_v<T, std::string>
         && !std::is_same_v<T, std::wstring>
-        && !is_duration_v<T>
         && !std::is_same_v<T, std::chrono::system_clock::time_point>
-        && !std::is_same_v<T, std::filesystem::path>)
+        && !std::is_same_v<T, std::filesystem::path>
+        && !std::is_same_v<T, std::filesystem::directory_entry>
+        && !is_duration_v<T>
+        && !is_bitset_v<T>
+    )
 #endif // C++20
     ;
 

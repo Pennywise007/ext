@@ -125,8 +125,10 @@ struct BaseTypes
     DECLARE_SERIALIZABLE_FIELD(std::multiset<int>, valueMultiSet);
     DECLARE_SERIALIZABLE_FIELD((std::map<int, long>), valueMap);
     DECLARE_SERIALIZABLE_FIELD((std::multimap<unsigned, long>), valueMultimap);
+    DECLARE_SERIALIZABLE_FIELD(std::bitset<10>, valueBitset);
 
     DECLARE_SERIALIZABLE_FIELD(std::filesystem::path, path);
+    DECLARE_SERIALIZABLE_FIELD(std::filesystem::directory_entry, directoryEntry);
 
     DECLARE_SERIALIZABLE_FIELD(std::chrono::system_clock::time_point, system_time);
 
@@ -175,8 +177,10 @@ struct BaseTypes
         valueVector = { 2.4f, 5.7f, NAN };
         valueSet = { 2.4, 5.7 };
         valueMultiSet = { 2, 5 };
+        valueBitset = 0b10101;
 
-        path = "C:\\T}es\"t";
+        path = "C:\\T}es\"t\\bin.exe";
+        directoryEntry = std::filesystem::directory_entry(path);
 
         std::tm timeinfo = {};
         timeinfo.tm_sec = 7;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <functional>
 
 #if defined(_WIN32) || defined(__CYGWIN__) // windows
 #include <atlbase.h>
@@ -47,3 +48,19 @@ struct uuid
 };
 
 } // namespace ext
+
+namespace std {
+
+template<>
+struct hash<ext::uuid> {
+    size_t operator()(const ext::uuid& u) const noexcept {
+        const uint8_t* data = reinterpret_cast<const uint8_t*>(&u.m_id);
+        size_t h = 0;
+        for (size_t i = 0; i < sizeof(u.m_id); ++i) {
+            h = (h << 5) - h + data[i]; // djb2-like
+        }
+        return h;
+    }
+};
+
+}

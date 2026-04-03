@@ -109,19 +109,19 @@ TEST(thread_pool_test, waiting_for_tasks)
     };
 
     // erased immediately
-    threadPool.erase_task(threadPool.add_task(erasedTask).first);
+    threadPool.stop_and_remove_task(threadPool.add_task(erasedTask).first);
 
     threadStart.Wait();
     EXPECT_FALSE(functionExecuted);
     EXPECT_FALSE(doneCalled);
     // erased during first task execution
-    threadPool.erase_task(threadPool.add_task(erasedTask).first);
+    threadPool.stop_and_remove_task(threadPool.add_task(erasedTask).first);
 
     // erased during done callback execution
     doneStart.Wait();
     EXPECT_TRUE(functionExecuted);
     EXPECT_FALSE(doneCalled);
-    threadPool.erase_task(threadPool.add_task(erasedTask).first);
+    threadPool.stop_and_remove_task(threadPool.add_task(erasedTask).first);
 
     threadPool.wait_for_tasks();
     EXPECT_TRUE(functionExecuted);
@@ -142,7 +142,7 @@ TEST(thread_pool_test, check_removing_tasks_with_post_processing_delay)
     {
         const auto taskId = threadPool.add_task([](){}).first;
         if (i != 0)
-            threadPool.erase_task(taskId);
+            threadPool.stop_and_remove_task(taskId);
     }
     threadPool.wait_for_tasks();
     EXPECT_EQ(executedTasksCount, 1u);
@@ -163,10 +163,34 @@ TEST(thread_pool_test, check_removing_tasks_with_processing_delay)
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }).first;
         if (i != 0)
-            threadPool.erase_task(taskId);
+            threadPool.stop_and_remove_task(taskId);
     }
     threadPool.wait_for_tasks();
     EXPECT_EQ(executedTasksCount, 1u);
+}
+
+TEST(thread_pool_test, check_removing_just_one_task)
+{
+    std::atomic_uint executedTasksCount = 0;
+    ext::thread_pool threadPool([&executedTasksCount](const ext::thread_pool::TaskId&)
+    {
+        ++executedTasksCount;
+    }, 1);
+
+    const auto taskId = threadPool.add_task([]()
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }).first;
+    threadPool.add_task([]()
+    {
+    });
+    threadPool.add_task([]()
+    {
+    });
+
+    threadPool.stop_and_remove_task(taskId);
+    threadPool.wait_for_tasks();
+    EXPECT_EQ(executedTasksCount, 2u);
 }
 
 TEST(thread_pool_test, interrupt_and_rerun)
@@ -288,4 +312,37 @@ TEST(thread_pool_test, task_execution_high_priority)
 
     threadPool.wait_for_tasks();
     EXPECT_EQ(executedThreads, 4);
+}
+
+TEST(thread_pool_test, task_interruption)
+{
+    ext::thread_pool threadPool(1);
+    ext::Event taskStarted;
+
+    std::atomic_bool firstTaskWasInterrupted = false;
+    auto firstTask = threadPool.add_task([&]() {
+        taskStarted.RaiseAll();
+
+        try
+        {
+            ext::this_thread::interruptible_sleep_for(std::chrono::milliseconds(100));
+        }
+        catch(const ext::thread::thread_interrupted&)
+        {
+            firstTaskWasInterrupted = true;
+        }
+    }).first;
+
+    auto secondTask = threadPool.add_task([&]() {
+        EXPECT_FALSE(true) << "Task should be discarded before execution";
+    }).first;
+
+    taskStarted.Wait();
+
+    EXPECT_TRUE(threadPool.stop_and_remove_task(secondTask));
+    EXPECT_TRUE(threadPool.stop_and_remove_task(firstTask));
+    EXPECT_FALSE(threadPool.stop_and_remove_task(firstTask)) << "Task should be already interrupted and removed";
+
+    threadPool.wait_for_tasks();
+    EXPECT_TRUE(firstTaskWasInterrupted) << "Task should be interrupted";
 }

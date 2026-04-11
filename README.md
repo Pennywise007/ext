@@ -178,6 +178,10 @@ EXPECT_FALSE(ext::reflection::is_enum_value<TestEnum>(-1));
 
 Serialization objects to/from json etc.
 
+## Optional Fields
+
+You can mark fields as optional using `DECLARE_OPTIONAL_SERIALIZABLE_FIELD` or `REGISTER_OPTIONAL_SERIALIZABLE_FIELD`. Optional fields are not required in the JSON during deserialization - if a field is missing, it keeps its default value instead of causing an error.
+
 <details><summary>Example</summary>
 
 ```c++
@@ -226,6 +230,9 @@ struct Setting : InternalStruct
 
     DECLARE_SERIALIZABLE_FIELD(CustomValue, value);
     DECLARE_SERIALIZABLE_FIELD(InternalStruct, internalStruct);
+
+    // Optional field - if missing in JSON, keeps default value (5)
+    DECLARE_OPTIONAL_SERIALIZABLE_FIELD(unsigned, repeatIntervalMinutes, 5);
 
     // Instead of using macroses - use REGISTER_SERIALIZABLE_FIELD in constructor
     std::list<int> m_listOfParams;

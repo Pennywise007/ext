@@ -293,6 +293,12 @@ struct SerializableTypes : BaseTypes, SerializableFieldImpl
     }
 };
 
+struct OptionalSettings
+{
+    REGISTER_SERIALIZABLE_OBJECT();
+    DECLARE_OPTIONAL_SERIALIZABLE_FIELD(unsigned, repeatIntervalMinutes, 5);
+};
+
 } // namespace
 
 TEST(serialization_test, json_default)
@@ -340,6 +346,18 @@ TEST(deserialization_test, json_modified)
     ASSERT_NO_THROW(SerializeToJson(testStruct, textAfterDeserialization));
 
     EXPECT_STREQ(expectedText.c_str(), textAfterDeserialization.c_str());
+}
+
+TEST(serialization_test, optional_field_missing_keeps_default)
+{
+    std::wstring json = L"{}";
+    OptionalSettings settings;
+    ASSERT_NO_THROW(DeserializeFromJson(settings, json));
+    EXPECT_EQ(5u, settings.repeatIntervalMinutes);
+    
+    json = LR"({ "repeatIntervalMinutes": 10 })";
+    ASSERT_NO_THROW(DeserializeFromJson(settings, json));
+    EXPECT_EQ(10u, settings.repeatIntervalMinutes);
 }
 
 TEST(deserialization_test, double_deserialization_leads_to_the_same_result)

@@ -123,6 +123,22 @@ std::shared_ptr<ISerializable> get_serializable(Type& value);
 template <class Type>
 std::shared_ptr<ISerializable> get_as_serializable(Type& type);
 
+// Proxy for marking regular fields as optional during serialization
+template <class Field>
+struct SerializableOptionalFieldProxy : ISerializableOptional
+{
+    explicit SerializableOptionalFieldProxy(Field& value) : m_value(value) {}
+
+protected:
+    [[nodiscard]] std::shared_ptr<ISerializable> Get() const override
+    {
+        return get_as_serializable<Field>(const_cast<Field&>(m_value));
+    }
+
+private:
+    Field& m_value;
+};
+
 // special class for holding SerializableValue
 struct SerializableValueHolder : ISerializableValue
 {

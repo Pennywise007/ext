@@ -146,7 +146,11 @@ private:
 template <class Type, typename Field>
 struct SerializableFieldInfo : ISerializableFieldInfo
 {
-    SerializableFieldInfo(const char* name, Field Type::* field) : m_name(name), m_field(field) {}
+    SerializableFieldInfo(const char* name, Field Type::* field, bool optional = false)
+        : m_name(name)
+        , m_field(field)
+        , m_optional(optional)
+    {}
 
 protected:
 // ISerializableFieldInfo
@@ -155,12 +159,15 @@ protected:
     {
         Type* typePointer = reinterpret_cast<Type*>(objectPointer);
         EXT_EXPECT(typePointer) << "Can`t get type " << ext::type_name<Type>();
+        if (m_optional)
+            return std::make_shared<details::SerializableOptionalFieldProxy<Field>>(typePointer->*m_field);
         return get_as_serializable<Field>(typePointer->*m_field);
     }
 
 protected:
     const char* m_name;
     Field Type::* m_field;
+    bool m_optional;
 };
 
 struct SerializableFieldInfoWrapper : ISerializableFieldInfo
@@ -255,9 +262,9 @@ protected:
 
 template<class Type>
 template <class Field>
-void SerializableObjectDescriptor<Type>::RegisterField(const char* name, Field Type::* field)
+void SerializableObjectDescriptor<Type>::RegisterField(const char* name, Field Type::* field, bool optional)
 {
-    m_fields.emplace_back(std::make_shared<details::SerializableFieldInfo<Type, Field>>(name, field));
+    m_fields.emplace_back(std::make_shared<details::SerializableFieldInfo<Type, Field>>(name, field, optional));
 }
 
 template<class Type>

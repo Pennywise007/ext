@@ -186,6 +186,13 @@ You can also declare this functions in your REGISTER_SERIALIZABLE_OBJECT object 
 #define DECLARE_SERIALIZABLE_FIELD(Type, Name, ...)                                             \
     DECLARE_SERIALIZABLE_FIELD_N(Type, Name, STRINGINIZE(Name), __VA_ARGS__)
 
+// Declaring an optional serializable field and registering it in global serializable objects register
+// Use case DECLARE_OPTIONAL_SERIALIZABLE_FIELD(long, m_propName); => long m_propName = long(); optional field registration
+// Use case DECLARE_OPTIONAL_SERIALIZABLE_FIELD(long, m_propName, 105); => long m_propName = 105; optional field registration
+// Optional fields are not required in JSON during deserialization - if missing, the field keeps its default value
+#define DECLARE_OPTIONAL_SERIALIZABLE_FIELD(Type, Name, ...)                                    \
+    DECLARE_OPTIONAL_SERIALIZABLE_FIELD_N(Type, Name, STRINGINIZE(Name), __VA_ARGS__)
+
 // Declaring a serializable field with a special serializable name and registering it in global serializable objects register
 // Use case DECLARE_SERIALIZABLE_FIELD(long, m_propName, "Pretty name"); => long m_propName = long(); REGISTER_SERIALIZABLE_FIELD_N("Pretty name", m_propName);
 // Use case DECLARE_SERIALIZABLE_FIELD(long, m_propName, "Pretty name", 105); => long m_propName = long(105); REGISTER_SERIALIZABLE_FIELD_N("Pretty name", m_propName);
@@ -194,6 +201,14 @@ You can also declare this functions in your REGISTER_SERIALIZABLE_OBJECT object 
     REMOVE_PARENTHESES(Type) Name = [this]() -> REMOVE_PARENTHESES(Type)                        \
         {                                                                                       \
             REGISTER_SERIALIZABLE_FIELD_N(SerializableName, Name);                              \
+            return { __VA_ARGS__ };                                                             \
+        }()
+
+// Declaring an optional serializable field with a special serializable name and registering it in global serializable objects register
+#define DECLARE_OPTIONAL_SERIALIZABLE_FIELD_N(Type, Name, SerializableName, ...)                \
+    REMOVE_PARENTHESES(Type) Name = [this]() -> REMOVE_PARENTHESES(Type)                        \
+        {                                                                                       \
+            REGISTER_OPTIONAL_SERIALIZABLE_FIELD_N(SerializableName, Name);                     \
             return { __VA_ARGS__ };                                                             \
         }()
 
@@ -209,6 +224,20 @@ You can also declare this functions in your REGISTER_SERIALIZABLE_OBJECT object 
             "Trying to register field on non registered object, maybe you forget to add REGISTER_SERIALIZABLE_OBJECT?");    \
         auto& __info = ext::get_singleton<ext::serializable::SerializableObjectDescriptor<CurrentType>>();                  \
         __info.RegisterField(SerializableName, &CurrentType::object);                           \
+    })
+
+// Register optional serializable field of current class in global serializable objects register
+#define REGISTER_OPTIONAL_SERIALIZABLE_FIELD(object)                                            \
+    REGISTER_OPTIONAL_SERIALIZABLE_FIELD_N(STRINGINIZE(object), object)
+
+// Register optional serializable field of current class in global serializable objects register with pretty name
+#define REGISTER_OPTIONAL_SERIALIZABLE_FIELD_N(SerializableName, object)                        \
+    CALL_ONCE({                                                                                 \
+        using CurrentType = std::remove_reference_t<decltype(*this)>;                           \
+        static_assert(ext::serializable::is_registered_serializable_object_v<CurrentType>,      \
+            "Trying to register field on non registered object, maybe you forget to add REGISTER_SERIALIZABLE_OBJECT?");    \
+        auto& __info = ext::get_singleton<ext::serializable::SerializableObjectDescriptor<CurrentType>>();                  \
+        __info.RegisterField(SerializableName, &CurrentType::object, true);                     \
     })
 
 namespace ext::serializable {
@@ -332,7 +361,7 @@ class SerializableObjectDescriptor
 public:
     // Register objects field for serialization
     template <class Field>
-    void RegisterField(const char* name, Field Type::* field);
+    void RegisterField(const char* name, Field Type::* field, bool optional = false);
     // Register object base classes which will need to be serialized
     template <class... Classes>
     void RegisterSerializableBaseClasses();

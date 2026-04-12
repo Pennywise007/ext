@@ -15,6 +15,11 @@ Using:
     {
         foundedPos = currentPos;
     });
+    
+Equal to:
+::ext::scope::ExitScope __on_scoped_exit0([&]() {
+    code;
+});
 */
 #define EXT_SCOPE_ON_EXIT(code) ::ext::scope::ExitScope EXT_PP_CAT(__on_scoped_exit, __COUNTER__)([&]() code);
 #define EXT_SCOPE_ON_EXIT_F(capture, code) ::ext::scope::ExitScope EXT_PP_CAT(__on_scoped_exit, __COUNTER__)([REMOVE_PARENTHESES(capture)]() code);
@@ -32,7 +37,7 @@ struct ExitScope : ::ext::NonCopyable
     ~ExitScope() { m_callback(); }
 
 private:
-    std::function<void(void)> m_callback;
+    const std::function<void(void)> m_callback;
 };
 
 /* Realization of object cleaner on exit scope */
@@ -48,8 +53,8 @@ struct FreeObject : ::ext::NonCopyable
     ~FreeObject() { m_freeObjectFunction(m_object); }
 
 private:
-    ObjectType& m_object;
-    FreeObjectFunction m_freeObjectFunction;
+    const ObjectType& m_object;
+    const FreeObjectFunction m_freeObjectFunction;
 };
 
 /*
@@ -136,7 +141,7 @@ public:
     }
 
 private:
-    FreeFunction m_freeObjectFunction;
+    const FreeFunction m_freeObjectFunction;
     std::optional<ObjectType> m_object;
     std::optional<ObjectType> m_objectInvalidValue;
 };

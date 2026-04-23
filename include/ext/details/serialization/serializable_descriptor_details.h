@@ -313,16 +313,10 @@ template<class Type>
     {
         static_assert(ext::reflection::fields_count<Type> > 0, "No fields in object for serialization");
 
-        auto fields = ext::reflection::get_object_fields(object);
-        
         auto fieldsCollection = std::make_shared<details::SerializableObjectImpl>(ext::type_name<Type>());
-        const auto registerField = [&]<std::size_t... Is>(std::index_sequence<Is...>) {
-            (([&] {
-                constexpr auto fieldName = ext::reflection::field_name<Type, Is>;
-                fieldsCollection->AddField(std::string(fieldName.data(), fieldName.size()), std::get<Is>(fields));
-            }()), ...);
-        };
-        registerField(std::make_index_sequence<std::tuple_size_v<decltype(fields)>>());
+        ext::reflection::for_each_field(object, [&](std::string_view fieldName, auto& field) {
+            fieldsCollection->AddField(std::string(fieldName.data(), fieldName.size()), field);
+        });
         return fieldsCollection;
     }
     else

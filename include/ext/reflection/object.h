@@ -31,8 +31,8 @@ inline constexpr size_t fields_count =
 
 /*
 Getting object fields(works with public fields only)
-Example:
 
+Example:
 struct Foo {
     int intField;
     bool booleanField;
@@ -67,8 +67,39 @@ ext::reflection::field_name<Foo, 0> == "intField"
 ext::reflection::field_name<Foo, 1> == "booleanField"
 */
 template<class Type, auto FieldIndex>
-constexpr auto field_name = details::get_field_name_impl<&std::get<FieldIndex>(get_object_fields(details::external<Type>))>();
+constexpr std::string_view field_name = details::get_field_name_impl<&std::get<FieldIndex>(get_object_fields(details::external<Type>))>();
+
 #endif // C++20
+
+/*
+Calls the provided function for each field of the object, passing the field name and a reference to the field value.
+
+Example:
+struct Foo {
+   int intField;
+   bool booleanField;
+};
+
+Foo object {};
+ext::reflection::for_each_field(object, [](std::string_view fieldName, auto& field) {
+    if (fieldName == "intField")
+        field = 5;
+    else if (fieldName == "booleanField")
+        field = true;
+});
+*/
+template <typename Object, typename Fn>
+static void for_each_field(Object& object, Fn&& fn)
+{
+    auto fields = get_object_fields(object);
+    const auto iterateOverFields = [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+        (([&] {
+            constexpr std::string_view fieldName = ::ext::reflection::field_name<Object, Is>;
+            fn(fieldName, std::get<Is>(fields));
+        }()), ...);
+    };
+    iterateOverFields(std::make_index_sequence<std::tuple_size_v<decltype(fields)>>());
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Check if object has a field

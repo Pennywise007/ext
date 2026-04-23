@@ -14,3 +14,8 @@ ext_test(
     name = "tracer_test",
     srcs = ["tracer_test.cpp"],
 )
+
+ext_test(
+    name = "command_line_test",
+    srcs = ["command_line_test.cpp"],
+)
